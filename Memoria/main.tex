@@ -29,7 +29,7 @@
 \documentclass[
 11pt, % The default document font size, options: 10pt, 11pt, 12pt
 oneside, % Two side (alternating margins) for binding by default, uncomment to switch to one side
-english, % TODO: Set language [english, spanish, ngerman]
+spanish, % TODO: Set language [english, spanish, ngerman]
 singlespacing, % Single line spacing, alternatives: onehalfspacing or doublespacing
 %draft, % Uncomment to enable draft mode (no pictures, no links, overfull hboxes indicated)
 %nolistspacing, % If the document is onehalfspacing or doublespacing, uncomment this to set spacing in lists to single
@@ -99,6 +99,20 @@ headsepline, % Uncomment to get a line under the header
   morestring=[b]"
 }
 
+\lstdefinelanguage{Python}{
+ keywords={not, and, typeof, null, catch, switch, in, int, str, float, self},
+ keywordstyle=\color{blue}\bfseries,
+ ndkeywords={boolean, throw, import},
+ ndkeywords={for, return, class, if ,elif, endif, while, do, else, True, False , catch, def},
+ ndkeywordstyle=\color{red}\bfseries,
+ identifierstyle=\color{black},
+ sensitive=false,
+ comment=[l]{\#},
+ morecomment=[s]{/*}{*/},
+ commentstyle=\color{purple}\ttfamily,
+ stringstyle=\color{red}\ttfamily,
+}
+
 \lstset{
    backgroundcolor=\color{lightgray},
    extendedchars=true,
@@ -114,9 +128,10 @@ headsepline, % Uncomment to get a line under the header
    captionpos=b
 }
 
+\setcounter{secnumdepth}{7}
+
 \usepackage{enumitem}
 \usepackage{tikz-uml}
-\usepackage{float}
 
 \usepackage{tcolorbox}
 \newtcolorbox{notebox}{
@@ -138,9 +153,14 @@ headsepline, % Uncomment to get a line under the header
 }
 
 \usepackage{mathpazo} % Use the Palatino font by default
-%\usepackage[backend=bibtex,style=authoryear,natbib=true,language=english]{biblatex} % Use the bibtex backend with the authoryear citation style (which resembles APA)
-
-%\addbibresource{bibliography.bib} % The filename of the bibliography
+\usepackage[
+  backend=bibtex,
+  style=alphabetic,
+  sorting=ynt,
+  natbib=true,
+  language=spanish
+]{biblatex} % Use the bibtex backend with the authoryear citation style (which resembles APA)
+\addbibresource{bibliography.bib} % The filename of the bibliography
 
 \usepackage[autostyle=true]{csquotes} % Required to generate language-dependent quotes in the bibliography
 \usepackage{titlesec}
@@ -183,7 +203,7 @@ headsepline, % Uncomment to get a line under the header
 %	PARAGRAPH SETTINGS
 %----------------------------------------------------------------------------------------
 
-\setlength{\parskip}{\baselineskip}%
+
 
 %----------------------------------------------------------------------------------------
 %	MARGIN SETTINGS
@@ -207,32 +227,32 @@ headsepline, % Uncomment to get a line under the header
 % \href{url}{name}
 
 % TODO: Your thesis title, print it with \ttitle
-\thesistitle{ThesisTitle}
+\thesistitle{Optimización de Algoritmos de Búsqueda en Grafos:\\Implementación y Comparación de Rendimiento en FPGA}
 % TODO: Your tutor name, print it with \tutor
-\tutor{Tutor} 
+\tutor{Juan José Palacios Alonso} 
 % TODO: Your other tutor name, print it with \tutorBis
-\tutorBis{TutorBis} 
+\tutorBis{} 
 % TODO: Your degree name, print it with \degreename
-\degree{Degree} 
+\degree{Grado de Ingeniería Informática en Tecnologías de la Información} 
 % TODO: Your name, print it with \authorname
-\author{Autor} 
+\author{Alejandro Rodríguez López} 
 % TODO: Your peer name, print it with \authornameBis
-\authorBis{AutorBis} 
+\authorBis{} 
 % TODO: Your address, print it with \addressname
-\addresses{Address} 
+\addresses{33204, Gijón, Asturias, España} 
 
 % TODO: Your subject area, print it with \subjectname
-\subject{Subject} 
+\subject{Trabajo de Fin de Grado} 
 % TODO: Keywords for your thesis, print it with \keywordnames
-\keywords{Keywords} 
+\keywords{Graph, Graph search, algorithm, parallel, FPGA, Python, C, low level, A star} 
 % TODO: Your university's name and URL, print it with \univname
-\university{University} 
+\university{Universidad de Oviedo} 
 % TODO: Your department's name and URL, print it with \deptname
-\department{Department} 
+\department{Informática} 
 % TODO: Your research group's name and URL, print it with \groupname
-\group{Group} 
+\group{Ciencia de la Computación e Inteligencia Artificial} 
 % TODO: Your faculty's name and URL, print it with \facname
-\faculty{Faculty} 
+\faculty{Escuela Politécnica de Ingeniería de Gijón} 
 
 \AtBeginDocument{
 	\hypersetup{pdftitle=\ttitle} % Set the PDF's title to your title
@@ -268,26 +288,12 @@ headsepline, % Uncomment to get a line under the header
     \vspace{2em}
 	\end{flushleft}
 \end{minipage}
-\begin{minipage}[t]{\textwidth}
-	\begin{flushleft} \large
-		\emph{Autor (Bis):}\\
-		\authorBisName\\
-    \vspace{2em}
-	\end{flushleft}
-\end{minipage}
 \begin{minipage}[t]{0.8\textwidth}
 	\begin{flushright} \large
 		\emph{Tutor:} \\
 		\tutorName
-    \vspace{2em}
 	\end{flushright}
 \end{minipage}\\
-\begin{minipage}[t]{0.8\textwidth}
-	\begin{flushright} \large
-		\emph{Tutor (Bis):} \\
-		\tutorBisName
-	\end{flushright}
-\end{minipage}\\[3cm]
  
 \vfill
 
@@ -348,6 +354,7 @@ headsepline, % Uncomment to get a line under the header
 %----------------------------------------------------------------------------------------
 %	ABSTRACT PAGE
 %----------------------------------------------------------------------------------------
+
 
 \begin{abstract}
 % TODO: Add the abstract
@@ -456,11 +463,16 @@ headsepline, % Uncomment to get a line under the header
 \mainmatter % Begin numeric (1,2,3...) page numbering
 
 \pagestyle{thesis} % Return the page headers back to the "thesis" style
+\setlength{\parskip}{\baselineskip}%
+
 
 % Include the chapters of the thesis as separate files from the Chapters folder
 % Uncomment the lines as you write the chapters
 
-%\include{Chapters/Chapter0}
+\include{Chapters/Chapter0}
+\include{Chapters/Chapter1}
+\include{Chapters/Chapter2}
+\include{Chapters/Chapter3}
 
 %----------------------------------------------------------------------------------------
 %	THESIS CONTENT - APPENDICES
@@ -477,8 +489,8 @@ headsepline, % Uncomment to get a line under the header
 %	BIBLIOGRAPHY
 %----------------------------------------------------------------------------------------
 
-%\printbibliography[heading=bibintoc]
-%\printbibliography
+\nocite{*}
+\printbibliography[heading=bibintoc]
 
 %----------------------------------------------------------------------------------------
 

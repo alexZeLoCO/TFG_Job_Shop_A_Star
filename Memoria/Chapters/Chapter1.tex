@@ -1,0 +1,154 @@
+\Chapter{Problema a investigar}{Objetivos}
+
+\section{Job Shop Scheduling Problem}
+
+Se estudiará la implementación de una solución al problema
+\italic{Job Shop Scheduling (JSP)} \cite{Yan77}
+\footnote{El problema también es conocido por otros nombres similares
+como \italic{Job Shop Scheduling Problem (JSSP)} o Job Scheduling Problem (JSP).}.
+Como su nombre indica, se trata de un problema en el que se debe
+crear una planificación.
+Desde el punto de vista de la ingeniería informática,
+el JSP es un problema de optimización.
+
+El problema JSP busca una planificación para una serie de
+máquinas (o trabajadores) que deben realizar un número conocido
+de trabajos.
+Cada trabajo está formado por una serie de operaciones (o tareas),
+con una duración conocida.
+Las tareas de un mismo trabajo deben ser ejecutadas en un orden específico.
+
+Existen numerosas variantes de este problema,
+entre ellas existen variantes que permiten la ejecución
+en paralelo de algunas tareas o requieren que alguna tarea
+en específico sea ejecutada por un trabajador (o tipo de trabajador)
+en particular.
+Por ello, es clave denotar las normas que se aplicarán a la hora de resolver
+el problema JSP:
+
+\begin{enumerate}[itemsep=0.25px]
+    \item Existen un número natural conocido de trabajos.
+    \item Todos los trabajos tienen el mismo número natural conocido de tareas.
+    \item A excepción de la primera tarea de cada trabajo,
+    todas tienen una única tarea predecesora que debe ser completada
+    antes de iniciar su ejecución.
+    \item Cada tarea puede tener una duración distinta.
+    \item La duración de cada tarea es un número natural conocido.
+    \item Existe un número natural conocido de trabajadores.
+    \item Todos los trabajadores son equivalentes,
+    cualquiera puede realizar cualquier tarea.
+    \item Una vez iniciada una tarea, no se puede interrumpir su ejecución.
+    \item Un mismo trabajador puede intercalar la ejecución de tareas de diferentes trabajos.
+    \item Un trabajador sólo puede realizar una tarea al mismo tiempo.
+    \item Los tiempos de preparación de un trabajador antes de realizar una tarea son nulos.
+    \item Los tiempos de espera entre la realización de una tarea y otra son nulos.
+\end{enumerate}
+
+\section{Método a resolver}
+
+\subsection{Algoritmo}
+
+Existen numerosos algoritmos capaces de resolver el problema del JSP.
+Estrategias más simples como listas ordenadas en función de la duración
+de los trabajos, algoritmos genéticos, técnicas gráficas,
+algoritmos \italic{Branch and Bound} y heurísticos.
+En este estudio se utilizará un algoritmo heurístico, A* (\italic{A star}) \cite{HNR68}
+para resolver el problema JSP.
+
+El algoritmo A* utiliza varios componentes para resolver problemas
+de optimización. A continuación se describe cada uno de ellos.
+
+\subsubsection{Componentes}
+
+\paragraph{Estado}~
+
+El estado es una estructura de datos que describe la situación
+del problema en un punto determinado.
+Estos estados deben ser comparables,
+debe ser posible dados dos estados conocer si son iguales o distintos.
+En el caso del JSP, el estado podría estar formado por lo siguiente:
+
+\begin{itemize}[itemsep=0.25px]
+    \item Instante de tiempo en el que comienza cada tarea planificada.
+    \item Instante de tiempo futuro en el que cada trabajador estará libre.
+\end{itemize}
+
+El resultado final del JSP será un estado donde todas las tareas han sido planificadas.
+
+\paragraph{Costes}~
+
+El algoritmo A* utiliza 3 costes distintos para resolver el problema de optimización:
+
+\subparagraph{Coste G}~
+
+El coste G (de ahora en adelante $cost_g$) es el coste desde el estado inicial
+hasta el estado actual.
+Este coste es calculado buscando el mayor tiempo de fin de
+las tareas ya planificadas.
+
+\subparagraph{Coste H}~
+
+El coste H (de ahora en adelante $cost_h$) es el coste estimado desde el estado actual
+hasta el estado final.
+Este coste es calculado utilizando una función heurística,
+que estima el coste.
+Esta función debe no debe ser optimista,
+por lo que en este estudio se utilizará el sumatorio de duraciones
+de las tareas restantes por planificar.
+
+\subparagraph{Coste F}~
+
+El coste F (de ahora en adelante $cost_f$) es el coste estimado desde el estado inicial
+hasta el estado final pasando por el estado actual.
+
+Por lo tanto, $$cost_f = cost_g + cost_h$$
+
+\paragraph{Generación de sucesores}~
+
+El algoritmo A* debe generar un número de estados sucesores dado un estado actual.
+Por lo que será necesario una función que dado un estado retorne un listado de estados.
+
+Dado un estado donde existen $N$ tareas por ejecutar ($T_0 \dots T_N$) y
+un trabajador cualquiera sin tarea asignada tendrá $N$ estados sucesores.
+En cada uno, el trabajador libre tendrá asignada cada una de las tareas,
+desde $T_0$ hasta $T_N$.
+
+\paragraph{Listas de prioridad}~
+
+El algoritmo A* utiliza dos listas de estados: la lista abierta y la lista cerrada.
+La lista cerrada contiene los estados que ya han sido estudiados mientras que
+la lista abierta contiene los estados que aún están por estudiar.
+
+Cada vez que se estudia un estado de la lista abierta,
+se obtienen sus sucesores que son añadidos a la lista abierta
+(siempre y cuando no estén en la lista cerrada)
+mientras que el estado estudiado pasa a la lista cerrada.
+
+Los estados de la lista abierta están ordenados en función de su $cost_f$,
+de menor a mayor.
+De esta forma, se tiene acceso inmediato al elemento con menor $cost_f$.
+
+\subsubsection{Pseudocódigo}
+
+\begin{lstlisting}[language=Python]
+    lista_cerrada = []
+    lista_abierta = SortedList()
+
+    lista_abierta.append(estado_inicial)
+
+    while (not lista_abierta.empty()):
+        # estado_actual se elimina de lista_abierta
+        estado_actual = lista_abierta.pop()
+
+        if (estado_actual == estado_final):
+            return estado_actual
+
+        estados_sucesores = calcular_sucesores(estado_actual)
+
+        for estado_sucesor in estados_sucesores:
+            
+\end{lstlisting}
+
+\subsection{Equipo de Estudio}
+
+\section{Método de comparativas}
