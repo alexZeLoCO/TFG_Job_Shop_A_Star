@@ -2,6 +2,7 @@ from typing import List, Generic, TypeVar, Callable, Iterator
 
 T = TypeVar('T')
 
+
 class SortedList(Generic[T]):
 
     def __init__(self, sorter: Callable[[T, T], bool]):
@@ -16,7 +17,7 @@ class SortedList(Generic[T]):
         ):
             current_index = current_index + 1
         self._data.append(None) 
-        for i in range (len(self) - 1, current_index, -1):
+        for i in range(len(self) - 1, current_index, -1):
             self._data[i] = self._data[i-1]
         self._data[current_index] = item
 

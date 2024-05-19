@@ -1,6 +1,7 @@
-from typing import List, Dict, Tuple
+from typing import List, Dict
 from SortedList import SortedList
 from State import State
+
 
 def calculate_h_cost(state: State, jobs: List[List[int]]) -> int:
     h_costs: List[int] = []
@@ -11,6 +12,7 @@ def calculate_h_cost(state: State, jobs: List[List[int]]) -> int:
                 h_costs[job_idx] = h_costs[job_idx] + jobs[job_idx][task_idx]
     return min(h_costs)
 
+
 def is_goal_state(state: State) -> bool:
     for job in state:
         for task in job:
@@ -18,8 +20,9 @@ def is_goal_state(state: State) -> bool:
                 return False
     return True
 
+
 def get_first_unscheduled_tasks_idxs(state: State) -> List[int]:
-    first_unscheduled_tasks_idxs: List[int] = [] 
+    first_unscheduled_tasks_idxs: List[int] = []
     for job in state:
         current_task_idx: int = 0
         while (
@@ -28,10 +31,11 @@ def get_first_unscheduled_tasks_idxs(state: State) -> List[int]:
         ):
             current_task_idx = current_task_idx + 1
         if (current_task_idx < len(job)):
-            first_unscheduled_tasks_idxs.append(current_task_idx) 
-        else: 
-            first_unscheduled_tasks_idxs.append(-1) 
+            first_unscheduled_tasks_idxs.append(current_task_idx)
+        else:
+            first_unscheduled_tasks_idxs.append(-1)
     return first_unscheduled_tasks_idxs
+
 
 def get_first_unscheduled_tasks_start_times(
     state: State,
@@ -53,14 +57,17 @@ def get_first_unscheduled_tasks_start_times(
             first_unscheduled_tasks_start_times.append(-1)
     return first_unscheduled_tasks_start_times
 
+
 def get_neighbors_of(state: State, jobs: List[List[int]]) -> List[State]:
     neighbors: List[State] = []
 
-    first_unscheduled_tasks_idxs = get_first_unscheduled_tasks_idxs(state) 
-    first_unscheduled_tasks_start_times = get_first_unscheduled_tasks_start_times(
-        state,
-        first_unscheduled_tasks_idxs,
-        jobs
+    first_unscheduled_tasks_idxs = get_first_unscheduled_tasks_idxs(state)
+    first_unscheduled_tasks_start_times = (
+        get_first_unscheduled_tasks_start_times(
+            state,
+            first_unscheduled_tasks_idxs,
+            jobs
+        )
     )
 
     for job_idx in range(0, len(state), 1):
@@ -68,14 +75,16 @@ def get_neighbors_of(state: State, jobs: List[List[int]]) -> List[State]:
         if (task_start_time != -1):
             unscheduled_task_idx = first_unscheduled_tasks_idxs[job_idx]
             # FIXME: Sth wrong here
-            for worker_id, worker_start_free_time in enumerate(state.workers_status):
+            for worker_id, worker_start_free_time in (
+                enumerate(state.workers_status)
+            ):
                 worker_start_time = max(
                     worker_start_free_time,
                     task_start_time
                 )
 
-                new_schedule = [ job[:] for job in state ]
-                new_schedule[job_idx][unscheduled_task_idx] = worker_start_time 
+                new_schedule = [job[:] for job in state]
+                new_schedule[job_idx][unscheduled_task_idx] = worker_start_time
 
                 new_workers_status = state.workers_status[:]
                 new_workers_status[worker_id] = (
@@ -87,12 +96,13 @@ def get_neighbors_of(state: State, jobs: List[List[int]]) -> List[State]:
 
     return neighbors
 
+
 def distance(a: State, b: State, jobs: List[List[int]]) -> int:
     for job_idx in range(0, len(a), 1):
         for task_idx in range(0, len(a[job_idx]), 1):
             if (a[job_idx][task_idx] != b[job_idx][task_idx]):
                 return jobs[job_idx][task_idx]
-    
+
 
 def a_star(jobs: List[List[int]], n_workers: int) -> List[List[int]]:
     starting_state: State = State(
@@ -131,9 +141,10 @@ def a_star(jobs: List[List[int]], n_workers: int) -> List[List[int]]:
                 if neighbor not in open_set:
                     open_set.append(neighbor)
 
+
 def main():
     print(a_star([[2, 5, 1], [3, 3, 3]], 3))
-    return
+
 
 if __name__ == '__main__':
     main()
