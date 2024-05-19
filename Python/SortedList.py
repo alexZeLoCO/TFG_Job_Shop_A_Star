@@ -21,7 +21,7 @@ class SortedList(Generic[T]):
         self._data[current_index] = item
 
     def pop(self) -> T:
-        return self._data.pop()
+        return self._data.pop(0)
 
     def __getitem__(self, index: int) -> T:
         return self._data[index]
