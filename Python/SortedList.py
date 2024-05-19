@@ -16,7 +16,7 @@ class SortedList(Generic[T]):
             not self._sorter(item, self[current_index])
         ):
             current_index = current_index + 1
-        self._data.append(None) 
+        self._data.append(None)
         for i in range(len(self) - 1, current_index, -1):
             self._data[i] = self._data[i-1]
         self._data[current_index] = item
