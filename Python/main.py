@@ -1,6 +1,7 @@
 from typing import List, Dict
 from SortedList import SortedList
 from State import State
+from Wrappers import timeit
 
 
 def calculate_h_cost(state: State, jobs: List[List[int]]) -> int:
@@ -74,7 +75,6 @@ def get_neighbors_of(state: State, jobs: List[List[int]]) -> List[State]:
         task_start_time = first_unscheduled_tasks_start_times[job_idx]
         if (task_start_time != -1):
             unscheduled_task_idx = first_unscheduled_tasks_idxs[job_idx]
-            # FIXME: Sth wrong here
             for worker_id, worker_start_free_time in (
                 enumerate(state.workers_status)
             ):
@@ -104,6 +104,7 @@ def distance(a: State, b: State, jobs: List[List[int]]) -> int:
                 return jobs[job_idx][task_idx]
 
 
+@timeit
 def a_star(jobs: List[List[int]], n_workers: int) -> List[List[int]]:
     starting_state: State = State(
         [[-1] * len(jobs[0])] * len(jobs),
