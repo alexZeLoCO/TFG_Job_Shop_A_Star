@@ -3,7 +3,7 @@
 \section{Job Shop Scheduling Problem}
 
 Se estudiará la implementación de una solución al problema
-\italic{Job Shop Scheduling (JSP)} \cite{Yan77}
+\italic{Job Shop Scheduling (JSP)}~\cite{Yan77}
 \footnote{El problema también es conocido por otros nombres similares
 como \italic{Job Shop Scheduling Problem (JSSP)} o Job Scheduling Problem (JSP).}.
 Como su nombre indica, se trata de un problema en el que se debe
@@ -24,7 +24,7 @@ en paralelo de algunas tareas o requieren que alguna tarea
 en específico sea ejecutada por un trabajador (o tipo de trabajador)
 en particular.
 Por ello, es clave denotar las normas que se aplicarán a la hora de resolver
-el problema JSP:
+el problema JSP\@:
 
 \begin{enumerate}[itemsep=0.25px]
     \item Existen un número natural conocido de trabajos.
@@ -48,12 +48,12 @@ el problema JSP:
 
 \subsection{Algoritmo}
 
-Existen numerosos algoritmos capaces de resolver el problema del JSP.
+Existen numerosos algoritmos capaces de resolver el problema del JSP\@.
 Estrategias más simples como listas ordenadas en función de la duración
 de los trabajos, algoritmos genéticos, técnicas gráficas,
 algoritmos \italic{Branch and Bound} y heurísticos.
-En este estudio se utilizará un algoritmo heurístico, A* (\italic{A star}) \cite{HNR68}
-para resolver el problema JSP.
+En este estudio se utilizará un algoritmo heurístico, A* (\italic{A star})~\cite{HNR68}
+para resolver el problema JSP\@.
 
 El algoritmo A* utiliza varios componentes para resolver problemas
 de optimización. A continuación se describe cada uno de ellos.
@@ -101,7 +101,7 @@ de las tareas restantes por planificar.
 El coste F (de ahora en adelante $cost_f$) es el coste estimado desde el estado inicial
 hasta el estado final pasando por el estado actual.
 
-Por lo tanto, $$cost_f = cost_g + cost_h$$
+Por lo tanto, \[cost_f = cost_g + cost_h\]
 
 \paragraph{Generación de sucesores}~
 
@@ -141,7 +141,6 @@ De esta forma, se tiene acceso inmediato al elemento con menor $cost_f$.
     f_costes[estado_inicial] = calcular_h_coste(estado_inicial)
 
     while (not lista_abierta.empty()):
-        # estado_actual se elimina de lista_abierta
         estado_actual = lista_abierta.pop()
 
         if (estado_actual == estado_final):
@@ -161,8 +160,61 @@ De esta forma, se tiene acceso inmediato al elemento con menor $cost_f$.
 
 \subsection{Equipo de Estudio}
 
+Este algoritmo es implementado y optimizado en diversas arquitecturas.
+Posteriormente, se realizan comparaciones entre ellas.
+
 \subsubsection{Arquitectura x86}
+
+Inicialmente, se realiza una implementación del problema utilizando \Python.
+Esta versión permite comprobar rápidamente el correcto funcionamiento del mismo
+así como llevar a cabo pruebas rápidas sin necesidad de compilación y
+estudiar los posibles cuellos de botella del algoritmo.
+
+Posteriormente, se desarrolla una nueva versión del mismo algoritmo
+utilizando C, un lenguaje compilado con mayor rendimiento
+que facilita la paralelización gracias a librerías como 
+\href{https://www.openmp.org/}{OpenMP}\@.
+
+Una vez desarrolladas,
+se realizan comparativas entre las distintas implementaciones
+de esta aquitectura, en particular:
+
+\begin{enumerate}[itemsep=0.25px]
+    \item Comparativa entre el rendimiento monohilo de Python y C.
+    \item Comparativa entre el rendimiento monohilo de C y multihilo de C.
+\end{enumerate}
 
 \subsection{FPGA}
 
+Finalmente, se desarrolla una implementación del algoritmo
+diseñado para ser ejecutado en una FPGA\@.
+Esta aceleradora, se encuentra embebida en una placa SoC
+Zybo Z7 10 acompañada de un procesador ARM\@.
+
+Para realizar esta implementación,
+se utiliza el software propio de Xilinx (AMD),
+Vitis HDL\@.
+Este programa ofrece entre muchas otras herramientas
+un sintetizador capaz de transpilar código C a Verilog
+que puede ser entonces compilado
+para ejecutarse en la FPGA\@.
+
 \section{Método de comparativas}
+
+Las comparativas entre las diferentes implementaciones
+del algoritmo se realizan en base a varias características.
+Principalmente:
+
+\begin{enumerate}[itemsep=0.25px]
+    \item Tiempo de ejecución.
+    \item Consumo de memoria volátil.
+\end{enumerate}
+
+Como es lógico, el algoritmo es ejecutado utilizando
+varios datos de entrada distintos múltiples veces.
+Es de crucial importancia tener en cuenta la
+caché de los dispositivos,
+esto implica que la primera ejecución de cada conjunto de datos
+de entrada tiene un peor rendimiento que las siguientes.
+Para aislar este hecho, las métricas de la
+primera ejecución de cada conjunto de datos son ignoradas.
