@@ -131,10 +131,14 @@ De esta forma, se tiene acceso inmediato al elemento con menor $cost_f$.
 \subsubsection{Pseudocódigo}
 
 \begin{lstlisting}[language=Python]
-    lista_cerrada = []
     lista_abierta = SortedList()
-
     lista_abierta.append(estado_inicial)
+
+    g_costes = {}
+    f_costes = {}
+
+    g_costes[estado_inicial] = 0
+    f_costes[estado_inicial] = calcular_h_coste(estado_inicial)
 
     while (not lista_abierta.empty()):
         # estado_actual se elimina de lista_abierta
@@ -146,9 +150,19 @@ De esta forma, se tiene acceso inmediato al elemento con menor $cost_f$.
         estados_sucesores = calcular_sucesores(estado_actual)
 
         for estado_sucesor in estados_sucesores:
+            sucesor_g_coste = calcular_g_coste(estado_sucesor)
+            if (sucesor_g_coste < g_costes[estado_sucesor]):
+                g_costes[estado_sucesor] = sucesor_g_coste
+                f_costes[estado_sucesor] = sucesor_g_coste + calcular_h_coste(estado_sucesor)
+                if (estado_sucesor not in lista_abierta):
+                    lista_abierta.append(estado_sucesor)
             
 \end{lstlisting}
 
 \subsection{Equipo de Estudio}
+
+\subsubsection{Arquitectura x86}
+
+\subsection{FPGA}
 
 \section{Método de comparativas}
