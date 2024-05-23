@@ -23,8 +23,8 @@ class State:
         return self.schedule[index]
 
     def __str__(self) -> str:
-        return (f"State=(schedule: {self.schedule},"
-                f"workers_status: {self.workers_status})")
+        return (f"(schedule={self.schedule},"
+                f"workers_status={self.workers_status})")
 
     def __repr__(self) -> str:
         return str(self)

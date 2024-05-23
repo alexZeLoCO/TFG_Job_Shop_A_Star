@@ -38,23 +38,36 @@ State a_star(std::vector<std::vector<int>> jobs, int n_workers)
         State current_state = *open_set.begin();
         open_set.erase(open_set.begin());
 
+        std::cout << "CURRENT STATE IS NOW "  << current_state << std::endl;
+
         if (current_state.is_goal_state())
             return current_state;
 
         std::vector<State> neighbor_states = current_state.get_neighbors_of();
+        std::cout << "NEIGHBORS OF CURRENT STATE:" << std::endl;
+        for (int neighbor_idx = 0 ; neighbor_idx < neighbor_states.size() ; neighbor_idx++)
+        {
+            std::cout << "NEIGHBOR_" << neighbor_idx << ": " <<
+                neighbor_states[neighbor_idx] << std::endl;
+        }
         for (State neighbor : neighbor_states)
         {
+            std::cout << "PROCESSING NEIGHBOR: " << neighbor << std::endl;
             int tentative_g_cost = neighbor.get_max_worker_status();
 
             if (
                 g_costs.find(neighbor) == g_costs.end() ||
                 tentative_g_cost < g_costs[neighbor])
             {
+                std::cout << "UPDATE DATA" << std::endl;
                 g_costs[neighbor] = tentative_g_cost;
                 f_costs[neighbor] = tentative_g_cost + neighbor.get_h_cost();
             }
             if (open_set.find(neighbor) == open_set.end())
+            {
+                std::cout << "NEIGHBOR ADDED TO OPEN SET" << std::endl;
                 open_set.emplace(neighbor);
+            }
         }
     }
 
@@ -63,10 +76,12 @@ State a_star(std::vector<std::vector<int>> jobs, int n_workers)
 
 int main(int argc, char **argv)
 {
-    std::vector<std::vector<int>> jobs({{2, 5, 1},
+    const std::vector<std::vector<int>> jobs({{2, 5, 1},
                                         {3, 3, 3}});
-    State output = a_star(jobs, 3);
-    std::cout << output << std::endl;
+
+    std::cout << "PROGRAM START" << std::endl;
+    const State output = a_star(jobs, 2);
+    std::cout << "PROGRAM RESULT:\n" << output << std::endl;
 
     return 0;
 }

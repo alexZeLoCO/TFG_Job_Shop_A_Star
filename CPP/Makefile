@@ -6,3 +6,4 @@ state.o: state.cpp
 
 clean:
 	rm main
+	rm **.o

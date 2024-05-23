@@ -6,10 +6,10 @@ class State
 {
 
 private:
-    std::vector<std::vector<int>> jobs;
+    const std::vector<std::vector<int>> jobs;
 
-    std::vector<std::vector<int>> schedule;
-    std::vector<int> workers_status;
+    const std::vector<std::vector<int>> schedule;
+    const std::vector<int> workers_status;
 
     unsigned int h_cost;
     unsigned int g_cost;
@@ -19,12 +19,11 @@ public:
         std::vector<std::vector<int>> jobs,
         std::vector<std::vector<int>> schedule,
         std::vector<int> workers_status,
-        unsigned int g_cost)
+        unsigned int g_cost) :
+        jobs(jobs),
+        schedule(schedule),
+        workers_status(workers_status)
     {
-        this->jobs = jobs;
-        this->schedule = schedule;
-        this->workers_status = workers_status;
-
         this->g_cost = g_cost;
         this->h_cost = this->calculate_h_cost();
     }
@@ -34,27 +33,22 @@ public:
                   std::vector<std::vector<int>>(),
                   std::vector<int>(), (unsigned int)0) {}
 
-    std::vector<std::vector<int>> get_schedule() const
-    {
-        return this->schedule;
-    }
+    const std::vector<std::vector<int>> get_schedule() const { return this->schedule; }
+    const std::vector<int> get_workers_status() const { return this->workers_status; }
 
-    std::vector<int> get_workers_status() const
-    {
-        return this->workers_status;
-    }
-
-    unsigned int get_g_cost() const { return this->g_cost; }
-    unsigned int get_h_cost() const { return this->h_cost; }
-    unsigned int get_f_cost() const { return this->get_g_cost() + this->get_h_cost(); }
+    const unsigned int get_g_cost() const { return this->g_cost; }
+    const unsigned int get_h_cost() const { return this->h_cost; }
+    const unsigned int get_f_cost() const { return this->get_g_cost() + this->get_h_cost(); }
 
     unsigned int get_max_worker_status() const
     {
-        int max_worker_status = 0;
-        for (int worker_status : this->get_workers_status())
-            if (max_worker_status < worker_status)
-                max_worker_status = worker_status;
-        return max_worker_status;
+        // idk why but if these are called inside std::max_element, it segfaults
+        std::vector<int>::const_iterator value_begin = this->get_workers_status().begin();
+        std::vector<int>::const_iterator value_end = this->get_workers_status().end();
+        std::vector<int>::const_iterator max_element = std::max_element(
+            value_begin, value_end
+        );
+        return max_element == this->get_workers_status().end() ? 0 : *(max_element.base());
     }
 
     unsigned int calculate_h_cost() const
@@ -163,19 +157,24 @@ public:
     }
 };
 
-std::ostream &operator<<(std::ostream &output_stream, State &the_state)
+std::ostream &operator<<(std::ostream &output_stream, const State &the_state)
 {
     output_stream << "(schedule=[";
     for (const std::vector<int> job : the_state.get_schedule())
     {
-        output_stream << "\n\t[ ";
+        output_stream << "[ ";
         for (const int task_start_time : job)
         {
             output_stream << task_start_time << " ";
         }
         output_stream << "]";
     }
-    output_stream << "\n])";
+    output_stream << "],workers_status=[ ";
+    for (const int worker_status : the_state.get_workers_status())
+    {
+        output_stream << worker_status << " ";
+    }
+    output_stream << "])";
     return output_stream;
 }
 

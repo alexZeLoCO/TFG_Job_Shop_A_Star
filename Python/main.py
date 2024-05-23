@@ -104,7 +104,6 @@ def distance(a: State, b: State, jobs: List[List[int]]) -> int:
                 return jobs[job_idx][task_idx]
 
 
-@timeit
 def a_star(jobs: List[List[int]], n_workers: int) -> List[List[int]]:
     starting_state: State = State(
         [[-1] * len(jobs[0])] * len(jobs),
@@ -125,26 +124,35 @@ def a_star(jobs: List[List[int]], n_workers: int) -> List[List[int]]:
 
     while len(open_set) > 0:
         current_state: State = open_set.pop()
+        print(f"CURRENT STATE IS NOW {current_state}")
         if (is_goal_state(current_state)):
             return current_state.schedule
         neighbor_states: List[State] = get_neighbors_of(current_state, jobs)
+        print("NEIGHBORS OF CURRENT STATE:")
+        for neighbor_idx, neighbor in enumerate(neighbor_states):
+            print(f"NEIGHBOR_{neighbor_idx}: {neighbor}")
         for neighbor in neighbor_states:
+            print(f"PROCESSING NEIGHBOR: {neighbor}")
             tentative_g_cost: int = max(neighbor.workers_status)
             if (
                 neighbor not in g_costs or
                 tentative_g_cost < g_costs[neighbor]
             ):
+                print("UPDATE DATA")
                 g_costs[neighbor] = tentative_g_cost
                 f_costs[neighbor] = (
                     tentative_g_cost +
                     calculate_h_cost(neighbor, jobs)
                 )
                 if neighbor not in open_set:
+                    print("NEIGHBOR ADDED TO OPEN SET")
                     open_set.append(neighbor)
 
 
 def main():
-    print(a_star([[2, 5, 1], [3, 3, 3]], 3))
+    print("PROGRAM START")
+    result = a_star([[2, 5, 1], [3, 3, 3]], 2)
+    print(f"PROGRAM RESULT:\n{result}")
 
 
 if __name__ == '__main__':
