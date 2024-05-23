@@ -526,3 +526,5 @@ Mkfile.old
 dkms.conf
 
 **/main.pdf
+**/main
+**/.vscode/
