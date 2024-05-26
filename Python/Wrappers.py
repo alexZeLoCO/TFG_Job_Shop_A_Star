@@ -5,13 +5,13 @@ import time
 def timeit(func):
     @wraps(func)
     def timeit_wrapper(*args, **kwargs):
+        func(*args, **kwargs)
         start_time = time.perf_counter()
         result = func(*args, **kwargs)
         end_time = time.perf_counter()
         total_time = end_time - start_time
         print(
-            f'Function {func.__name__}{args} {kwargs}'
-            f'Took {total_time:.4f} seconds'
+            f'{func.__name__};{args};{total_time:1.5E}'
         )
         return result
     return timeit_wrapper

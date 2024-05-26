@@ -23,8 +23,16 @@ class State:
         return self.schedule[index]
 
     def __str__(self) -> str:
-        return (f"(schedule={self.schedule},"
-                f"workers_status={self.workers_status})")
+        out: str = "(schedule=["
+        for job in self.schedule:
+            out: str = f"{out}[ "
+            for task in job:
+                out: str = f"{out}{task} "
+            out: str = f"{out}]"
+        out: str = f"{out}],workers_status=[ {' '.join([
+                    str(worker_status) for worker_status in self.workers_status
+                ])} ])"
+        return out
 
     def __repr__(self) -> str:
         return str(self)

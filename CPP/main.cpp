@@ -1,87 +1,173 @@
 #include <iostream>
 #include <unordered_map>
 #include <vector>
+#include <chrono>
+#include <typeinfo>
+#include <iomanip>
+#include <omp.h>
 #include <algorithm>
-#include <set>
 
-#include "state.cpp"
+#include "state.h"
+#include "sortedList.h"
+
+// Forward declaration of the template function
+template <typename T>
+std::ostream &operator<<(std::ostream &os, const std::vector<T> &vec);
+
+// Helper function to print vectors
+template <typename T>
+void print_vector(std::ostream &os, const std::vector<T> &vec)
+{
+    os << '[';
+    for (std::size_t i = 0; i < vec.size(); ++i)
+    {
+        os << vec[i];
+        if (i != vec.size() - 1)
+        {
+            os << ", ";
+        }
+    }
+    os << ']';
+}
+
+// Specialization for vectors of vectors
+template <typename T>
+void print_vector(std::ostream &os, const std::vector<std::vector<T>> &vec)
+{
+    os << '[';
+    for (std::size_t i = 0; i < vec.size(); ++i)
+    {
+        os << vec[i];
+        if (i != vec.size() - 1)
+        {
+            os << ", ";
+        }
+    }
+    os << ']';
+}
+
+// Overload of the << operator for std::vector
+template <typename T>
+std::ostream &operator<<(std::ostream &os, const std::vector<T> &vec)
+{
+    print_vector(os, vec);
+    return os;
+}
 
 State a_star(std::vector<std::vector<int>> jobs, int n_workers)
 {
-    int n_jobs = jobs.size();
+    const std::size_t n_jobs = jobs.size();
     if (n_jobs == 0)
         return State();
-    int n_tasks = jobs[0].size();
+    const std::size_t n_tasks = jobs[0].size();
     if (n_tasks == 0)
         return State();
 
-    std::vector<std::vector<int>> starting_schedule(n_jobs, std::vector<int>(n_tasks, -1));
-    std::vector<int> starting_workers_status(n_workers, 0);
+    const std::vector<std::vector<int>> starting_schedule(n_jobs, std::vector<int>(n_tasks, -1));
+    const std::vector<int> starting_workers_status(n_workers, 0);
 
-    State starting_state(jobs, starting_schedule, starting_workers_status, 0);
+    const State starting_state(jobs, starting_schedule, starting_workers_status, 0);
 
     std::unordered_map<State, int, StateHash> g_costs;
-    g_costs.emplace(starting_state, 0);
+    g_costs.try_emplace(starting_state, 0);
     std::unordered_map<State, int, StateHash> f_costs;
-    f_costs.emplace(starting_state, starting_state.get_f_cost());
+    f_costs.try_emplace(starting_state, starting_state.get_f_cost());
 
-    auto comparator = [&f_costs](const State &lhs, const State &rhs)
+    const auto comparator = [&f_costs](const State &lhs, const State &rhs)
     {
         return f_costs[lhs] < f_costs[rhs];
     };
 
-    std::set<State, decltype(comparator)> open_set(comparator);
-    open_set.emplace(starting_state);
+    SortedList<State> open_set(comparator);
+    open_set.append(starting_state);
 
-    while (open_set.size() > 0)
+    State goal_state;
+    bool found_goal_state = false;
+
+    while (!found_goal_state && !open_set.empty())
     {
-        State current_state = *open_set.begin();
-        open_set.erase(open_set.begin());
-
-        std::cout << "CURRENT STATE IS NOW "  << current_state << std::endl;
-
-        if (current_state.is_goal_state())
-            return current_state;
-
-        std::vector<State> neighbor_states = current_state.get_neighbors_of();
-        std::cout << "NEIGHBORS OF CURRENT STATE:" << std::endl;
-        for (int neighbor_idx = 0 ; neighbor_idx < neighbor_states.size() ; neighbor_idx++)
+        int max_threads = std::min(omp_get_max_threads(), (int)open_set.size());
+#pragma omp parallel for shared(open_set, goal_state, found_goal_state, f_costs, g_costs)
+        for (int i = 0; i < max_threads; i++)
         {
-            std::cout << "NEIGHBOR_" << neighbor_idx << ": " <<
-                neighbor_states[neighbor_idx] << std::endl;
-        }
-        for (State neighbor : neighbor_states)
-        {
-            std::cout << "PROCESSING NEIGHBOR: " << neighbor << std::endl;
-            int tentative_g_cost = neighbor.get_max_worker_status();
+            State current_state;
 
-            if (
-                g_costs.find(neighbor) == g_costs.end() ||
-                tentative_g_cost < g_costs[neighbor])
+#pragma omp critical(open_set)
+            current_state = open_set.pop();
+
+            if (current_state.is_goal_state())
             {
-                std::cout << "UPDATE DATA" << std::endl;
-                g_costs[neighbor] = tentative_g_cost;
-                f_costs[neighbor] = tentative_g_cost + neighbor.get_h_cost();
+#pragma omp critical(goal)
+                {
+                    goal_state = current_state;
+                    found_goal_state = true;
+                }
             }
-            if (open_set.find(neighbor) == open_set.end())
+
+            const std::vector<State> neighbor_states = current_state.get_neighbors_of();
+            for (const State &neighbor : neighbor_states)
             {
-                std::cout << "NEIGHBOR ADDED TO OPEN SET" << std::endl;
-                open_set.emplace(neighbor);
+                int tentative_g_cost = neighbor.get_max_worker_status();
+#pragma omp critical(open_set)
+                {
+                    if (g_costs.find(neighbor) == g_costs.end() ||
+                        tentative_g_cost < g_costs[neighbor])
+                    {
+                        g_costs[neighbor] = tentative_g_cost;
+                        f_costs[neighbor] = tentative_g_cost + neighbor.get_h_cost();
+                        if (!open_set.contains(neighbor))
+                            open_set.append(neighbor);
+                    }
+                }
             }
         }
     }
+    return goal_state;
+}
 
-    return State();
+State timeit(
+    const std::function<State(std::vector<std::vector<int>>, int)> &foo,
+    const std::vector<std::vector<int>> &jobs, int n_workers)
+{
+    foo(jobs, n_workers); // Cache warm up
+    auto start_time = std::chrono::high_resolution_clock::now();
+    const State result = foo(jobs, n_workers);
+    auto end_time = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> total_time = end_time - start_time;
+    std::cout << "c++;" << omp_get_max_threads() << ";a_star" << ";(" << jobs << ", "
+              << n_workers << ");" << jobs.size() << ";" << jobs[0].size() << ";"
+              << n_workers << ";" << std::setprecision(5) << std::scientific
+              << total_time.count() << std::endl;
+    return result;
+}
+
+void process_jobs(const std::vector<std::vector<int>> &jobs)
+{
+    for (int n_workers = 1; n_workers < jobs.size() + 1; n_workers++)
+    {
+        timeit(a_star, jobs, n_workers);
+    }
 }
 
 int main(int argc, char **argv)
 {
-    const std::vector<std::vector<int>> jobs({{2, 5, 1},
-                                        {3, 3, 3}});
+    // CSV HEADER
+    std::cout << "lang;n_threads;function;args;n_jobs;n_tasks;n_workers;runtime" << std::endl;
 
-    std::cout << "PROGRAM START" << std::endl;
-    const State output = a_star(jobs, 2);
-    std::cout << "PROGRAM RESULT:\n" << output << std::endl;
+    process_jobs({{2, 5}, {3, 3}});
+    process_jobs({{2, 5, 1}, {3, 3, 3}});
+    process_jobs({{2, 5, 1, 2}, {3, 3, 3, 7}});
+    process_jobs({{2, 5, 1, 2, 5}, {3, 3, 3, 7, 5}});
+
+    process_jobs({{2, 5}, {3, 3}, {1, 7}});
+    process_jobs({{2, 5, 1}, {3, 3, 3}, {1, 7, 2}});
+    process_jobs({{2, 5, 1, 2}, {3, 3, 3, 7}, {1, 7, 2, 8}});
+    process_jobs({{2, 5, 1, 2, 5}, {3, 3, 3, 7, 5}, {1, 7, 2, 8, 1}});
+
+    process_jobs({{2, 5}, {3, 3}, {1, 7}, {2, 2}});
+    process_jobs({{2, 5, 1}, {3, 3, 3}, {1, 7, 2}, {2, 2, 3}});
+    process_jobs({{2, 5, 1, 2}, {3, 3, 3, 7}, {1, 7, 2, 8}, {2, 2, 3, 6}});
+    process_jobs({{2, 5, 1, 2, 5}, {3, 3, 3, 7, 5}, {1, 7, 2, 8, 1}, {2, 2, 3, 6, 4}});
 
     return 0;
 }

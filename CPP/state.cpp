@@ -1,166 +1,127 @@
-#include <iostream>
-#include <vector>
-#include <algorithm>
+#include "state.h"
 
-class State
+unsigned int State::get_max_worker_status() const
 {
+    int max_element = 0;
+    for (const int worker_free_start_time : this->get_workers_status())
+        if (worker_free_start_time > max_element)
+            max_element = worker_free_start_time;
+    return max_element;
+}
 
-private:
-    const std::vector<std::vector<int>> jobs;
-
-    const std::vector<std::vector<int>> schedule;
-    const std::vector<int> workers_status;
-
-    unsigned int h_cost;
-    unsigned int g_cost;
-
-public:
-    State(
-        std::vector<std::vector<int>> jobs,
-        std::vector<std::vector<int>> schedule,
-        std::vector<int> workers_status,
-        unsigned int g_cost) :
-        jobs(jobs),
-        schedule(schedule),
-        workers_status(workers_status)
+unsigned int State::calculate_h_cost() const
+{
+    std::vector<int> h_costs;
+    for (int job_idx = 0; job_idx < this->jobs.size(); job_idx++)
     {
-        this->g_cost = g_cost;
-        this->h_cost = this->calculate_h_cost();
+        h_costs.emplace_back(0);
+        std::vector<int> job = jobs[job_idx];
+        for (int task_idx = 0; task_idx < job.size(); task_idx++)
+            if (this->get_schedule()[job_idx][task_idx] == -1)
+                h_costs[job_idx] += job[task_idx];
     }
+    auto min_element = std::min_element(h_costs.begin(), h_costs.end());
+    return min_element == h_costs.end() ? 0 : *(min_element.base());
+}
 
-    State() : State(
-                  std::vector<std::vector<int>>(),
-                  std::vector<std::vector<int>>(),
-                  std::vector<int>(), (unsigned int)0) {}
+bool State::is_goal_state() const
+{
+    for (const std::vector<int> &job : this->get_schedule())
+        for (const int task : job)
+            if (task == -1)
+                return false;
+    return true;
+}
 
-    const std::vector<std::vector<int>> get_schedule() const { return this->schedule; }
-    const std::vector<int> get_workers_status() const { return this->workers_status; }
+int State::distance_to(std::vector<std::vector<int>> &to) const
+{
+    State from = *this;
+    for (int job_idx = 0; job_idx < this->jobs.size(); job_idx++)
+        for (int task_idx = 0; task_idx < this->jobs[job_idx].size(); task_idx++)
+            if (from.get_schedule()[job_idx][task_idx] != to[job_idx][task_idx])
+                return jobs[job_idx][task_idx];
+    return 0;
+}
 
-    const unsigned int get_g_cost() const { return this->g_cost; }
-    const unsigned int get_h_cost() const { return this->h_cost; }
-    const unsigned int get_f_cost() const { return this->get_g_cost() + this->get_h_cost(); }
-
-    unsigned int get_max_worker_status() const
+std::vector<int> State::get_first_unscheduled_task_idxs() const
+{
+    std::vector<int> first_unscheduled_task_idxs;
+    for (const std::vector<int> &job : this->get_schedule())
     {
-        // idk why but if these are called inside std::max_element, it segfaults
-        std::vector<int>::const_iterator value_begin = this->get_workers_status().begin();
-        std::vector<int>::const_iterator value_end = this->get_workers_status().end();
-        std::vector<int>::const_iterator max_element = std::max_element(
-            value_begin, value_end
-        );
-        return max_element == this->get_workers_status().end() ? 0 : *(max_element.base());
+        int current_task_idx = 0;
+        while (
+            current_task_idx < job.size() &&
+            job[current_task_idx] >= 0)
+            current_task_idx++;
+        if (current_task_idx < job.size())
+            first_unscheduled_task_idxs.emplace_back(current_task_idx);
+        else
+            first_unscheduled_task_idxs.emplace_back(-1);
     }
+    return first_unscheduled_task_idxs;
+}
 
-    unsigned int calculate_h_cost() const
+std::vector<int> State::get_first_unscheduled_task_start_times(
+    std::vector<int> &first_unscheduled_task_idxs) const
+{
+    std::vector<int> first_unscheduled_task_start_times;
+    for (int job_idx = 0; job_idx < jobs.size(); job_idx++)
     {
-        std::vector<int> h_costs;
-        for (int job_idx = 0; job_idx < this->jobs.size(); job_idx++)
+        int currently_unscheduled_task_idx = first_unscheduled_task_idxs[job_idx];
+        if (currently_unscheduled_task_idx != -1)
         {
-            h_costs.push_back(0);
-            std::vector<int> job = jobs[job_idx];
-            for (int task_idx = 0; task_idx < job.size(); task_idx++)
-                if (this->get_schedule()[job_idx][task_idx] == -1)
-                    h_costs[job_idx] += job[task_idx];
-        }
-        return *(std::min_element(h_costs.begin(), h_costs.end()).base());
-    }
-
-    bool is_goal_state() const
-    {
-        for (const std::vector<int> job : this->get_schedule())
-            for (const int task : job)
-                if (task == -1)
-                    return false;
-        return true;
-    }
-
-    int distance_to(std::vector<std::vector<int>> to) const
-    {
-        State from = *this;
-        for (int job_idx = 0; job_idx < this->jobs.size(); job_idx++)
-            for (int task_idx = 0; task_idx < this->jobs[job_idx].size(); task_idx++)
-                if (from.get_schedule()[job_idx][task_idx] != to[job_idx][task_idx])
-                    return jobs[job_idx][task_idx];
-        return 0;
-    }
-
-    std::vector<int> get_first_unscheduled_task_idxs() const
-    {
-        std::vector<int> first_unscheduled_task_idxs;
-        for (const std::vector<int> job : this->get_schedule())
-        {
-            int current_task_idx = 0;
-            while (
-                current_task_idx < job.size() &&
-                job[current_task_idx] >= 0)
-                current_task_idx++;
-            if (current_task_idx < job.size())
-                first_unscheduled_task_idxs.push_back(current_task_idx);
+            if (currently_unscheduled_task_idx == 0)
+                first_unscheduled_task_start_times.emplace_back(0);
             else
-                first_unscheduled_task_idxs.push_back(-1);
+                first_unscheduled_task_start_times.emplace_back(
+                    jobs[job_idx][currently_unscheduled_task_idx - 1] +
+                    this->get_schedule()[job_idx][currently_unscheduled_task_idx - 1]);
         }
-        return first_unscheduled_task_idxs;
+        else
+            first_unscheduled_task_start_times.emplace_back(-1);
     }
+    return first_unscheduled_task_start_times;
+}
 
-    std::vector<int> get_first_unscheduled_task_start_times(
-        std::vector<int> first_unscheduled_task_idxs) const
+std::vector<State> State::get_neighbors_of() const
+{
+    std::vector<State> neighbors;
+
+    std::vector<int> first_unscheduled_task_idxs = this->get_first_unscheduled_task_idxs();
+    std::vector<int> first_unscheduled_task_start_times = this->get_first_unscheduled_task_start_times(first_unscheduled_task_idxs);
+
+    for (int job_idx = 0; job_idx < this->get_schedule().size(); job_idx++)
     {
-        std::vector<int> first_unscheduled_task_start_times;
-        for (int job_idx = 0; job_idx < jobs.size(); job_idx++)
+        int task_start_time = first_unscheduled_task_start_times[job_idx];
+        if (task_start_time != -1)
         {
-            int currently_unscheduled_task_idx = first_unscheduled_task_idxs[job_idx];
-            if (currently_unscheduled_task_idx != -1)
+            int unscheduled_task_idx = first_unscheduled_task_idxs[job_idx];
+            for (int worker_id = 0; worker_id < this->get_workers_status().size(); worker_id++)
             {
-                if (currently_unscheduled_task_idx == 0)
-                    first_unscheduled_task_start_times.push_back(0);
-                else
-                    first_unscheduled_task_start_times.push_back(
-                        jobs[job_idx][currently_unscheduled_task_idx - 1] +
-                        this->get_schedule()[job_idx][currently_unscheduled_task_idx - 1]);
-            }
-            else
-                first_unscheduled_task_start_times.push_back(-1);
-        }
-        return first_unscheduled_task_start_times;
-    }
+                int worker_start_time = std::max(this->get_workers_status()[worker_id], task_start_time);
 
-    std::vector<State> get_neighbors_of() const
-    {
-        std::vector<State> neighbors;
+                std::vector<std::vector<int>> new_schedule = this->get_schedule();
+                new_schedule[job_idx][unscheduled_task_idx] = worker_start_time;
 
-        std::vector<int> first_unscheduled_task_idxs = this->get_first_unscheduled_task_idxs();
-        std::vector<int> first_unscheduled_task_start_times = this->get_first_unscheduled_task_start_times(first_unscheduled_task_idxs);
+                std::vector<int> new_workers_status = this->get_workers_status();
+                new_workers_status[worker_id] = (worker_start_time + jobs[job_idx][unscheduled_task_idx]);
 
-        for (int job_idx = 0; job_idx < this->get_schedule().size(); job_idx++)
-        {
-            int task_start_time = first_unscheduled_task_idxs[job_idx];
-            if (task_start_time != -1)
-            {
-                int unscheduled_task_idx = first_unscheduled_task_idxs[job_idx];
-                for (int worker_id = 0; worker_id < this->get_workers_status().size(); worker_id++)
-                {
-                    int worker_start_time = std::max(this->get_workers_status()[worker_id], task_start_time);
-
-                    std::vector<std::vector<int>> new_schedule = this->get_schedule();
-                    new_schedule[job_idx][unscheduled_task_idx] = worker_start_time;
-
-                    std::vector<int> new_workers_status = this->get_workers_status();
-                    new_workers_status[worker_id] = (worker_start_time + jobs[job_idx][unscheduled_task_idx]);
-
-                    State new_state(this->jobs, new_schedule, new_workers_status, this->distance_to(new_schedule));
-
-                    neighbors.push_back(new_state);
-                }
+                neighbors.emplace_back(this->jobs, new_schedule, new_workers_status, this->distance_to(new_schedule));
             }
         }
-        return neighbors;
     }
-};
+    return neighbors;
+}
+
+bool operator<(const State &a, const State &b)
+{
+    return a.get_g_cost() < b.get_g_cost();
+}
 
 std::ostream &operator<<(std::ostream &output_stream, const State &the_state)
 {
     output_stream << "(schedule=[";
-    for (const std::vector<int> job : the_state.get_schedule())
+    for (const std::vector<int> &job : the_state.get_schedule())
     {
         output_stream << "[ ";
         for (const int task_start_time : job)
@@ -178,42 +139,55 @@ std::ostream &operator<<(std::ostream &output_stream, const State &the_state)
     return output_stream;
 }
 
-bool operator==(const State a, const State b)
+State &State::operator=(const State &other_state)
 {
-    std::vector<std::vector<int>> a_schedule = a.get_schedule(), b_schedule = b.get_schedule();
-    if (a_schedule.size() != b_schedule.size())
-        return false;
-    for (int job_idx = 0; job_idx < a_schedule.size(); job_idx++)
-    {
-        std::vector<int> a_job = a_schedule[job_idx], b_job = b_schedule[job_idx];
-        if (a_job.size() != b_job.size())
-            return false;
-        for (int task_idx = 0; task_idx < a_job.size(); task_idx++)
-        {
-            if (a_job[task_idx] != b_job[task_idx])
-                return false;
-        }
-    }
-    std::vector<int> a_workers_status = a.get_workers_status(), b_workers_status = b.get_workers_status();
-    if (a_workers_status.size() != b_workers_status.size())
-        return false;
-    for (int worker_status_idx = 0; worker_status_idx < a_workers_status.size(); worker_status_idx++)
-    {
-        if (a_workers_status[worker_status_idx] != b_workers_status[worker_status_idx])
-            return false;
-    }
-    return true;
+    this->g_cost = other_state.get_g_cost();
+    this->schedule = other_state.get_schedule();
+    this->jobs = other_state.jobs;
+    this->workers_status = other_state.get_workers_status();
+    return *this;
 }
 
-struct StateHash
+bool operator==(const State &a, const State &b)
 {
-    std::size_t operator()(const State &key) const
+    std::vector<std::vector<int>> a_schedule = a.get_schedule();
+    std::vector<std::vector<int>> b_schedule = b.get_schedule();
+    if (a_schedule.size() != b_schedule.size())
+        return false;
+
+    std::vector<int> a_workers_status = a.get_workers_status();
+    std::vector<int> b_workers_status = b.get_workers_status();
+    if (a_workers_status.size() != b_workers_status.size())
+        return false;
+
+    std::size_t a_hash = StateHash()(a);
+    std::size_t b_hash = StateHash()(b);
+
+    return a_hash == b_hash;
+    /*
+    for (size_t job_idx = 0; job_idx < a_schedule.size(); job_idx++)
     {
-        std::vector<std::vector<int>> schedule = key.get_schedule();
-        size_t seed = schedule.size() * schedule[0].size();
-        for (int i = 0; i < schedule.size(); i++)
-            for (int j = 0; j < schedule[i].size(); j++)
-                seed ^= (i * j) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-        return seed;
+        std::vector<int> a_job = a_schedule[job_idx];
+        std::vector<int> b_job = b_schedule[job_idx];
+        if (
+            a_job.size() != b_job.size() ||
+            !std::equal(a_schedule.begin(), a_schedule.end(), b_schedule.begin(), b_schedule.end()))
+            return false;
     }
-};
+    if (!std::equal(a_workers_status.begin(), a_workers_status.end(), b_workers_status.begin(), b_workers_status.end()))
+        return false;
+    return true;
+    */
+}
+
+std::size_t StateHash::operator()(const State &key) const
+{
+    std::vector<std::vector<int>> schedule = key.get_schedule();
+    std::size_t seed = schedule.size() * schedule[0].size();
+    for (int i = 0; i < key.get_workers_status().size(); i++)
+        seed ^= (i * key.get_workers_status()[i]) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    for (int i = 0; i < schedule.size(); i++)
+        for (int j = 0; j < schedule[i].size(); j++)
+            seed ^= (i * j * schedule[i][j]) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    return seed;
+}
