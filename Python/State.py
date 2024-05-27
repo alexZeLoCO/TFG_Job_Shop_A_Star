@@ -1,15 +1,16 @@
 from typing import List, Iterator, cast, Self
 
 from DataFreezer import freeze_data
+from Task import Task
 
 
 class State:
 
     def __init__(
             self,
-            jobs: List[List[int]],
+            jobs: List[List[Task]],
             schedule: List[List[int]],
-            workers_status: List[int]
+            workers_status: List[List[int]]
     ):
         self.jobs = jobs
         self.schedule = schedule
@@ -23,7 +24,7 @@ class State:
                 if (task == -1):
                     h_costs[job_idx] = (
                         h_costs[job_idx] +
-                        self.jobs[job_idx][task_idx]
+                        self.jobs[job_idx][task_idx].duration
                     )
         return min(h_costs)
 
@@ -63,7 +64,9 @@ class State:
                     first_unscheduled_tasks_start_times.append(0)
                 else:
                     first_unscheduled_tasks_start_times.append(
-                        self.jobs[job_idx][currently_unscheduled_task_idx - 1]
+                        self.jobs[job_idx][
+                            currently_unscheduled_task_idx - 1
+                        ].duration
                         + job[currently_unscheduled_task_idx - 1]
                     )
             else:
@@ -84,26 +87,42 @@ class State:
             task_start_time = first_unscheduled_tasks_start_times[job_idx]
             if (task_start_time != -1):
                 unscheduled_task_idx = first_unscheduled_tasks_idxs[job_idx]
-                for worker_id, worker_start_free_time in (
-                    enumerate(self.workers_status)
+                qualified_workers: List[int] = (
+                    self.jobs[job_idx][unscheduled_task_idx].qualified_workers
+                )
+                for worker_type in (
+                    qualified_workers if (
+                        qualified_workers is not None and
+                        len(qualified_workers) > 0
+                    ) else range(0, len(self.workers_status), 1)
                 ):
-                    worker_start_time = max(
-                        worker_start_free_time,
-                        task_start_time
-                    )
+                    for worker_id, worker_start_free_time in enumerate(
+                        self.workers_status[worker_type]
+                    ):
+                        worker_start_time = max(
+                            worker_start_free_time,
+                            task_start_time
+                        )
 
-                    new_schedule = [job[:] for job in self.schedule]
-                    new_schedule[job_idx][unscheduled_task_idx] = (
-                        worker_start_time
-                    )
+                        new_schedule = [job[:] for job in self.schedule]
+                        new_schedule[job_idx][unscheduled_task_idx] = (
+                            worker_start_time
+                        )
 
-                    new_workers_status = self.workers_status[:]
-                    new_workers_status[worker_id] = (
-                        worker_start_time +
-                        self.jobs[job_idx][unscheduled_task_idx]
-                    )
+                        new_workers_status = [
+                            worker_type[:]
+                            for worker_type in self.workers_status
+                        ]
+                        new_workers_status[worker_type][worker_id] = (
+                            worker_start_time +
+                            self.jobs[job_idx][unscheduled_task_idx].duration
+                        )
 
-                    neighbors.append(State(new_schedule, new_workers_status))
+                        neighbors.append(State(
+                            self.jobs,
+                            new_schedule,
+                            new_workers_status
+                        ))
 
         return neighbors
 
