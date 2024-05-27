@@ -141,18 +141,29 @@ State timeit(
     return result;
 }
 
-void process_jobs(const std::vector<std::vector<int>> &jobs)
+void process_jobs(const std::vector<std::vector<int>> &jobs, int max_workers)
 {
-    for (int n_workers = 1; n_workers < jobs.size() + 1; n_workers++)
+    for (int n_workers = 1; n_workers <= max_workers; n_workers++)
     {
         timeit(a_star, jobs, n_workers);
     }
+}
+
+void process_jobs(const std::vector<std::vector<int>> &jobs)
+{
+    process_jobs(jobs, jobs.size() + 1);
 }
 
 int main(int argc, char **argv)
 {
     // CSV HEADER
     std::cout << "lang;n_threads;function;args;n_jobs;n_tasks;n_workers;runtime" << std::endl;
+
+    // timeit(a_star, {{2, 1, 4, 5, 5, 4, 1, 2, 2, 1, 4, 5}}, 1);
+    // timeit(a_star, {{2}, {1}, {4}, {5}, {5}, {4}, {1}, {2}, {2}, {1}, {4}, {5}}, 1);
+
+    // timeit(a_star, {{2, 1, 4, 5, 5, 4, 1, 2, 2, 1, 4, 5}}, 2);
+    // timeit(a_star, {{2}, {1}, {4}, {5}, {5}, {4}, {1}, {2}, {2}, {1}, {4}, {5}}, 2);
 
     process_jobs({{2, 5}, {3, 3}});
     process_jobs({{2, 5, 1}, {3, 3, 3}});
@@ -161,13 +172,13 @@ int main(int argc, char **argv)
 
     process_jobs({{2, 5}, {3, 3}, {1, 7}});
     process_jobs({{2, 5, 1}, {3, 3, 3}, {1, 7, 2}});
-    process_jobs({{2, 5, 1, 2}, {3, 3, 3, 7}, {1, 7, 2, 8}});
-    process_jobs({{2, 5, 1, 2, 5}, {3, 3, 3, 7, 5}, {1, 7, 2, 8, 1}});
+    process_jobs({{2, 5, 1, 2}, {3, 3, 3, 7}, {1, 7, 2, 8}}, 2);
+    process_jobs({{2, 5, 1, 2, 5}, {3, 3, 3, 7, 5}, {1, 7, 2, 8, 1}}, 1); // Does not go past 1 worker
 
-    process_jobs({{2, 5}, {3, 3}, {1, 7}, {2, 2}});
-    process_jobs({{2, 5, 1}, {3, 3, 3}, {1, 7, 2}, {2, 2, 3}});
-    process_jobs({{2, 5, 1, 2}, {3, 3, 3, 7}, {1, 7, 2, 8}, {2, 2, 3, 6}});
-    process_jobs({{2, 5, 1, 2, 5}, {3, 3, 3, 7, 5}, {1, 7, 2, 8, 1}, {2, 2, 3, 6, 4}});
+    process_jobs({{2, 5}, {3, 3}, {1, 7}, {2, 2}}, 4);
+    process_jobs({{2, 5, 1}, {3, 3, 3}, {1, 7, 2}, {2, 2, 3}}, 2);
+    process_jobs({{2, 5, 1, 2}, {3, 3, 3, 7}, {1, 7, 2, 8}, {2, 2, 3, 6}}, 1);             // check max_workers
+    process_jobs({{2, 5, 1, 2, 5}, {3, 3, 3, 7, 5}, {1, 7, 2, 8, 1}, {2, 2, 3, 6, 4}}, 1); // check max_workers
 
     return 0;
 }
