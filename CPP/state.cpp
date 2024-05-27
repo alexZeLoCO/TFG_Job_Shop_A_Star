@@ -164,20 +164,6 @@ bool operator==(const State &a, const State &b)
     std::size_t b_hash = StateHash()(b);
 
     return a_hash == b_hash;
-    /*
-    for (size_t job_idx = 0; job_idx < a_schedule.size(); job_idx++)
-    {
-        std::vector<int> a_job = a_schedule[job_idx];
-        std::vector<int> b_job = b_schedule[job_idx];
-        if (
-            a_job.size() != b_job.size() ||
-            !std::equal(a_schedule.begin(), a_schedule.end(), b_schedule.begin(), b_schedule.end()))
-            return false;
-    }
-    if (!std::equal(a_workers_status.begin(), a_workers_status.end(), b_workers_status.begin(), b_workers_status.end()))
-        return false;
-    return true;
-    */
 }
 
 std::size_t StateHash::operator()(const State &key) const
