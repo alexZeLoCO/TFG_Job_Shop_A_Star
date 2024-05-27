@@ -528,3 +528,8 @@ dkms.conf
 **/main.pdf
 **/main
 **/.vscode/
+./output
+./data
+**/data/**
+*.ods
+analysis.txt
