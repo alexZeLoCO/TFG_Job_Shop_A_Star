@@ -3,15 +3,14 @@
 template <typename T>
 void SortedList<T>::append(T item)
 {
-    int current_index = 0;
+    typename std::vector<T>::iterator pos = this->m_data.begin();
     while (
-        current_index < this->m_data.size() &&
-        !this->m_sorter(item, this->m_data[current_index]))
-        current_index++;
-    this->m_data.emplace_back();
-    for (int i = this->m_data.size() - 1; i > current_index; i--)
-        this->m_data[i] = this->m_data[i - 1];
-    this->m_data[current_index] = item;
+        pos < this->m_data.end() &&
+        !this->m_sorter(item, *pos.base()))
+    {
+        pos++;
+    }
+    this->m_data.insert(pos, item);
 }
 
 template <typename T>
