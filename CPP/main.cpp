@@ -54,7 +54,7 @@ std::ostream &operator<<(std::ostream &os, const std::vector<T> &vec)
     return os;
 }
 
-State a_star(std::vector<std::vector<int>> jobs, int n_workers)
+State a_star(std::vector<std::vector<Task>> jobs, int n_workers, int n_worker_types)
 {
     const std::size_t n_jobs = jobs.size();
     if (n_jobs == 0)
@@ -64,9 +64,9 @@ State a_star(std::vector<std::vector<int>> jobs, int n_workers)
         return State();
 
     const std::vector<std::vector<int>> starting_schedule(n_jobs, std::vector<int>(n_tasks, -1));
-    const std::vector<int> starting_workers_status(n_workers, 0);
+    const std::vector<std::vector<int>> starting_workers_status(n_worker_types, std::vector<int>(n_workers, 0));
 
-    const State starting_state(jobs, starting_schedule, starting_workers_status, 0);
+    const State starting_state(jobs, starting_schedule, starting_workers_status);
 
     std::unordered_map<State, int, StateHash> g_costs;
     g_costs.try_emplace(starting_state, 0);
@@ -107,7 +107,7 @@ State a_star(std::vector<std::vector<int>> jobs, int n_workers)
             const std::vector<State> neighbor_states = current_state.get_neighbors_of();
             for (const State &neighbor : neighbor_states)
             {
-                int tentative_g_cost = neighbor.get_max_worker_status();
+                int tentative_g_cost = neighbor.get_g_cost();
 #pragma omp critical(open_set)
                 {
                     if (g_costs.find(neighbor) == g_costs.end() ||
@@ -126,12 +126,12 @@ State a_star(std::vector<std::vector<int>> jobs, int n_workers)
 }
 
 State timeit(
-    const std::function<State(std::vector<std::vector<int>>, int)> &foo,
-    const std::vector<std::vector<int>> &jobs, int n_workers)
+    const std::function<State(std::vector<std::vector<Task>>, int, int)> &foo,
+    const std::vector<std::vector<Task>> &jobs, int n_workers, int n_worker_types)
 {
-    foo(jobs, n_workers); // Cache warm up
+    foo(jobs, n_workers, n_worker_types); // Cache warm up
     auto start_time = std::chrono::high_resolution_clock::now();
-    const State result = foo(jobs, n_workers);
+    const State result = foo(jobs, n_workers, n_worker_types);
     auto end_time = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> total_time = end_time - start_time;
     std::cout << "c++;" << omp_get_max_threads() << ";a_star" << ";(" << jobs << ", "
@@ -141,15 +141,26 @@ State timeit(
     return result;
 }
 
-void process_jobs(const std::vector<std::vector<int>> &jobs, int max_workers)
+void process_jobs(const std::vector<std::vector<Task>> &jobs, int max_workers, int n_worker_types)
 {
     for (int n_workers = 1; n_workers <= max_workers; n_workers++)
     {
-        timeit(a_star, jobs, n_workers);
+        timeit(a_star, jobs, n_workers, n_worker_types);
     }
 }
 
-void process_jobs(const std::vector<std::vector<int>> &jobs)
+void process_jobs(const std::vector<std::vector<Task>> &jobs, int max_workers)
+{
+    int n_worker_types = 0;
+    for (const std::vector<Task> &job : jobs)
+        for (const Task &task : job)
+            for (const int qualified_worker : task.get_qualified_workers())
+                if (qualified_worker > n_worker_types)
+                    n_worker_types = qualified_worker;
+    process_jobs(jobs, max_workers, n_worker_types == 0 ? 1 : n_worker_types);
+}
+
+void process_jobs(const std::vector<std::vector<Task>> &jobs)
 {
     process_jobs(jobs, jobs.size() + 1);
 }
@@ -159,26 +170,30 @@ int main(int argc, char **argv)
     // CSV HEADER
     std::cout << "lang;n_threads;function;args;n_jobs;n_tasks;n_workers;runtime" << std::endl;
 
-    // timeit(a_star, {{2, 1, 4, 5, 5, 4, 1, 2, 2, 1, 4, 5}}, 1);
-    // timeit(a_star, {{2}, {1}, {4}, {5}, {5}, {4}, {1}, {2}, {2}, {1}, {4}, {5}}, 1);
+    std::cout << a_star({{2, 5, 1}, {3, 3, 3}}, 2, 1) << std::endl;
 
-    // timeit(a_star, {{2, 1, 4, 5, 5, 4, 1, 2, 2, 1, 4, 5}}, 2);
-    // timeit(a_star, {{2}, {1}, {4}, {5}, {5}, {4}, {1}, {2}, {2}, {1}, {4}, {5}}, 2);
+    /*
+        // timeit(a_star, {{2, 1, 4, 5, 5, 4, 1, 2, 2, 1, 4, 5}}, 1);
+        // timeit(a_star, {{2}, {1}, {4}, {5}, {5}, {4}, {1}, {2}, {2}, {1}, {4}, {5}}, 1);
 
-    process_jobs({{2, 5}, {3, 3}});
-    process_jobs({{2, 5, 1}, {3, 3, 3}});
-    process_jobs({{2, 5, 1, 2}, {3, 3, 3, 7}});
-    process_jobs({{2, 5, 1, 2, 5}, {3, 3, 3, 7, 5}});
+        // timeit(a_star, {{2, 1, 4, 5, 5, 4, 1, 2, 2, 1, 4, 5}}, 2);
+        // timeit(a_star, {{2}, {1}, {4}, {5}, {5}, {4}, {1}, {2}, {2}, {1}, {4}, {5}}, 2);
 
-    process_jobs({{2, 5}, {3, 3}, {1, 7}});
-    process_jobs({{2, 5, 1}, {3, 3, 3}, {1, 7, 2}});
-    process_jobs({{2, 5, 1, 2}, {3, 3, 3, 7}, {1, 7, 2, 8}}, 2);
-    process_jobs({{2, 5, 1, 2, 5}, {3, 3, 3, 7, 5}, {1, 7, 2, 8, 1}}, 1); // Does not go past 1 worker
+        process_jobs({{2, 5}, {3, 3}});
+        process_jobs({{2, 5, 1}, {3, 3, 3}});
+        process_jobs({{2, 5, 1, 2}, {3, 3, 3, 7}});
+        process_jobs({{2, 5, 1, 2, 5}, {3, 3, 3, 7, 5}});
 
-    process_jobs({{2, 5}, {3, 3}, {1, 7}, {2, 2}}, 4);
-    process_jobs({{2, 5, 1}, {3, 3, 3}, {1, 7, 2}, {2, 2, 3}}, 2);
-    process_jobs({{2, 5, 1, 2}, {3, 3, 3, 7}, {1, 7, 2, 8}, {2, 2, 3, 6}}, 1);             // check max_workers
-    process_jobs({{2, 5, 1, 2, 5}, {3, 3, 3, 7, 5}, {1, 7, 2, 8, 1}, {2, 2, 3, 6, 4}}, 1); // check max_workers
+        process_jobs({{2, 5}, {3, 3}, {1, 7}});
+        process_jobs({{2, 5, 1}, {3, 3, 3}, {1, 7, 2}});
+        process_jobs({{2, 5, 1, 2}, {3, 3, 3, 7}, {1, 7, 2, 8}}, 2);
+        process_jobs({{2, 5, 1, 2, 5}, {3, 3, 3, 7, 5}, {1, 7, 2, 8, 1}}, 1); // Does not go past 1 worker
+
+        process_jobs({{2, 5}, {3, 3}, {1, 7}, {2, 2}}, 4);
+        process_jobs({{2, 5, 1}, {3, 3, 3}, {1, 7, 2}, {2, 2, 3}}, 2);
+        process_jobs({{2, 5, 1, 2}, {3, 3, 3, 7}, {1, 7, 2, 8}, {2, 2, 3, 6}}, 1);
+        process_jobs({{2, 5, 1, 2, 5}, {3, 3, 3, 7, 5}, {1, 7, 2, 8, 1}, {2, 2, 3, 6, 4}}, 1);
+        */
 
     return 0;
 }
