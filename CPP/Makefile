@@ -6,8 +6,8 @@ OMP_FLAGS=-fopenmp
 dev: main.cpp dev_state.o dev_sortedList.o
 	$(CC) $(DEV_FLAGS) $(OMP_FLAGS) main.cpp dev_state.o dev_sortedList.o -o main
 
-dev_sortedList.o : sortedList.cpp sortedList.h dev_state.o
-	$(CC) $(DEV_FLAGS) -c sortedList.cpp dev_state.o -o dev_sortedList.o
+dev_sortedList.o : sortedList.cpp sortedList.h state.h
+	$(CC) $(DEV_FLAGS) -c sortedList.cpp -o dev_sortedList.o
 
 dev_state.o: state.cpp state.h
 	$(CC) $(DEV_FLAGS) $(OMP_FLAGS) -c state.cpp -o dev_state.o
