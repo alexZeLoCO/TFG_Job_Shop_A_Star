@@ -7,7 +7,7 @@
 
 #include "state.h"
 
-template <class T>
+template <typename T>
 class SortedList
 {
 private:
@@ -22,11 +22,16 @@ public:
         this->m_data.reserve(STARTING_VECTOR_CAPACITY);
     }
 
+    std::vector<T> get_data() const { return this->m_data; }
+
     void append(T);
     T pop();
     size_t size() const;
     bool contains(const T &) const;
     bool empty() const;
 };
+
+template <typename T>
+std::ostream &operator<<(std::ostream &, const SortedList<T> &);
 
 #endif // SORTED_LIST_H

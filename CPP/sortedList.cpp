@@ -39,7 +39,19 @@ bool SortedList<T>::empty() const
     return this->m_data.empty();
 }
 
+template <typename T>
+std::ostream &operator<<(std::ostream &output_stream, const SortedList<T> &the_list)
+{
+    output_stream << "[ ";
+    for (const T &item : the_list.get_data())
+        output_stream << item << " ";
+    output_stream << "]";
+    return output_stream;
+}
+
 // Pre defs
 
 template class SortedList<int>;
 template class SortedList<State>;
+template std::ostream &operator<<(std::ostream &, const SortedList<int> &);
+template std::ostream &operator<<(std::ostream &, const SortedList<State> &);

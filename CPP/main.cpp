@@ -66,11 +66,11 @@ State a_star(std::vector<std::vector<int>> jobs, int n_workers)
     const std::vector<std::vector<int>> starting_schedule(n_jobs, std::vector<int>(n_tasks, -1));
     const std::vector<int> starting_workers_status(n_workers, 0);
 
-    const State starting_state(jobs, starting_schedule, starting_workers_status, 0);
+    const State starting_state(jobs, starting_schedule, starting_workers_status);
 
-    std::unordered_map<State, int, StateHash> g_costs;
+    std::unordered_map<State, int, StateHash, StateEqual> g_costs;
     g_costs.try_emplace(starting_state, 0);
-    std::unordered_map<State, int, StateHash> f_costs;
+    std::unordered_map<State, int, StateHash, StateEqual> f_costs;
     f_costs.try_emplace(starting_state, starting_state.get_f_cost());
 
     const auto comparator = [&f_costs](const State &lhs, const State &rhs)
@@ -165,6 +165,10 @@ int main(int argc, char **argv)
     // timeit(a_star, {{2, 1, 4, 5, 5, 4, 1, 2, 2, 1, 4, 5}}, 2);
     // timeit(a_star, {{2}, {1}, {4}, {5}, {5}, {4}, {1}, {2}, {2}, {1}, {4}, {5}}, 2);
 
+    std::cout << a_star({{2, 5, 1}, {3, 3, 3}}, 1) << std::endl;
+    std::cout << a_star({{2, 5, 1}, {3, 3, 3}}, 2) << std::endl;
+    std::cout << a_star({{2, 5, 1}, {3, 3, 3}}, 3) << std::endl;
+
     process_jobs({{2, 5}, {3, 3}});
     process_jobs({{2, 5, 1}, {3, 3, 3}});
     process_jobs({{2, 5, 1, 2}, {3, 3, 3, 7}});
@@ -172,13 +176,13 @@ int main(int argc, char **argv)
 
     process_jobs({{2, 5}, {3, 3}, {1, 7}});
     process_jobs({{2, 5, 1}, {3, 3, 3}, {1, 7, 2}});
-    process_jobs({{2, 5, 1, 2}, {3, 3, 3, 7}, {1, 7, 2, 8}}, 2);
-    process_jobs({{2, 5, 1, 2, 5}, {3, 3, 3, 7, 5}, {1, 7, 2, 8, 1}}, 1); // Does not go past 1 worker
+    process_jobs({{2, 5, 1, 2}, {3, 3, 3, 7}, {1, 7, 2, 8}});
+    process_jobs({{2, 5, 1, 2, 5}, {3, 3, 3, 7, 5}, {1, 7, 2, 8, 1}});
 
-    process_jobs({{2, 5}, {3, 3}, {1, 7}, {2, 2}}, 4);
-    process_jobs({{2, 5, 1}, {3, 3, 3}, {1, 7, 2}, {2, 2, 3}}, 2);
-    process_jobs({{2, 5, 1, 2}, {3, 3, 3, 7}, {1, 7, 2, 8}, {2, 2, 3, 6}}, 1);             // check max_workers
-    process_jobs({{2, 5, 1, 2, 5}, {3, 3, 3, 7, 5}, {1, 7, 2, 8, 1}, {2, 2, 3, 6, 4}}, 1); // check max_workers
+    process_jobs({{2, 5}, {3, 3}, {1, 7}, {2, 2}});
+    process_jobs({{2, 5, 1}, {3, 3, 3}, {1, 7, 2}, {2, 2, 3}});
+    process_jobs({{2, 5, 1, 2}, {3, 3, 3, 7}, {1, 7, 2, 8}, {2, 2, 3, 6}});
+    process_jobs({{2, 5, 1, 2, 5}, {3, 3, 3, 7, 5}, {1, 7, 2, 8, 1}, {2, 2, 3, 6, 4}});
 
     return 0;
 }

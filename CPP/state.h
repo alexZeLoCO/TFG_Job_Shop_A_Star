@@ -20,19 +20,18 @@ public:
     State() : State(
                   std::vector<std::vector<int>>(),
                   std::vector<std::vector<int>>(),
-                  std::vector<int>(), (unsigned int)0)
+                  std::vector<int>())
     {
     }
 
     State(
         std::vector<std::vector<int>> const &jobs,
         std::vector<std::vector<int>> const &schedule,
-        std::vector<int> const &workers_status,
-        unsigned int g_cost) : jobs(jobs),
-                               schedule(schedule),
-                               workers_status(workers_status),
-                               g_cost(g_cost)
+        std::vector<int> const &workers_status) : jobs(jobs),
+                                                  schedule(schedule),
+                                                  workers_status(workers_status)
     {
+        this->g_cost = this->get_max_worker_status();
         this->h_cost = this->calculate_h_cost();
     };
 
@@ -62,6 +61,16 @@ bool operator==(const State &, const State &);
 struct StateHash
 {
     std::size_t operator()(const State &) const;
+};
+
+struct FullHash
+{
+    std::size_t operator()(const State &) const;
+};
+
+struct StateEqual
+{
+    bool operator()(const State &, const State &) const;
 };
 
 #endif // STATE_H
