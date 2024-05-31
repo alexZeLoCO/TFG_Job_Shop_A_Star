@@ -7,12 +7,12 @@
 
 #include "state.h"
 
+constexpr int STARTING_VECTOR_CAPACITY = 128;
+
 template <typename T>
 class SortedList
 {
 private:
-    static const int STARTING_VECTOR_CAPACITY = 128;
-
     std::vector<T> m_data;
     std::function<bool(const T &, const T &)> m_sorter;
 
