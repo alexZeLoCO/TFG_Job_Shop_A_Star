@@ -115,8 +115,7 @@ State a_star(std::vector<std::vector<int>> jobs, int n_workers)
                     {
                         g_costs[neighbor] = tentative_g_cost;
                         f_costs[neighbor] = tentative_g_cost + neighbor.get_h_cost();
-                        if (!open_set.contains(neighbor))
-                            open_set.append(neighbor);
+                        open_set.append(neighbor);
                     }
                 }
             }
@@ -137,7 +136,7 @@ State timeit(
     std::cout << "c++;" << omp_get_max_threads() << ";a_star" << ";(" << jobs << ", "
               << n_workers << ");" << jobs.size() << ";" << jobs[0].size() << ";"
               << n_workers << ";" << std::setprecision(5) << std::scientific
-              << total_time.count() << std::endl;
+              << total_time.count() << ";" << result << std::endl;
     return result;
 }
 
@@ -157,32 +156,64 @@ void process_jobs(const std::vector<std::vector<int>> &jobs)
 int main(int argc, char **argv)
 {
     // CSV HEADER
-    std::cout << "lang;n_threads;function;args;n_jobs;n_tasks;n_workers;runtime" << std::endl;
+    std::cout << "lang;n_threads;function;args;n_jobs;n_tasks;n_workers;runtime;result" << std::endl;
+
+    // std::cout << a_star({{2, 5, 1}, {3, 3, 3}}, 2) << std::endl;
 
     // timeit(a_star, {{2, 1, 4, 5, 5, 4, 1, 2, 2, 1, 4, 5}}, 1);
     // timeit(a_star, {{2}, {1}, {4}, {5}, {5}, {4}, {1}, {2}, {2}, {1}, {4}, {5}}, 1);
-
     // timeit(a_star, {{2, 1, 4, 5, 5, 4, 1, 2, 2, 1, 4, 5}}, 2);
     // timeit(a_star, {{2}, {1}, {4}, {5}, {5}, {4}, {1}, {2}, {2}, {1}, {4}, {5}}, 2);
 
-    std::cout << a_star({{2, 5, 1}, {3, 3, 3}}, 1) << std::endl;
-    std::cout << a_star({{2, 5, 1}, {3, 3, 3}}, 2) << std::endl;
-    std::cout << a_star({{2, 5, 1}, {3, 3, 3}}, 3) << std::endl;
+    /*
+        process_jobs({{2, 5}, {3, 3}});
+        process_jobs({{2, 5, 1}, {3, 3, 3}});
+        process_jobs({{2, 5, 1, 2}, {3, 3, 3, 7}});
+        process_jobs({{2, 5, 1, 2, 5}, {3, 3, 3, 7, 5}});
 
-    process_jobs({{2, 5}, {3, 3}});
-    process_jobs({{2, 5, 1}, {3, 3, 3}});
-    process_jobs({{2, 5, 1, 2}, {3, 3, 3, 7}});
-    process_jobs({{2, 5, 1, 2, 5}, {3, 3, 3, 7, 5}});
+        process_jobs({{2, 5}, {3, 3}, {1, 7}});
+        process_jobs({{2, 5, 1}, {3, 3, 3}, {1, 7, 2}});
+        process_jobs({{2, 5, 1, 2}, {3, 3, 3, 7}, {1, 7, 2, 8}});
+        process_jobs({{2, 5, 1, 2, 5}, {3, 3, 3, 7, 5}, {1, 7, 2, 8, 1}});
 
-    process_jobs({{2, 5}, {3, 3}, {1, 7}});
-    process_jobs({{2, 5, 1}, {3, 3, 3}, {1, 7, 2}});
-    process_jobs({{2, 5, 1, 2}, {3, 3, 3, 7}, {1, 7, 2, 8}});
-    process_jobs({{2, 5, 1, 2, 5}, {3, 3, 3, 7, 5}, {1, 7, 2, 8, 1}});
+        process_jobs({{2, 5}, {3, 3}, {1, 7}, {2, 2}});
+        process_jobs({{2, 5, 1}, {3, 3, 3}, {1, 7, 2}, {2, 2, 3}});
+        process_jobs({{2, 5, 1, 2}, {3, 3, 3, 7}, {1, 7, 2, 8}, {2, 2, 3, 6}});
+        process_jobs({{2, 5, 1, 2, 5}, {3, 3, 3, 7, 5}, {1, 7, 2, 8, 1}, {2, 2, 3, 6, 4}});
 
-    process_jobs({{2, 5}, {3, 3}, {1, 7}, {2, 2}});
-    process_jobs({{2, 5, 1}, {3, 3, 3}, {1, 7, 2}, {2, 2, 3}});
-    process_jobs({{2, 5, 1, 2}, {3, 3, 3, 7}, {1, 7, 2, 8}, {2, 2, 3, 6}});
-    process_jobs({{2, 5, 1, 2, 5}, {3, 3, 3, 7, 5}, {1, 7, 2, 8, 1}, {2, 2, 3, 6, 4}});
+        process_jobs({{2, 5}, {3, 3}, {1, 7}, {2, 2}, {3, 3}});
+        process_jobs({{2, 5, 1}, {3, 3, 3}, {1, 7, 2}, {2, 2, 3}, {3, 3, 2}});
+        process_jobs({{2, 5, 1, 2}, {3, 3, 3, 7}, {1, 7, 2, 8}, {2, 2, 3, 6}, {3, 3, 2, 4}});
+        process_jobs({{2, 5, 1, 2, 5}, {3, 3, 3, 7, 5}, {1, 7, 2, 8, 1}, {2, 2, 3, 6, 4}, {3, 3, 2, 4, 6}});
+
+        process_jobs({{2, 5}, {3, 3}, {1, 7}, {2, 2}, {3, 3}, {4, 4}});
+        process_jobs({{2, 5, 1}, {3, 3, 3}, {1, 7, 2}, {2, 2, 3}, {3, 3, 2}, {4, 4, 1}});
+        process_jobs({{2, 5, 1, 2}, {3, 3, 3, 7}, {1, 7, 2, 8}, {2, 2, 3, 6}, {3, 3, 2, 4}, {4, 4, 1, 5}});
+        process_jobs({{2, 5, 1, 2, 5}, {3, 3, 3, 7, 5}, {1, 7, 2, 8, 1}, {2, 2, 3, 6, 4}, {3, 3, 2, 4, 6}, {4, 4, 1, 5, 3}});
+        */
+
+    timeit(a_star,
+           {{88, 68, 94, 99, 67},
+            {72, 50, 69, 75, 94},
+            {98, 73, 82, 51, 71},
+            {94, 71, 81, 85, 66},
+            {50, 59, 82, 67, 56}},
+           5);
+
+    /*
+timeit(a_star,
+    {{88, 68, 94, 99, 67, 89, 77, 99, 86, 92},
+     {72, 50, 69, 75, 94, 66, 92, 82, 94, 63},
+     {83, 61, 83, 65, 64, 85, 78, 85, 55, 77},
+     {94, 68, 61, 99, 54, 75, 66, 76, 63, 67},
+     {69, 88, 82, 95, 99, 67, 95, 68, 67, 86},
+     {99, 81, 64, 66, 80, 80, 69, 62, 79, 88},
+     {50, 86, 97, 96, 65, 97, 66, 99, 52, 71},
+     {98, 73, 82, 51, 71, 94, 85, 62, 95, 79},
+     {94, 71, 81, 85, 66, 90, 76, 58, 93, 97},
+     {50, 59, 82, 67, 56, 96, 58, 81, 59, 96}},
+    10);
+    */
 
     return 0;
 }
