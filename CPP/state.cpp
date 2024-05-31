@@ -20,9 +20,8 @@ unsigned int State::calculate_h_cost() const
             if (this->get_schedule()[job_idx][task_idx] == -1)
                 h_costs[job_idx] += job[task_idx];
     }
-    // Or should this be min?
     auto max_element = std::max_element(h_costs.begin(), h_costs.end());
-    return max_element == h_costs.end() ? 0 : *(max_element.base());
+    return max_element == h_costs.end() ? 0 : *max_element;
 }
 
 bool State::is_goal_state() const
@@ -157,31 +156,48 @@ bool operator==(const State &a, const State &b)
     return a_hash == b_hash;
 }
 
-std::size_t StateHash::operator()(const State &key) const
+std::size_t StateHash::operator()(State key) const
 {
+    if (key.get_state_hash() != UNINITIALIZED_HASH)
+        return key.get_state_hash();
     std::vector<std::vector<int>> schedule = key.get_schedule();
     std::size_t seed = schedule.size() * schedule[0].size();
-    for (size_t i = 0; i < schedule.size(); i++)
-        for (size_t j = 0; j < schedule[i].size(); j++)
+    if (schedule.empty())
+        return seed;
+    const std::size_t nTasks = schedule[0].size();
+#pragma omp parallel for collapse(2) reduction(+ : seed)
+    for (std::size_t i = 0; i < schedule.size(); i++)
+        for (std::size_t j = 0; j < nTasks; j++)
             seed += (schedule[i][j] * 10 ^ (i * j + j));
+    key.set_state_hash(seed);
     return seed;
 }
 
-std::size_t FullHash::operator()(const State &key) const
+std::size_t FullHash::operator()(State key) const
 {
-    std::vector<std::vector<int>> schedule = key.get_schedule();
+    if (key.get_full_hash() != UNINITIALIZED_HASH)
+        return key.get_full_hash();
+    std::vector<std::vector<int>>
+        schedule = key.get_schedule();
     std::vector<int> workers_status = key.get_workers_status();
     std::size_t seed = schedule.size() * schedule[0].size() * workers_status.size();
 
+#pragma omp parallel for reduction(+ : seed)
     for (size_t i = 0; i < workers_status.size(); i++)
         seed += (workers_status[i] * 10 ^ i);
 
+    if (schedule.empty())
+        return seed;
+
+    const std::size_t nTasks = schedule[0].size();
+#pragma omp parallel for collapse(2) reduction(+ : seed)
     for (size_t i = 0; i < schedule.size(); i++)
     {
         const size_t actual_i = 1 + i + workers_status.size();
-        for (size_t j = 0; j < schedule[i].size(); j++)
+        for (size_t j = 0; j < nTasks; j++)
             seed += (schedule[i][j] * 10 ^ (actual_i * j + j));
     }
+    key.set_full_hash(seed);
     return seed;
 }
 
