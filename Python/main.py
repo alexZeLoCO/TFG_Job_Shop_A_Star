@@ -3,6 +3,24 @@ from SortedList import SortedList
 from State import State
 from Task import Task
 from Wrappers import timeit
+import csv
+
+
+def read_from_file(filename: str) -> List[List[Task]]:
+    jobs: List[List[Task]] = []
+    with open(filename) as csvfile:
+        spamreader = csv.reader(csvfile, delimiter=';')
+        for job_idx, tasks in enumerate(spamreader):
+            jobs.append([])
+            is_worker: bool = True
+            for task in tasks:
+                if (is_worker):
+                    worker: int = int(task)
+                    is_worker: bool = False
+                else:
+                    jobs[job_idx].append(Task(int(task), (int(worker),)))
+                    is_worker: bool = True
+    return jobs
 
 
 def get_n_worker_types(
@@ -13,10 +31,10 @@ def get_n_worker_types(
             max(task.qualified_workers) if (
                 task.qualified_workers is not None and
                 len(task.qualified_workers) > 0
-            ) else 1
+            ) else 0
             for task in job
         ] for job in jobs)
-    ]))
+    ])) + 1
 
 
 @timeit
@@ -81,10 +99,16 @@ def main():
 
     # CSV HEADER
     print("lang;n_threads;function;args;n_jobs"
-          ";n_tasks;n_workers;runtime")
+          ";n_tasks;n_workers;runtime;result")
 
+    jobs: List[List[Task]] = read_from_file('../datasets/abz5.csv')
+
+    process_jobs(jobs)
+
+
+"""
     process_jobs([
-        [Task(2), Task(5)],
+        [Task(2), Task(5, [0, 2])],
         [Task(3), Task(3)]
     ])
     process_jobs([
@@ -145,6 +169,7 @@ def main():
         [Task(1), Task(7), Task(2), Task(8), Task(1)],
         [Task(2), Task(2), Task(3), Task(6), Task(4)]
     ], 0)  # By comparison, should not get past the first one
+"""
 
 
 if __name__ == '__main__':

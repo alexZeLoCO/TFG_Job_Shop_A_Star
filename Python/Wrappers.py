@@ -15,7 +15,7 @@ def timeit(func):
         total_time = end_time - start_time
         print(
             (f"py;1;{func.__name__};{args};{n_jobs};{n_tasks};"
-             f"{n_workers};{total_time:1.5E}")
+             f"{n_workers};{total_time:1.5E};{result}")
         )
         return result
     return timeit_wrapper
