@@ -4,19 +4,21 @@ template <typename T>
 void SortedList<T>::append(T item)
 {
     typename std::vector<T>::iterator pos = this->m_data.begin();
+    typename std::vector<T>::iterator end = this->m_data.end();
     while (
-        pos < this->m_data.end() &&
-        !this->m_sorter(item, *pos.base()))
+        pos < end &&
+        !this->m_sorter(item, *pos))
     {
         pos++;
     }
-    this->m_data.insert(pos, item);
+    if (pos == end || !(item == *pos))
+        this->m_data.insert(pos, item);
 }
 
 template <typename T>
 T SortedList<T>::pop()
 {
-    T out = *(this->m_data.begin().base());
+    T out = *(this->m_data.begin());
     this->m_data.erase(this->m_data.begin());
     return out;
 }
