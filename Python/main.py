@@ -1,9 +1,14 @@
+import logging
 from typing import List, Dict
+from Logger import Logger
 from SortedList import SortedList
 from State import State
 from Task import Task
 from Wrappers import timeit
 import csv
+
+
+logger = Logger(level=logging.DEBUG)
 
 
 def read_from_file(filename: str) -> List[List[Task]]:
@@ -20,6 +25,7 @@ def read_from_file(filename: str) -> List[List[Task]]:
                 else:
                     jobs[job_idx].append(Task(int(task), (int(worker),)))
                     is_worker: bool = True
+    logger.debug(f"IO has read file {filename} jobs {jobs}")
     return jobs
 
 
@@ -63,12 +69,19 @@ def a_star(
     )
     open_set.append(starting_state)
 
+    logger.info("Main loop is starting")
+    n_iter: int = -1
     while len(open_set) > 0:
+        n_iter: int = n_iter + 1
         current_state: State = open_set.pop()
+        logger.debug(f"New current state {current_state} (iter. {n_iter})")
         if (current_state.is_goal_state()):
+            logger.debug(f"Solution has been found {current_state}")
             return current_state.schedule
         neighbor_states: List[State] = current_state.get_neighbors_of()
+        logger.debug(f"Found {len(neighbor_states)} neighbors")
         for neighbor in neighbor_states:
+            logger.debug(f"Processing neighbor {neighbor}")
             tentative_g_cost: int = max([
                 max(worker_type) for worker_type in neighbor.workers_status
             ])
@@ -76,12 +89,20 @@ def a_star(
                 neighbor not in g_costs or
                 tentative_g_cost < g_costs[neighbor]
             ):
+                logger.debug(f"Data maps g_costs and f_costs are "
+                             f"updated with neighbor g_cost "
+                             f"{tentative_g_cost} and f_cost "
+                             f"{(
+                                 tentative_g_cost +
+                                 neighbor.calculate_h_cost()
+                )}")
                 g_costs[neighbor] = tentative_g_cost
                 f_costs[neighbor] = (
                     tentative_g_cost +
                     neighbor.calculate_h_cost()
                 )
                 if neighbor not in open_set:
+                    logger.debug(f"Neighbor was not in open_set, adding")
                     open_set.append(neighbor)
 
 
@@ -101,7 +122,7 @@ def main():
     print("lang;n_threads;function;args;n_jobs"
           ";n_tasks;n_workers;runtime;result")
 
-    jobs: List[List[Task]] = read_from_file('../datasets/abz5.csv')
+    jobs: List[List[Task]] = read_from_file('../datasets/ft06.csv')
 
     process_jobs(jobs)
 

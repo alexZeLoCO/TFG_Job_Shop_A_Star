@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <omp.h>
 #include <algorithm>
+#include <fstream>
 
 #include "state.h"
 #include "sortedList.h"
@@ -54,6 +55,31 @@ std::ostream &operator<<(std::ostream &os, const std::vector<T> &vec)
     return os;
 }
 
+std::vector<std::vector<int>> get_jobs_from_file(std::string filename)
+{
+    std::ifstream file(filename);
+    std::string my_string;
+    std::string my_number;
+    std::vector<std::vector<int>> out;
+    if (file.is_open())
+    {
+        while (std::getline(file, my_string))
+        {
+            std::stringstream line(my_string);
+            out.push_back(std::vector<int>());
+            unsigned int idx = 0;
+            while (std::getline(line, my_number, ';'))
+            {
+                if (idx++ % 2 != 0)
+                    out[out.size() - 1].push_back(stoi(my_number));
+            }
+        }
+    }
+    else
+        std::cerr << "Could not read file";
+    return out;
+}
+
 State a_star(std::vector<std::vector<int>> jobs, int n_workers)
 {
     const std::size_t n_jobs = jobs.size();
@@ -83,40 +109,44 @@ State a_star(std::vector<std::vector<int>> jobs, int n_workers)
 
     State goal_state;
     bool found_goal_state = false;
+    bool has_state = !open_set.empty();
 
-    while (!found_goal_state && !open_set.empty())
+#pragma omp paralell shared(open_set, has_state, found_goal_state, goal_state, f_costs, g_costs)
+    while (!found_goal_state && has_state)
     {
-        int max_threads = std::min(omp_get_max_threads(), (int)open_set.size());
-#pragma omp parallel for shared(open_set, goal_state, found_goal_state, f_costs, g_costs)
-        for (int i = 0; i < max_threads; i++)
+        State current_state;
+
+#pragma omp critical(open_set)
+        if (open_set.empty())
+            has_state = false;
+
+        if (!has_state)
+            break;
+
+#pragma omp critical(open_set)
+        current_state = open_set.pop();
+
+        if (current_state.is_goal_state())
         {
-            State current_state;
-
-#pragma omp critical(open_set)
-            current_state = open_set.pop();
-
-            if (current_state.is_goal_state())
-            {
 #pragma omp critical(goal)
-                {
-                    goal_state = current_state;
-                    found_goal_state = true;
-                }
-            }
-
-            const std::vector<State> neighbor_states = current_state.get_neighbors_of();
-            for (const State &neighbor : neighbor_states)
             {
-                int tentative_g_cost = neighbor.get_max_worker_status();
+                goal_state = current_state;
+                found_goal_state = true;
+            }
+        }
+
+        const std::vector<State> neighbor_states = current_state.get_neighbors_of();
+        for (const State &neighbor : neighbor_states)
+        {
+            int tentative_g_cost = neighbor.get_max_worker_status();
 #pragma omp critical(open_set)
+            {
+                if (g_costs.find(neighbor) == g_costs.end() ||
+                    tentative_g_cost < g_costs[neighbor])
                 {
-                    if (g_costs.find(neighbor) == g_costs.end() ||
-                        tentative_g_cost < g_costs[neighbor])
-                    {
-                        g_costs[neighbor] = tentative_g_cost;
-                        f_costs[neighbor] = tentative_g_cost + neighbor.get_h_cost();
-                        open_set.append(neighbor);
-                    }
+                    g_costs[neighbor] = tentative_g_cost;
+                    f_costs[neighbor] = tentative_g_cost + neighbor.get_h_cost();
+                    open_set.append(neighbor);
                 }
             }
         }
@@ -190,7 +220,6 @@ int main(int argc, char **argv)
         process_jobs({{2, 5, 1}, {3, 3, 3}, {1, 7, 2}, {2, 2, 3}, {3, 3, 2}, {4, 4, 1}});
         process_jobs({{2, 5, 1, 2}, {3, 3, 3, 7}, {1, 7, 2, 8}, {2, 2, 3, 6}, {3, 3, 2, 4}, {4, 4, 1, 5}});
         process_jobs({{2, 5, 1, 2, 5}, {3, 3, 3, 7, 5}, {1, 7, 2, 8, 1}, {2, 2, 3, 6, 4}, {3, 3, 2, 4, 6}, {4, 4, 1, 5, 3}});
-        */
 
     timeit(a_star,
            {{88, 68, 94, 99, 67},
@@ -199,21 +228,12 @@ int main(int argc, char **argv)
             {94, 71, 81, 85, 66},
             {50, 59, 82, 67, 56}},
            5);
+           */
 
-    /*
-timeit(a_star,
-    {{88, 68, 94, 99, 67, 89, 77, 99, 86, 92},
-     {72, 50, 69, 75, 94, 66, 92, 82, 94, 63},
-     {83, 61, 83, 65, 64, 85, 78, 85, 55, 77},
-     {94, 68, 61, 99, 54, 75, 66, 76, 63, 67},
-     {69, 88, 82, 95, 99, 67, 95, 68, 67, 86},
-     {99, 81, 64, 66, 80, 80, 69, 62, 79, 88},
-     {50, 86, 97, 96, 65, 97, 66, 99, 52, 71},
-     {98, 73, 82, 51, 71, 94, 85, 62, 95, 79},
-     {94, 71, 81, 85, 66, 90, 76, 58, 93, 97},
-     {50, 59, 82, 67, 56, 96, 58, 81, 59, 96}},
-    10);
-    */
+    timeit(
+        a_star,
+        get_jobs_from_file("../datasets/abz5.csv"),
+        5);
 
     return 0;
 }
