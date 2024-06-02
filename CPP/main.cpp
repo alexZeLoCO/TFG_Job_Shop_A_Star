@@ -77,6 +77,7 @@ std::vector<std::vector<int>> get_jobs_from_file(std::string filename)
     }
     else
         std::cerr << "Could not read file";
+    file.close();
     return out;
 }
 
