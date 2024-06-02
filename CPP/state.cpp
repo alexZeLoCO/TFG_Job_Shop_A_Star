@@ -193,9 +193,8 @@ std::size_t FullHash::operator()(State key) const
 #pragma omp parallel for collapse(2) reduction(+ : seed)
     for (size_t i = 0; i < schedule.size(); i++)
     {
-        const size_t actual_i = 1 + i + workers_status.size();
         for (size_t j = 0; j < nTasks; j++)
-            seed += (schedule[i][j] * 10 ^ (actual_i * j + j));
+            seed += (schedule[i][j] * 10 ^ ((1 + i + workers_status.size()) * j + j));
     }
     key.set_full_hash(seed);
     return seed;
