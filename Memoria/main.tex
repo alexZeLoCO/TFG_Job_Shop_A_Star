@@ -44,113 +44,10 @@ headsepline, % Uncomment to get a line under the header
 
 \usepackage[utf8]{inputenc} % Required for inputting international characters
 \usepackage[T1]{fontenc} % Output font encoding for international characters
-\usepackage{pgffor}
-\usepackage{listings}
-\usepackage{hyperref}
-\usepackage{xcolor}
-\usepackage{tabularx}
-\usepackage{listings-rust}
-\usepackage{tabularx, multirow}
-\usepackage{amsmath}
 
-\colorlet{punct}{red!60!black}
-\definecolor{background}{HTML}{EEEEEE}
-\definecolor{delim}{RGB}{20,105,176}
-\colorlet{numb}{magenta!60!black}
-
-\lstdefinelanguage{json}{
-    basicstyle=\normalfont\ttfamily,
-    numbers=left,
-    numberstyle=\scriptsize,
-    stepnumber=1,
-    numbersep=8pt,
-    showstringspaces=false,
-    breaklines=true,
-    frame=lines,
-    backgroundcolor=\color{background},
-    literate=
-     *{0}{{{\color{numb}0}}}{1}
-      {1}{{{\color{numb}1}}}{1}
-      {2}{{{\color{numb}2}}}{1}
-      {3}{{{\color{numb}3}}}{1}
-      {4}{{{\color{numb}4}}}{1}
-      {5}{{{\color{numb}5}}}{1}
-      {6}{{{\color{numb}6}}}{1}
-      {7}{{{\color{numb}7}}}{1}
-      {8}{{{\color{numb}8}}}{1}
-}
-
-\definecolor{lightgray}{rgb}{.9,.9,.9}
-\definecolor{darkgray}{rgb}{.4,.4,.4}
-\definecolor{purple}{rgb}{0.65, 0.12, 0.82}
-
-\lstdefinelanguage{JavaScript}{
-  keywords={const, let, var, typeof, new, true, false, catch, function, return, null, catch, switch, var, if, in, while, do, else, case, break},
-  keywordstyle=\color{blue}\bfseries,
-  ndkeywords={class, export, boolean, throw, implements, import, this},
-  ndkeywordstyle=\color{darkgray}\bfseries,
-  identifierstyle=\color{black},
-  sensitive=false,
-  comment=[l]{//},
-  morecomment=[s]{/*}{*/},
-  commentstyle=\color{purple}\ttfamily,
-  stringstyle=\color{red}\ttfamily,
-  morestring=[b]',
-  morestring=[b]"
-}
-
-\lstdefinelanguage{Python}{
- keywords={not, and, typeof, null, catch, switch, in, int, str, float, self},
- keywordstyle=\color{blue}\bfseries,
- ndkeywords={boolean, throw, import},
- ndkeywords={for, return, class, if ,elif, endif, while, do, else, True, False , catch, def},
- ndkeywordstyle=\color{red}\bfseries,
- identifierstyle=\color{black},
- sensitive=false,
- comment=[l]{\#},
- morecomment=[s]{/*}{*/},
- commentstyle=\color{purple}\ttfamily,
- stringstyle=\color{red}\ttfamily,
-}
-
-\lstset{
-   backgroundcolor=\color{lightgray},
-   extendedchars=true,
-   basicstyle=\footnotesize\ttfamily,
-   showstringspaces=false,
-   showspaces=false,
-   numbers=left,
-   numberstyle=\footnotesize,
-   numbersep=9pt,
-   tabsize=2,
-   breaklines=true,
-   showtabs=false,
-   captionpos=b
-}
+\usepackage{myconfig} % Local file, contains command configurations
 
 \setcounter{secnumdepth}{7}
-
-\usepackage{enumitem}
-\usepackage{tikz-uml}
-
-\usepackage{tcolorbox}
-\newtcolorbox{notebox}{
-  colback=white,
-  colframe=black,
-  boxrule=1pt,
-  arc=4pt,
-  fonttitle=\bfseries,
-  title=NOTA
-}
-
-\newtcolorbox{examplebox}{
-  colback=white,
-  colframe=blue,
-  boxrule=1pt,
-  arc=4pt,
-  fonttitle=\bfseries,
-  title=EJEMPLO
-}
 
 \usepackage{mathpazo} % Use the Palatino font by default
 \usepackage[
@@ -163,47 +60,6 @@ headsepline, % Uncomment to get a line under the header
 \addbibresource{bibliography.bib} % The filename of the bibliography
 
 \usepackage[autostyle=true]{csquotes} % Required to generate language-dependent quotes in the bibliography
-\usepackage{titlesec}
-
-\newcommand{\bold}[1]{\textbf{#1}\ }
-\newcommand{\italic}[1]{\textit{#1}\ }
-\newcommand{\frontend}{\bold{frontend}}
-\newcommand{\backend}{\bold{backend}}
-\newcommand{\ReactJS}{\href{https://react.dev/}{\bold{ReactJS}}}
-\newcommand{\Flask}{\href{https://flask.palletsprojects.com/en/3.0.x/}{\bold{Flask}}}
-\newcommand{\SQLAlchemy}{\href{https://www.sqlalchemy.org/}{\bold{SQL Alchemy}}}
-\newcommand{\TypeScript}{\href{https://www.typescriptlang.org/}{\bold{TypeScript}}}
-\newcommand{\JavaScript}{\href{https://www.javascript.com/}{\bold{JavaScript}}}
-\newcommand{\Python}{\href{https://www.python.org/}{\bold{Python}}}
-\newcommand{\Java}{\href{https://www.java.com/en/}{\bold{Java}}}
-\newcommand{\Rust}{\href{https://www.rust-lang.org/}{\bold{Rust}}}
-\newcommand{\C}{\href{https://en.wikipedia.org/wiki/C_(programming_language)}{\bold{C}}}
-\newcommand{\Haskell}{\href{https://www.haskell.org/}{\bold{Haskell}}}
-
-\newcommand\Chapter[2]{
-  \chapter[#1: {\itshape#2}]{#1\\\hfill\Large\itshape#2}
-  \label{chap:#1}
-}
-
-\newcommand\Section[1]{\section{#1}\label{sec:#1}}
-\newcommand\Subsection[1]{\subsection{#1}\label{ssec:#1}}
-\newcommand\Subsubsection[1]{\subsubsection{#1}\label{sssec:#1}}
-\newcommand\Paragraph[1]{\paragraph{#1}\label{par:#1}}
-
-\newcommand\uml[2]{
-  \begin{figure}[h]
-    \begin{center}
-      #1
-    \end{center}
-    \caption{#2}
-  \end{figure}
-}
-
-%----------------------------------------------------------------------------------------
-%	PARAGRAPH SETTINGS
-%----------------------------------------------------------------------------------------
-
-
 
 %----------------------------------------------------------------------------------------
 %	MARGIN SETTINGS

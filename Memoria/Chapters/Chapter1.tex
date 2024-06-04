@@ -1,4 +1,4 @@
-\Chapter{Problema a investigar}{Objetivos}
+\Chapter{Problema a investigar}{Análisis, implementación y optimización}
 
 \section{Job Shop Scheduling Problem}
 
@@ -218,3 +218,360 @@ esto implica que la primera ejecución de cada conjunto de datos
 de entrada tiene un peor rendimiento que las siguientes.
 Para aislar este hecho, las métricas de la
 primera ejecución de cada conjunto de datos son ignoradas.
+
+\section{Implementación}
+
+\subsection{Task}
+
+La clase \lstinline{Task} correspone a una tarea a realizar.
+Una instancia de esta clase está definida por los atributos:
+\begin{itemize}[itemsep=0.25px]
+    \item \lstinline{unsigned int duration}: Duración de la tarea.
+    \item \lstinline{std::vector<int> qualified_workers}: Listado de trabajadores que pueden realizar la tarea.
+\end{itemize}
+
+\subsection{State}
+
+La clase \lstinline{State} corresponde a un estado (o nodo).
+Una instancia de esta clase está definida por los atributos:
+\begin{itemize}[itemsep=0.25px]
+    \item \lstinline{std::vector<std::vector<Task>> jobs}: Lista de trabajos y tareas a ejecutar.
+    \item \lstinline{std::vector<std::vector<int>> schedule}: Planificación actual.
+    \item \lstinline{std::vector<int> workers_status}: Instantes en los que cada trabajador queda libre.
+\end{itemize}
+
+\begin{notebox}
+    Nótese que el atributo \lstinline{std::vector<std::vector<Task>> jobs} será el mismo
+    en todos los estados de un mismo problema.
+    Por lo que no será necesario revisarlo en
+    \lstinline{State::operator==} ni \lstinline{State::operator()}.
+\end{notebox}
+
+El algoritmo A* requiere que se creen estructuras de datos que contendrán instancias
+de la clase \lstinline{State}.
+Estas estructuras necesitarán que se proporcionen implementaciones para los operadores
+\lstinline{State::operator==} y \lstinline{State::operator()} de la clase \lstinline{State}.
+
+\begin{itemize}[itemsep=0.25px]
+    \item El atributo \lstinline{std::vector<std::vector<Task>> jobs} es igual en todas las
+    instancias de \lstinline{State}, por lo que será ignorado.
+    \item El atributo \lstinline{std::vector<std::vector<int>> schedule} denota
+    la distancia restante hasta el fin del problema.
+    \item El atributo \lstinline{std::vector<int> workers_status} no tiene valor alguno
+    a la hora de denotar la distancia restante hasta resolver el problema,
+    pero es necesario para distinguir dos estados diferentes.
+\end{itemize}
+
+Por ello, será necesario definir dos operadores \lstinline{State::operator()}:
+uno que sea indiferente al atributo \lstinline{std::vector<int> workers_status}
+(\lstinline{StateHash::operator()})
+y otro que sí lo utilice para distinguir diferentes instancias de \lstinline{State}
+(\lstinline{FullHash::operator()}).
+
+
+\section{Optimización}
+
+\subsection{State}
+
+La operación \lstinline{operator()} es ejecutada varias veces para cada
+\lstinline{State}, este metodo tiene una complejidad de $O(n^2)$,
+por lo que su valor se almacena en un atributo una vez calculado por primera vez
+para evitar tener que recalcularlo.
+
+La operación \lstinline{operator()} consta de 2 bucles \lstinline{for} anidados.
+Su principal objetivo es calcular una reducción de los atributos de la instancia
+\lstinline{State}.
+Se utiliza \lstinline{#pragma omp parallel for collapse(2) reduction(+: seed)}
+para paralelizar la reducción.
+
+\begin{lstlisting}[language=C++]
+std::size_t FullHash::operator()(State key) const
+{
+    if (key.get_full_hash() != UNINITIALIZED_HASH)
+        return key.get_full_hash();
+    std::vector<std::vector<int>>
+        schedule = key.get_schedule();
+    std::vector<int> workers_status = key.get_workers_status();
+    std::size_t seed = schedule.size() * schedule[0].size() * workers_status.size();
+
+#pragma omp parallel for reduction(+ : seed)
+    for (size_t i = 0; i < workers_status.size(); i++)
+        seed += (workers_status[i] * 10 ^ i);
+
+    if (schedule.empty())
+        return seed;
+
+    const std::size_t nTasks = schedule[0].size();
+#pragma omp parallel for collapse(2) reduction(+ : seed)
+    for (size_t i = 0; i < schedule.size(); i++)
+    {
+        for (size_t j = 0; j < nTasks; j++)
+            seed += (schedule[i][j] * 10 ^ ((1 + i + workers_status.size()) * j + j));
+    }
+    key.set_full_hash(seed);
+    return seed;
+}
+\end{lstlisting}
+
+Los operadores \lstinline{operator==} necesarios se implementan utilizando
+los operadores \lstinline{operator()} correspondientes.
+
+\begin{notebox}
+    Las funciones hash utilizadas en los \lstinline{operator()}
+    son resistentes a colisiones,
+    esto es, $\nexists (a, b) / h(a) = h(b)$ por lo que se pueden
+    utilizar para comparar elementos en \lstinline{operator==}.
+\end{notebox}
+
+\subsection{A*}
+
+\begin{figure}
+\begin{center}
+\begin{tikzpicture}[node distance=2cm]
+    \node (A) [startstop] {Inicio};
+
+    \node (B) [process, right of=A, xshift=2cm] {
+        Inicializar \lstinline{g_costs}, \lstinline{f_costs} y \lstinline{open_set}
+    };
+
+    \node (C) [decision, below of=B, yshift=-2cm] {
+        ¿Se ha encontrado el objetivo o
+        el \lstinline{open_set} está vacío?
+    };
+
+    \node (D) [startstop, right of=C, xshift=3.5cm] {
+        Retornar
+    };
+
+    \node (E) [process, left of=C, xshift=-3.5cm] {
+        Asignar el primer elemento de \lstinline{open_set}
+        al nodo actual
+    };
+
+    \node (F) [process, below of=E, yshift=-1cm] {
+        Calcular nodos vecinos del nodo actual
+    };
+
+    \node (G) [decision, below of=F, yshift=-2cm] {
+        ¿Hay vecinos? 
+    };
+    
+    \node (H) [process, below of=G, yshift=-2cm] {
+        Calcular el coste G del vecino actual
+    };
+
+    \node (I) [decision, right of=H, xshift=3.5cm] {
+        ¿Es el mejor coste G que se conoce para este estado?
+    };
+
+    \node (J) [process, right of=I, xshift=3.5cm] {
+        Guardar coste G y nodo en \lstinline{g_costs} y \lstinline{f_costs}
+    };
+
+    \node (K) [decision, above of=J, yshift=2cm] {
+        ¿Existe el nodo en el \lstinline{open_set}?
+    };
+
+    \node (L) [process, left of=K, xshift=-3.5cm] {
+        Insertar en \lstinline{open_set}
+    };
+
+    \draw [arrow] (A) -- (B);
+    \draw [arrow] (B) -- (C);
+    \draw [arrow] (C) -- node [anchor=north] {Sí} (D);
+    \draw [arrow] (C) -- node [anchor=north] {No} (E);
+    \draw [arrow] (E) -- (F);
+    \draw [arrow] (F) -- (G);
+    \draw [arrow] (G) -- node [anchor=north west] {No} (C);
+    \draw [arrow] (G) -- node [anchor=east] {Sí} (H);
+    \draw [arrow] (H) -- (I);
+    \draw [arrow] (I) -- node [anchor=north east] {No} (G);
+    \draw [arrow] (I) -- node [anchor=north] {Sí} (J);
+    \draw [arrow] (J) -- (K);
+    \draw [arrow] (K) -- node [anchor=north east] {No} (C);
+    \draw [arrow] (K) -- node [anchor=north] {Sí} (L);
+    \draw [arrow] (L) -- (G);
+\end{tikzpicture}
+\end{center}
+\caption{Representación del algoritmo A*}
+\end{figure}
+
+A la hora de paralelizar un algoritmo existen dos principales direcciones
+en las que basar el diseño:
+\begin{itemize}[itemsep=0.25px]
+    \item Paralelización de datos: $N$ datos independientes sufren el mismo procesamiento de forma paralela.
+    \item Paralelización de tareas: $N$ tareas independientes son ejecutadas de forma paralela.
+\end{itemize}
+
+Visto el diagrama anterior, está claro que las tareas del algoritmo A* no son paralelizables
+y el número de datos (nodos) varía según se ejecuta el algoritmo.
+Ignorando las posibles oportunidades de paralelismo que puedan tener los procesos
+individuales del algoritmo, la principal paralelización se encuentra en el
+procesamiento de cada nodo.
+
+Un hilo principal se encarga de comprobar en cada iteración si se ha encontrado
+el nodo objetivo o si el \lstinline{open_set} está vacío,
+mientras que el resto de hilos son asignados un nodo para procesar.
+
+De cualquier forma, este diseño no tiene por qué necesariamente reducir el tiempo
+requerido para hallar un nodo solución, simplemente tiene la oportunidad de reducirlo
+en algunos casos específicos.
+Porque se explora un mayor número de nodos en el mismo tiempo.
+(Véase Figura 2.2)
+
+\begin{figure}[h]
+\begin{subfigure}{.5\textwidth}
+\begin{center}
+\begin{tikzpicture}[node distance=1.5cm]
+    \node (00) [dot, fill=green!30] {00};
+    \node (01) [dot, right of=00] {01};
+    \node (02) [dot, right of=01] {02};
+    \node (03) [dot, right of=02] {03};
+
+    \node (10) [dot, below of=00] {10};
+    \node (11) [dot, right of=10, fill=blue!30] {11};
+    \node (12) [dot, right of=11] {12};
+    \node (13) [dot, right of=12] {13};
+
+    \node (20) [dot, below of=10] {20};
+    \node (21) [dot, right of=20] {21};
+    \node (22) [dot, right of=21, fill=blue!30] {22};
+    \node (23) [dot, right of=22] {23};
+
+    \node (30) [dot, below of=20] {30};
+    \node (31) [dot, right of=30] {31};
+    \node (32) [dot, right of=31] {32};
+    \node (33) [dot, right of=32, fill=yellow!30] {33};
+
+    \draw [arrow] (00) -- (11);
+    \draw [arrow] (11) -- (22);
+    \draw [arrow] (22) -- (33);
+\end{tikzpicture}
+\subcaption{Algoritmo A* monohilo}
+\end{center}
+\end{subfigure}
+\begin{subfigure}{.5\textwidth}
+\begin{center}
+\begin{tikzpicture}[node distance=1.5cm]
+    \node (00) [dot, fill=green!30] {00};
+    \node (01) [dot, right of=00, fill=blue!30] {01};
+    \node (02) [dot, right of=01] {02};
+    \node (03) [dot, right of=02] {03};
+
+    \node (10) [dot, below of=00, fill=blue!30] {10};
+    \node (11) [dot, right of=10, fill=blue!30] {11};
+    \node (12) [dot, right of=11, fill=blue!30] {12};
+    \node (13) [dot, right of=12] {13};
+
+    \node (20) [dot, below of=10] {20};
+    \node (21) [dot, right of=20, fill=blue!30] {21};
+    \node (22) [dot, right of=21, fill=blue!30] {22};
+    \node (23) [dot, right of=22, fill=blue!30] {23};
+
+    \node (30) [dot, below of=20] {30};
+    \node (31) [dot, right of=30] {31};
+    \node (32) [dot, right of=31, fill=blue!30] {32};
+    \node (33) [dot, right of=32, fill=yellow!30] {33};
+
+    \draw [arrow] (00) -- (11);
+    \draw [arrow] (00) -- (01);
+    \draw [arrow] (00) -- (10);
+    \draw [arrow] (11) -- (22);
+    \draw [arrow] (11) -- (12);
+    \draw [arrow] (11) -- (21);
+    \draw [arrow] (22) -- (33);
+    \draw [arrow] (22) -- (23);
+    \draw [arrow] (22) -- (32);
+\end{tikzpicture}
+\subcaption{Algoritmo A* multihilo (3 hilos)}
+\end{center}
+\end{subfigure}
+\caption{Comparativa entre algoritmos monohilo y multihilo}
+\end{figure}
+
+El diseño paralelo propuesto no es sin inconvenientes,
+tiene varias instancias de secciones críticas que suponen
+una amenaza para el rendimiento del algoritmo.
+
+Primero, al paralelizar el algoritmo siguiendo esta estrategia,
+se han añadido variables de control compartidas por todos
+los hilos que sirven para conocer si se ha resuelto el problema
+o no (una variable donde se copia el resultado y
+otra que sirve como \italic{flag}).
+El acceso a estas variables debe estar controlado
+para evitar el acceso simultaneo a las mismas.
+De cualquier forma, es improbable que dos hilos tengan
+la necesidad de acceder esta sección crítica ya que sólo
+se ejecuta una vez.
+Sería necesario que dos hilos hallasen dos soluciones diferentes al
+problema al mismo tiempo.
+
+Segundo, el acceso al \lstinline{open_set} también 
+debe estar controlado de forma que sólo un hilo
+pueda interactuar con la estructura de datos compartida.
+Esta interacción se presenta al menos en dos instancias por
+cada iteración del bucle principal:
+una primera vez para acceder al nodo a procesar
+y otra para insertar los nuevos vecinos.
+Si bien la obtención del nodo a procesar se realiza en $O(1)$
+ya que el \lstinline{open_set} está ordenado y
+siempre se accede al nodo en la cabeza de la lista,
+la inserción de vecinos no corre la misma suerte,
+es necesario que estos nuevos nodos sean insertados en orden,
+resultando en una complejidad $O(n)$
+\footnote{Esta implementación utiliza iteradores y
+\lstinline{std::deque<T>} para hallar la posición de cada
+nuevo elemento e insertarlo en el mismo barrido.}.
+
+\begin{notebox}
+    La sección crítica correspondiente al \lstinline{open_set}
+    tiene una complejidad proporcional al tamaño del \lstinline{open_set}.
+    Esto es, si el \lstinline{open_set} tiene pocos elementos,
+    la sección crítica tendrá pocos efectos en el rendimiento del programa,
+    pero si contiene un número mayor de elementos,
+    será necesario más tiempo para resolver la sección crítica.
+
+    Nótese que a medida que avanza el programa,
+    el tamaño del \lstinline{open_set} crece,
+    incrementando la duración de la sección crítica y
+    reduciendo la paralelización del algoritmo. 
+\end{notebox}
+
+\begin{figure}[h]
+\begin{center}
+\begin{tikzpicture}[node distance=2cm]
+    \node (A) [startstop] {Obtener nodo};
+
+    \node (B) [decision, below of=A, yshift=-2cm] {
+        ¿Es el nodo final?
+    };
+
+    \node (C) [process, right of=B, xshift=3cm] {
+        Anotar como resultado y levantar \italic{flag}
+    };
+
+    \node (D) [process, below of=B, yshift=-2cm] {
+        Calcular nodos vecinos del nodo actual
+    };
+
+    \node (E) [decision, below of=D, yshift=-2cm] {
+        ¿Hay vecinos?
+    };
+
+    \node (F) [process, right of=E, xshift=3cm] {
+        Procesar vecino
+    };
+
+    \draw [arrow] (A) -- (B);
+    \draw [arrow] (B) -- node [anchor=north] {Sí} (C);
+    \draw [arrow] (B) -- node [anchor=east] {No} (D);
+    \draw [arrow] (D) -- (E);
+    \draw [arrow] (E) -- node [anchor=north] {Sí} (F);
+    \draw [arrow] (E) to [bend left=2cm] node [anchor=east] {No} (A);
+    \draw [arrow] (F) to [bend left=2cm] (E);
+
+    
+\end{tikzpicture}
+\caption{Representación de la sección paralela del algoritmo}
+\end{center}
+\end{figure}
