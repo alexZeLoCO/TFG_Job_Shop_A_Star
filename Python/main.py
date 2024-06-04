@@ -8,7 +8,7 @@ from Wrappers import timeit
 import csv
 
 
-logger = Logger(level=logging.DEBUG)
+logger = Logger(level=logging.NOTSET)
 
 
 def read_from_file(filename: str) -> List[List[Task]]:
@@ -48,7 +48,7 @@ def a_star(
     jobs: List[List[Task]],
     n_workers: int,
     n_worker_types: int = None
-) -> List[List[int]]:
+) -> State:
     if (n_worker_types is None):
         n_worker_types = get_n_worker_types(jobs)
     starting_state: State = State(
@@ -77,7 +77,7 @@ def a_star(
         logger.debug(f"New current state {current_state} (iter. {n_iter})")
         if (current_state.is_goal_state()):
             logger.debug(f"Solution has been found {current_state}")
-            return current_state.schedule
+            return current_state
         neighbor_states: List[State] = current_state.get_neighbors_of()
         logger.debug(f"Found {len(neighbor_states)} neighbors")
         for neighbor in neighbor_states:
@@ -95,14 +95,14 @@ def a_star(
                              f"{(
                                  tentative_g_cost +
                                  neighbor.calculate_h_cost()
-                )}")
+                                )}")
                 g_costs[neighbor] = tentative_g_cost
                 f_costs[neighbor] = (
                     tentative_g_cost +
                     neighbor.calculate_h_cost()
                 )
                 if neighbor not in open_set:
-                    logger.debug(f"Neighbor was not in open_set, adding")
+                    logger.debug("Neighbor was not in open_set, adding")
                     open_set.append(neighbor)
 
 
@@ -120,7 +120,7 @@ def main():
 
     # CSV HEADER
     print("lang;n_threads;function;args;n_jobs"
-          ";n_tasks;n_workers;runtime;result")
+          ";n_tasks;n_workers;runtime;schedule;makespan")
 
     jobs: List[List[Task]] = read_from_file('../datasets/ft06.csv')
 
