@@ -3,8 +3,8 @@
 template <typename T>
 void SortedList<T>::append(T item)
 {
-    typename std::vector<T>::iterator pos = this->m_data.begin();
-    typename std::vector<T>::iterator end = this->m_data.end();
+    typename std::deque<T>::iterator pos = this->m_data.begin();
+    typename std::deque<T>::iterator end = this->m_data.end();
     while (
         pos < end &&
         !this->m_sorter(item, *pos))

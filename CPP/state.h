@@ -6,15 +6,17 @@
 #include <iostream>
 #include <omp.h>
 
+#include "task.h"
+
 constexpr std::size_t UNINITIALIZED_HASH = 0;
 
 class State
 {
 private:
-    std::vector<std::vector<int>> jobs{};
+    std::vector<std::vector<Task>> m_jobs{};
 
-    std::vector<std::vector<int>> schedule{};
-    std::vector<int> workers_status{};
+    std::vector<std::vector<int>> m_schedule{};
+    std::vector<int> m_workers_status{};
 
     unsigned int h_cost{};
     unsigned int g_cost{};
@@ -24,25 +26,25 @@ private:
 
 public:
     State() : State(
-                  std::vector<std::vector<int>>(),
+                  std::vector<std::vector<Task>>(),
                   std::vector<std::vector<int>>(),
                   std::vector<int>())
     {
     }
 
     State(
-        std::vector<std::vector<int>> const &jobs,
+        std::vector<std::vector<Task>> const &jobs,
         std::vector<std::vector<int>> const &schedule,
-        std::vector<int> const &workers_status) : jobs(jobs),
-                                                  schedule(schedule),
-                                                  workers_status(workers_status)
+        std::vector<int> const &workers_status) : m_jobs(jobs),
+                                                  m_schedule(schedule),
+                                                  m_workers_status(workers_status)
     {
         this->g_cost = this->get_max_worker_status();
         this->h_cost = this->calculate_h_cost();
     };
 
-    std::vector<std::vector<int>> get_schedule() const { return this->schedule; }
-    std::vector<int> get_workers_status() const { return this->workers_status; }
+    std::vector<std::vector<int>> get_schedule() const { return this->m_schedule; }
+    std::vector<int> get_workers_status() const { return this->m_workers_status; }
 
     unsigned int get_g_cost() const { return this->g_cost; }
     unsigned int get_h_cost() const { return this->h_cost; }

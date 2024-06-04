@@ -55,33 +55,44 @@ std::ostream &operator<<(std::ostream &os, const std::vector<T> &vec)
     return os;
 }
 
-std::vector<std::vector<int>> get_jobs_from_file(std::string filename)
+std::vector<std::vector<Task>> get_jobs_from_file(std::string filename)
 {
     std::ifstream file(filename);
     std::string my_string;
     std::string my_number;
-    std::vector<std::vector<int>> out;
-    if (file.is_open())
+    std::vector<std::vector<Task>> out;
+    if (!file.is_open())
     {
-        while (std::getline(file, my_string))
+        std::cerr << "Could not read file" << std::endl;
+        file.close();
+        return out;
+    }
+    while (std::getline(file, my_string))
+    {
+        std::stringstream line(my_string);
+        out.emplace_back();
+        bool is_worker = true;
+        unsigned int qualified_worker = 0;
+        while (std::getline(line, my_number, ';'))
         {
-            std::stringstream line(my_string);
-            out.push_back(std::vector<int>());
-            unsigned int idx = 0;
-            while (std::getline(line, my_number, ';'))
+            if (is_worker)
             {
-                if (idx++ % 2 != 0)
-                    out[out.size() - 1].push_back(stoi(my_number));
+                qualified_worker = stoi(my_number);
+                is_worker = false;
+            }
+            else
+            {
+                out[out.size() - 1].emplace_back(stoi(my_number),
+                                                 std::vector<unsigned int>(1, qualified_worker));
+                is_worker = true;
             }
         }
     }
-    else
-        std::cerr << "Could not read file";
     file.close();
     return out;
 }
 
-State a_star(std::vector<std::vector<int>> jobs, int n_workers)
+State a_star(std::vector<std::vector<Task>> jobs, std::size_t n_workers)
 {
     const std::size_t n_jobs = jobs.size();
     if (n_jobs == 0)
@@ -89,6 +100,8 @@ State a_star(std::vector<std::vector<int>> jobs, int n_workers)
     const std::size_t n_tasks = jobs[0].size();
     if (n_tasks == 0)
         return State();
+    if (n_workers == 0)
+        n_workers = n_tasks;
 
     const std::vector<std::vector<int>> starting_schedule(n_jobs, std::vector<int>(n_tasks, -1));
     const std::vector<int> starting_workers_status(n_workers, 0);
@@ -156,8 +169,8 @@ State a_star(std::vector<std::vector<int>> jobs, int n_workers)
 }
 
 State timeit(
-    const std::function<State(std::vector<std::vector<int>>, int)> &foo,
-    const std::vector<std::vector<int>> &jobs, int n_workers)
+    const std::function<State(std::vector<std::vector<Task>>, int)> &foo,
+    const std::vector<std::vector<Task>> &jobs, int n_workers)
 {
     foo(jobs, n_workers); // Cache warm up
     auto start_time = std::chrono::high_resolution_clock::now();
@@ -167,11 +180,11 @@ State timeit(
     std::cout << "c++;" << omp_get_max_threads() << ";a_star" << ";(" << jobs << ", "
               << n_workers << ");" << jobs.size() << ";" << jobs[0].size() << ";"
               << n_workers << ";" << std::setprecision(5) << std::scientific
-              << total_time.count() << ";" << result << std::endl;
+              << total_time.count() << ";" << result << ";" << result.get_max_worker_status() << std::endl;
     return result;
 }
 
-void process_jobs(const std::vector<std::vector<int>> &jobs, int max_workers)
+void process_jobs(const std::vector<std::vector<Task>> &jobs, int max_workers)
 {
     for (int n_workers = 1; n_workers <= max_workers; n_workers++)
     {
@@ -179,7 +192,7 @@ void process_jobs(const std::vector<std::vector<int>> &jobs, int max_workers)
     }
 }
 
-void process_jobs(const std::vector<std::vector<int>> &jobs)
+void process_jobs(const std::vector<std::vector<Task>> &jobs)
 {
     process_jobs(jobs, jobs.size() + 1);
 }
@@ -187,54 +200,45 @@ void process_jobs(const std::vector<std::vector<int>> &jobs)
 int main(int argc, char **argv)
 {
     // CSV HEADER
-    std::cout << "lang;n_threads;function;args;n_jobs;n_tasks;n_workers;runtime;result" << std::endl;
+    std::cout << "lang;n_threads;function;args;n_jobs;n_tasks;n_workers;runtime;schedule;makespan" << std::endl;
 
     // std::cout << a_star({{2, 5, 1}, {3, 3, 3}}, 2) << std::endl;
 
-    // timeit(a_star, {{2, 1, 4, 5, 5, 4, 1, 2, 2, 1, 4, 5}}, 1);
-    // timeit(a_star, {{2}, {1}, {4}, {5}, {5}, {4}, {1}, {2}, {2}, {1}, {4}, {5}}, 1);
-    // timeit(a_star, {{2, 1, 4, 5, 5, 4, 1, 2, 2, 1, 4, 5}}, 2);
-    // timeit(a_star, {{2}, {1}, {4}, {5}, {5}, {4}, {1}, {2}, {2}, {1}, {4}, {5}}, 2);
-
-    /*
-        process_jobs({{2, 5}, {3, 3}});
-        process_jobs({{2, 5, 1}, {3, 3, 3}});
-        process_jobs({{2, 5, 1, 2}, {3, 3, 3, 7}});
-        process_jobs({{2, 5, 1, 2, 5}, {3, 3, 3, 7, 5}});
-
-        process_jobs({{2, 5}, {3, 3}, {1, 7}});
-        process_jobs({{2, 5, 1}, {3, 3, 3}, {1, 7, 2}});
-        process_jobs({{2, 5, 1, 2}, {3, 3, 3, 7}, {1, 7, 2, 8}});
-        process_jobs({{2, 5, 1, 2, 5}, {3, 3, 3, 7, 5}, {1, 7, 2, 8, 1}});
-
-        process_jobs({{2, 5}, {3, 3}, {1, 7}, {2, 2}});
-        process_jobs({{2, 5, 1}, {3, 3, 3}, {1, 7, 2}, {2, 2, 3}});
-        process_jobs({{2, 5, 1, 2}, {3, 3, 3, 7}, {1, 7, 2, 8}, {2, 2, 3, 6}});
-        process_jobs({{2, 5, 1, 2, 5}, {3, 3, 3, 7, 5}, {1, 7, 2, 8, 1}, {2, 2, 3, 6, 4}});
-
-        process_jobs({{2, 5}, {3, 3}, {1, 7}, {2, 2}, {3, 3}});
-        process_jobs({{2, 5, 1}, {3, 3, 3}, {1, 7, 2}, {2, 2, 3}, {3, 3, 2}});
-        process_jobs({{2, 5, 1, 2}, {3, 3, 3, 7}, {1, 7, 2, 8}, {2, 2, 3, 6}, {3, 3, 2, 4}});
-        process_jobs({{2, 5, 1, 2, 5}, {3, 3, 3, 7, 5}, {1, 7, 2, 8, 1}, {2, 2, 3, 6, 4}, {3, 3, 2, 4, 6}});
-
-        process_jobs({{2, 5}, {3, 3}, {1, 7}, {2, 2}, {3, 3}, {4, 4}});
-        process_jobs({{2, 5, 1}, {3, 3, 3}, {1, 7, 2}, {2, 2, 3}, {3, 3, 2}, {4, 4, 1}});
-        process_jobs({{2, 5, 1, 2}, {3, 3, 3, 7}, {1, 7, 2, 8}, {2, 2, 3, 6}, {3, 3, 2, 4}, {4, 4, 1, 5}});
-        process_jobs({{2, 5, 1, 2, 5}, {3, 3, 3, 7, 5}, {1, 7, 2, 8, 1}, {2, 2, 3, 6, 4}, {3, 3, 2, 4, 6}, {4, 4, 1, 5, 3}});
-
-    timeit(a_star,
-           {{88, 68, 94, 99, 67},
-            {72, 50, 69, 75, 94},
-            {98, 73, 82, 51, 71},
-            {94, 71, 81, 85, 66},
-            {50, 59, 82, 67, 56}},
-           5);
-           */
+    std::vector<std::vector<Task>> jobs =
+        get_jobs_from_file("../datasets/ft06.csv");
 
     timeit(
         a_star,
-        get_jobs_from_file("../datasets/abz5.csv"),
-        5);
+        jobs,
+        0);
 
     return 0;
+}
+
+void run_short_jobs()
+{
+    process_jobs({{2, 5}, {3, 3}});
+    process_jobs({{2, 5, 1}, {3, 3, 3}});
+    process_jobs({{2, 5, 1, 2}, {3, 3, 3, 7}});
+    process_jobs({{2, 5, 1, 2, 5}, {3, 3, 3, 7, 5}});
+
+    process_jobs({{2, 5}, {3, 3}, {1, 7}});
+    process_jobs({{2, 5, 1}, {3, 3, 3}, {1, 7, 2}});
+    process_jobs({{2, 5, 1, 2}, {3, 3, 3, 7}, {1, 7, 2, 8}});
+    process_jobs({{2, 5, 1, 2, 5}, {3, 3, 3, 7, 5}, {1, 7, 2, 8, 1}});
+
+    process_jobs({{2, 5}, {3, 3}, {1, 7}, {2, 2}});
+    process_jobs({{2, 5, 1}, {3, 3, 3}, {1, 7, 2}, {2, 2, 3}});
+    process_jobs({{2, 5, 1, 2}, {3, 3, 3, 7}, {1, 7, 2, 8}, {2, 2, 3, 6}});
+    process_jobs({{2, 5, 1, 2, 5}, {3, 3, 3, 7, 5}, {1, 7, 2, 8, 1}, {2, 2, 3, 6, 4}});
+
+    process_jobs({{2, 5}, {3, 3}, {1, 7}, {2, 2}, {3, 3}});
+    process_jobs({{2, 5, 1}, {3, 3, 3}, {1, 7, 2}, {2, 2, 3}, {3, 3, 2}});
+    process_jobs({{2, 5, 1, 2}, {3, 3, 3, 7}, {1, 7, 2, 8}, {2, 2, 3, 6}, {3, 3, 2, 4}});
+    process_jobs({{2, 5, 1, 2, 5}, {3, 3, 3, 7, 5}, {1, 7, 2, 8, 1}, {2, 2, 3, 6, 4}, {3, 3, 2, 4, 6}});
+
+    process_jobs({{2, 5}, {3, 3}, {1, 7}, {2, 2}, {3, 3}, {4, 4}});
+    process_jobs({{2, 5, 1}, {3, 3, 3}, {1, 7, 2}, {2, 2, 3}, {3, 3, 2}, {4, 4, 1}});
+    process_jobs({{2, 5, 1, 2}, {3, 3, 3, 7}, {1, 7, 2, 8}, {2, 2, 3, 6}, {3, 3, 2, 4}, {4, 4, 1, 5}});
+    process_jobs({{2, 5, 1, 2, 5}, {3, 3, 3, 7, 5}, {1, 7, 2, 8, 1}, {2, 2, 3, 6, 4}, {3, 3, 2, 4, 6}, {4, 4, 1, 5, 3}});
 }

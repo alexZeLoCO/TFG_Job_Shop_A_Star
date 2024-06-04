@@ -4,6 +4,7 @@
 #include <functional>
 #include <algorithm>
 #include <iterator>
+#include <deque>
 
 #include "state.h"
 
@@ -13,16 +14,16 @@ template <typename T>
 class SortedList
 {
 private:
-    std::vector<T> m_data;
+    std::deque<T> m_data;
     std::function<bool(const T &, const T &)> m_sorter;
 
 public:
     explicit SortedList(std::function<bool(const T &, const T &)> const &sorter) : m_sorter(sorter)
     {
-        this->m_data.reserve(STARTING_VECTOR_CAPACITY);
+        // this->m_data.reserve(STARTING_VECTOR_CAPACITY);
     }
 
-    std::vector<T> get_data() const { return this->m_data; }
+    std::deque<T> get_data() const { return this->m_data; }
 
     void append(T);
     T pop();

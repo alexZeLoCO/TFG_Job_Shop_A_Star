@@ -12,13 +12,13 @@ unsigned int State::get_max_worker_status() const
 unsigned int State::calculate_h_cost() const
 {
     std::vector<int> h_costs;
-    for (size_t job_idx = 0; job_idx < this->jobs.size(); job_idx++)
+    for (size_t job_idx = 0; job_idx < this->m_jobs.size(); job_idx++)
     {
         h_costs.emplace_back(0);
-        std::vector<int> job = jobs[job_idx];
+        std::vector<Task> job = this->m_jobs[job_idx];
         for (size_t task_idx = 0; task_idx < job.size(); task_idx++)
             if (this->get_schedule()[job_idx][task_idx] == -1)
-                h_costs[job_idx] += job[task_idx];
+                h_costs[job_idx] += job[task_idx].get_duration();
     }
     auto max_element = std::max_element(h_costs.begin(), h_costs.end());
     return max_element == h_costs.end() ? 0 : *max_element;
@@ -31,16 +31,6 @@ bool State::is_goal_state() const
             if (task == -1)
                 return false;
     return true;
-}
-
-int State::distance_to(std::vector<std::vector<int>> &to) const
-{
-    State from = *this;
-    for (size_t job_idx = 0; job_idx < this->jobs.size(); job_idx++)
-        for (size_t task_idx = 0; task_idx < this->jobs[job_idx].size(); task_idx++)
-            if (from.get_schedule()[job_idx][task_idx] != to[job_idx][task_idx])
-                return jobs[job_idx][task_idx];
-    return 0;
 }
 
 std::vector<int> State::get_first_unscheduled_task_idxs() const
@@ -65,7 +55,7 @@ std::vector<int> State::get_first_unscheduled_task_start_times(
     std::vector<int> &first_unscheduled_task_idxs) const
 {
     std::vector<int> first_unscheduled_task_start_times;
-    for (size_t job_idx = 0; job_idx < jobs.size(); job_idx++)
+    for (size_t job_idx = 0; job_idx < this->m_jobs.size(); job_idx++)
     {
         int currently_unscheduled_task_idx = first_unscheduled_task_idxs[job_idx];
         if (currently_unscheduled_task_idx != -1)
@@ -74,7 +64,7 @@ std::vector<int> State::get_first_unscheduled_task_start_times(
                 first_unscheduled_task_start_times.emplace_back(0);
             else
                 first_unscheduled_task_start_times.emplace_back(
-                    jobs[job_idx][currently_unscheduled_task_idx - 1] +
+                    this->m_jobs[job_idx][currently_unscheduled_task_idx - 1].get_duration() +
                     this->get_schedule()[job_idx][currently_unscheduled_task_idx - 1]);
         }
         else
@@ -96,17 +86,26 @@ std::vector<State> State::get_neighbors_of() const
         if (task_start_time != -1)
         {
             int unscheduled_task_idx = first_unscheduled_task_idxs[job_idx];
-            for (size_t worker_id = 0; worker_id < this->get_workers_status().size(); worker_id++)
+            Task currentTask = this->m_jobs[job_idx][unscheduled_task_idx];
+            std::vector<unsigned int> qualified_workers = currentTask.get_qualified_workers();
+            if (qualified_workers.empty())
+                for (std::size_t i = 0; i < this->get_workers_status().size(); i++)
+                    qualified_workers.push_back(i);
+            for (const unsigned int worker_id : qualified_workers)
             {
-                int worker_start_time = std::max(this->get_workers_status()[worker_id], task_start_time);
+                // int worker_start_time = std::max(this->get_workers_status()[worker_id], task_start_time);
+                int worker_start_time = this->get_workers_status()[worker_id] > task_start_time
+                                            ? this->get_workers_status()[worker_id]
+                                            : task_start_time;
 
                 std::vector<std::vector<int>> new_schedule = this->get_schedule();
                 new_schedule[job_idx][unscheduled_task_idx] = worker_start_time;
 
                 std::vector<int> new_workers_status = this->get_workers_status();
-                new_workers_status[worker_id] = (worker_start_time + jobs[job_idx][unscheduled_task_idx]);
+                new_workers_status[worker_id] = (worker_start_time +
+                                                 currentTask.get_duration());
 
-                neighbors.emplace_back(this->jobs, new_schedule, new_workers_status);
+                neighbors.emplace_back(this->m_jobs, new_schedule, new_workers_status);
             }
         }
     }
@@ -142,9 +141,9 @@ std::ostream &operator<<(std::ostream &output_stream, const State &the_state)
 State &State::operator=(const State &other_state)
 {
     this->g_cost = other_state.get_g_cost();
-    this->schedule = other_state.get_schedule();
-    this->jobs = other_state.jobs;
-    this->workers_status = other_state.get_workers_status();
+    this->m_schedule = other_state.get_schedule();
+    this->m_jobs = other_state.m_jobs;
+    this->m_workers_status = other_state.get_workers_status();
     return *this;
 }
 
