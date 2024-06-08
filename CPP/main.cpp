@@ -65,6 +65,7 @@ State a_star(
         {
             goal_state = current_state;
             found_goal_state = true;
+            break;
         }
 
         const std::vector<State> neighbor_states = current_state.get_neighbors_of(); // O(2n + n^2) or (n + 2n^2)
