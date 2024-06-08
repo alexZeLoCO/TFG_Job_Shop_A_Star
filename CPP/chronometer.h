@@ -32,7 +32,7 @@ public:
             auto n_workers = (unsigned int)state.get_workers_status().size();
             std::cout << "c++;" << omp_get_max_threads() << ";a_star;" << ((float)goal) / 10 << ";" << state.get_jobs().size() << ";" << state.get_jobs()[0].size() << ";"
                       << n_workers << ";" << std::setprecision(5) << std::scientific
-                      << this->time().count() << ";" << state << ";" << state.get_max_worker_status() << std::endl;
+                      << this->time().count() << std::defaultfloat << ";" << state << ";" << state.get_max_worker_status() << std::endl;
         }
     }
 };
