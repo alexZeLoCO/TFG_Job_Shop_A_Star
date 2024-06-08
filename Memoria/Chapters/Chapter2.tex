@@ -1,1 +1,83 @@
 \Chapter{Experimentos}{Trabajo y Resultados}
+
+\section{Conjuntos de datos}
+
+Los diferentes conjuntos de datos utilizados para medir el rendimiento
+de las diferentes implementaciones han sido obtenidos de
+\href{http://jobshop.jjvh.nl/}{(HTTP) Jobshop Instances}
+o diseñados a mano.
+
+\subsection{\italic{Jobshop Instances}}
+
+\subsection{Personalizados}
+
+\section{Método de medición}
+
+Todas las versiones imprimen por salida estándar datos que posteriormente son
+procesados en formato CSV:
+
+\begin{itemize}[itemsep=0.25px]
+    \item Lenguaje
+    \item Número de hilos
+    \item Trabajos
+    \item Tareas
+    \item Trabajadores
+    \item Tiempo de ejecución
+    \item Planificación
+    \item \italic{Makespan}
+\end{itemize}
+
+\subsection{Python}
+
+Se utiliza un \italic{Wrapper} de python que se encarga de tomar
+una medición de tiempo antes y después de iniciar el algoritmo.
+
+\begin{lstlisting}[language=Python]
+def timeit(func):
+    @wraps(func)
+    def timeit_wrapper(*args, **kwargs):
+        n_jobs: int = len(args[0])
+        n_tasks: int = len(args[0][0])
+        n_workers: int = args[1]
+        func(*args, **kwargs)  # Cache warm up
+        start_time = time.perf_counter()
+        result: State = func(*args, **kwargs)
+        end_time = time.perf_counter()
+        total_time = end_time - start_time
+        print(
+            (f"py;1;{func.__name__};{args};{n_jobs};{n_tasks};"
+             f"{n_workers};{total_time:1.5E};{result.schedule};"
+             f"{max(result.workers_status)}")
+        )
+        return result
+    return timeit_wrapper
+\end{lstlisting}
+
+\subsection{C++}
+
+Se utiliza una función que se encarga de tomar una medición de tiempo
+antes y después de iniciar el algoritmo.
+
+\begin{lstlisting}[language=C++]
+State timeit(
+    const std::function<State(std::vector<std::vector<Task>>, int)> &foo,
+    const std::vector<std::vector<Task>> &jobs, int n_workers)
+{
+    foo(jobs, n_workers); // Cache warm up
+    auto start_time = std::chrono::high_resolution_clock::now();
+    const State result = foo(jobs, n_workers);
+    auto end_time = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> total_time = end_time - start_time;
+    std::cout << "c++;" << omp_get_max_threads() << ";a_star" << ";(" << jobs << ", "
+              << n_workers << ");" << jobs.size() << ";" << jobs[0].size() << ";"
+              << n_workers << ";" << std::setprecision(5) << std::scientific
+              << total_time.count() << ";" << result << ";" << result.get_max_worker_status() << std::endl;
+    return result;
+}
+\end{lstlisting}
+
+\subsection{FPGA}
+
+\section{Resultados}
+
+\section{Análisis}

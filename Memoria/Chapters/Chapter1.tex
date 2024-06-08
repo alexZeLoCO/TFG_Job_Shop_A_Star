@@ -55,6 +55,87 @@ algoritmos \italic{Branch and Bound} y heurísticos.
 En este estudio se utilizará un algoritmo heurístico, A* (\italic{A star})~\cite{HNR68}
 para resolver el problema JSP\@.
 
+El A* es una evolución del algoritmo de Dijkstra.
+Su principal diferencia es la implementación de una función heurística
+que se utiliza para decidir el siguiente nodo a expandir.
+De esta forma, se podría decir que el algoritmo A* va `guiado'
+hacia la solución, mientras que el algoritmo de Dijkstra
+sigue los caminos con menor coste.
+
+\begin{figure}
+\begin{subfigure}{.5\textwidth}
+\begin{center}
+\begin{tikzpicture}[node distance=1.5cm]
+    \node (00) [dot, fill=green!30] {00};
+    \node (01) [dot, right of=00, fill=blue!30] {01};
+    \node (02) [dot, right of=01] {02};
+    \node (03) [dot, right of=02, fill=blue!30] {03};
+
+    \node (10) [dot, below of=00] {10};
+    \node (11) [dot, right of=10, fill=blue!30] {11};
+    \node (12) [dot, right of=11, fill=blue!30] {12};
+    \node (13) [dot, right of=12, fill=blue!30] {13};
+
+    \node (20) [dot, below of=10] {20};
+    \node (21) [dot, right of=20] {21};
+    \node (22) [dot, right of=21, fill=blue!30] {22};
+    \node (23) [dot, right of=22] {23};
+
+    \node (30) [dot, below of=20] {30};
+    \node (31) [dot, right of=30, fill=blue!30] {31};
+    \node (32) [dot, right of=31, fill=blue!30] {32};
+    \node (33) [dot, right of=32, fill=yellow!30] {33};
+
+    \draw [arrow] (00) -- (11);
+    \draw [arrow] (00) -- (01);
+
+    \draw [arrow] (11) -- (22);
+    \draw [arrow] (11) -- (12);
+    \draw [arrow] (12) -- (13);
+    \draw [arrow] (13) -- (03);
+
+    \draw [arrow] (22) -- (33);
+    \draw [arrow] (22) -- (32);
+
+    \draw [arrow] (32) -- (31);
+\end{tikzpicture}
+\subcaption{Algoritmo Dijkstra}
+\end{center}
+\end{subfigure}
+\begin{subfigure}{.5\textwidth}
+\begin{center}
+\begin{tikzpicture}[node distance=1.5cm]
+    \node (00) [dot, fill=green!30] {00};
+    \node (01) [dot, right of=00] {01};
+    \node (02) [dot, right of=01] {02};
+    \node (03) [dot, right of=02] {03};
+
+    \node (10) [dot, below of=00] {10};
+    \node (11) [dot, right of=10, fill=blue!30] {11};
+    \node (12) [dot, right of=11] {12};
+    \node (13) [dot, right of=12] {13};
+
+    \node (20) [dot, below of=10] {20};
+    \node (21) [dot, right of=20] {21};
+    \node (22) [dot, right of=21, fill=blue!30] {22};
+    \node (23) [dot, right of=22] {23};
+
+    \node (30) [dot, below of=20] {30};
+    \node (31) [dot, right of=30] {31};
+    \node (32) [dot, right of=31] {32};
+    \node (33) [dot, right of=32, fill=yellow!30] {33};
+
+    \draw [arrow] (00) -- (11);
+    \draw [arrow] (11) -- (22);
+    \draw [arrow] (22) -- (33);
+\end{tikzpicture}
+\subcaption{Algoritmo A*}
+\end{center}
+\end{subfigure}
+\caption{Comparativa entre algoritmos Dijkstra y A*}
+\label{fig:DijkstraA*Comparison}
+\end{figure}
+
 El algoritmo A* utiliza varios componentes para resolver problemas
 de optimización. A continuación se describe cada uno de ellos.
 
@@ -165,13 +246,13 @@ Posteriormente, se realizan comparaciones entre ellas.
 
 \subsubsection{Arquitectura x86}
 
-Inicialmente, se realiza una implementación del problema utilizando \Python.
+Inicialmente, se realiza una implementación del algoritmo utilizando \Python.
 Esta versión permite comprobar rápidamente el correcto funcionamiento del mismo
 así como llevar a cabo pruebas rápidas sin necesidad de compilación y
 estudiar los posibles cuellos de botella del algoritmo.
 
 Posteriormente, se desarrolla una nueva versión del mismo algoritmo
-utilizando C, un lenguaje compilado con mayor rendimiento
+utilizando C++, un lenguaje compilado, declarativo y orientado a objetos
 que facilita la paralelización gracias a librerías como 
 \href{https://www.openmp.org/}{OpenMP}\@.
 
@@ -180,11 +261,11 @@ se realizan comparativas entre las distintas implementaciones
 de esta aquitectura, en particular:
 
 \begin{enumerate}[itemsep=0.25px]
-    \item Comparativa entre el rendimiento monohilo de Python y C.
-    \item Comparativa entre el rendimiento monohilo de C y multihilo de C.
+    \item Comparativa entre el rendimiento monohilo de Python y C++.
+    \item Comparativa entre el rendimiento monohilo de C++ y multihilo de C++.
 \end{enumerate}
 
-\subsection{FPGA}
+\subsubsection{FPGA}
 
 Finalmente, se desarrolla una implementación del algoritmo
 diseñado para ser ejecutado en una FPGA\@.
@@ -195,7 +276,7 @@ Para realizar esta implementación,
 se utiliza el software propio de Xilinx (AMD),
 Vitis HDL\@.
 Este programa ofrece entre muchas otras herramientas
-un sintetizador capaz de transpilar código C a Verilog
+un sintetizador capaz de transpilar código C++ a Verilog
 que puede ser entonces compilado
 para ejecutarse en la FPGA\@.
 
@@ -211,15 +292,21 @@ Principalmente:
 \end{enumerate}
 
 Como es lógico, el algoritmo es ejecutado utilizando
-varios datos de entrada distintos múltiples veces.
-Es de crucial importancia tener en cuenta la
-caché de los dispositivos,
-esto implica que la primera ejecución de cada conjunto de datos
-de entrada tiene un peor rendimiento que las siguientes.
-Para aislar este hecho, las métricas de la
-primera ejecución de cada conjunto de datos son ignoradas.
+distintos datos de entrada múltiples veces.
+
+\begin{notebox}
+    La segunda ejecución de cualquier algoritmo suele tender a
+    requerir menos tiempo debido al funcionamiento de la caché.
+    
+    Para evitar este fenómeno, el algoritmo se ejecuta
+    siempre dos veces ignorando las métricas de la primera ejecución.
+\end{notebox}
 
 \section{Implementación}
+
+Tanto \Python como C++ son lenguajes orientados a objetos.
+Esta sección contiene las descripciones de las diferentes
+clases diseñadas para dar soporte al algoritmo.
 
 \subsection{Task}
 
@@ -249,17 +336,21 @@ Una instancia de esta clase está definida por los atributos:
 
 El algoritmo A* requiere que se creen estructuras de datos que contendrán instancias
 de la clase \lstinline{State}.
-Estas estructuras necesitarán que se proporcionen implementaciones para los operadores
+Estas estructuras necesitan que se proporcionen implementaciones para los operadores
 \lstinline{State::operator==} y \lstinline{State::operator()} de la clase \lstinline{State}.
+Para diseñar las implementaciones de estos operadores
+se estudian previamente los atributos que componen la clase \lstinline{State}:
 
 \begin{itemize}[itemsep=0.25px]
-    \item El atributo \lstinline{std::vector<std::vector<Task>> jobs} es igual en todas las
+    \item \lstinline{std::vector<std::vector<Task>> jobs}: Es igual en todas las
     instancias de \lstinline{State}, por lo que será ignorado.
-    \item El atributo \lstinline{std::vector<std::vector<int>> schedule} denota
-    la distancia restante hasta el fin del problema.
-    \item El atributo \lstinline{std::vector<int> workers_status} no tiene valor alguno
-    a la hora de denotar la distancia restante hasta resolver el problema,
-    pero es necesario para distinguir dos estados diferentes.
+    \item \lstinline{std::vector<std::vector<int>> schedule}: Proporciona
+    información crucial sobre el estado ($cost_g$ y $cost_h$).
+    \item \lstinline{std::vector<int> workers_status}: No proporciona
+    información alguna sobre los costes,
+    pero es necesario para distinguir dos estados diferentes
+    ya que es posible que dos estados tengan los mismos costes pero a través de
+    planificaciones distintas.
 \end{itemize}
 
 Por ello, será necesario definir dos operadores \lstinline{State::operator()}:
@@ -274,17 +365,20 @@ y otro que sí lo utilice para distinguir diferentes instancias de \lstinline{St
 \subsection{State}
 
 La operación \lstinline{operator()} es ejecutada varias veces para cada
-\lstinline{State}, este metodo tiene una complejidad de $O(n^2)$,
-por lo que su valor se almacena en un atributo una vez calculado por primera vez
+\lstinline{State}, este método tiene una complejidad de $O(n^2)$,
+por lo que su valor se almacena tras calcularlo por primera vez
 para evitar tener que recalcularlo.
 
-La operación \lstinline{operator()} consta de 2 bucles \lstinline{for} anidados.
+La operación \lstinline{operator()} contiene 2 bucles \lstinline{for} anidados.
 Su principal objetivo es calcular una reducción de los atributos de la instancia
 \lstinline{State}.
 Se utiliza \lstinline{#pragma omp parallel for collapse(2) reduction(+: seed)}
 para paralelizar la reducción.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[
+    language=C++,
+    caption=Implementación de \lstinline{FullHash::operator()}
+]
 std::size_t FullHash::operator()(State key) const
 {
     if (key.get_full_hash() != UNINITIALIZED_HASH)
@@ -314,16 +408,28 @@ std::size_t FullHash::operator()(State key) const
 \end{lstlisting}
 
 Los operadores \lstinline{operator==} necesarios se implementan utilizando
-los operadores \lstinline{operator()} correspondientes.
+los \lstinline{operator()} correspondientes.
 
 \begin{notebox}
     Las funciones hash utilizadas en los \lstinline{operator()}
     son resistentes a colisiones,
-    esto es, $\nexists (a, b) / h(a) = h(b)$ por lo que se pueden
+    esto es, $
+    (\nexists (State_a, State_b) / h(State_a) = h(State_b))
+    \rightarrow
+    (h(State_a) \ne h(State_b) \iff State_a \ne State_b)
+    $
+    por lo que se pueden
     utilizar para comparar elementos en \lstinline{operator==}.
 \end{notebox}
 
 \subsection{A*}
+
+A la hora de paralelizar un algoritmo existen dos principales direcciones
+en las que basar el diseño:
+\begin{itemize}[itemsep=0.25px]
+    \item Paralelización de datos: $N$ datos independientes sufren el mismo procesamiento de forma paralela.
+    \item Paralelización de tareas: $N$ tareas independientes son ejecutadas de forma paralela.
+\end{itemize}
 
 \begin{figure}
 \begin{center}
@@ -394,32 +500,30 @@ los operadores \lstinline{operator()} correspondientes.
 \end{tikzpicture}
 \end{center}
 \caption{Representación del algoritmo A*}
+\label{fig:AlgoritmoA*}
 \end{figure}
 
-A la hora de paralelizar un algoritmo existen dos principales direcciones
-en las que basar el diseño:
-\begin{itemize}[itemsep=0.25px]
-    \item Paralelización de datos: $N$ datos independientes sufren el mismo procesamiento de forma paralela.
-    \item Paralelización de tareas: $N$ tareas independientes son ejecutadas de forma paralela.
-\end{itemize}
-
-Visto el diagrama anterior, está claro que las tareas del algoritmo A* no son paralelizables
+Visto el diagrama (\ref{fig:AlgoritmoA*}),
+está claro que las tareas del algoritmo A* no son paralelizables
 y el número de datos (nodos) varía según se ejecuta el algoritmo.
-Ignorando las posibles oportunidades de paralelismo que puedan tener los procesos
-individuales del algoritmo, la principal paralelización se encuentra en el
-procesamiento de cada nodo.
+Ignorando las posibles oportunidades de paralelismo que se puedan encontrar
+en los procesos individuales del algoritmo,
+la principal paralelización se encuentra en el
+procesamiento de los nodos.
 
-Un hilo principal se encarga de comprobar en cada iteración si se ha encontrado
-el nodo objetivo o si el \lstinline{open_set} está vacío,
-mientras que el resto de hilos son asignados un nodo para procesar.
+\subsection{Paralelización}
 
-De cualquier forma, este diseño no tiene por qué necesariamente reducir el tiempo
+Sería posible desarrollar una implementación que paralelice el procesamiento de los nodos,
+asignando uno a cada hilo de forma que para $N$ hilos se procesen $N$ nodos
+de forma simultánea.
+
+De cualquier forma, este diseño es particular no tiene por qué reducir el tiempo
 requerido para hallar un nodo solución, simplemente tiene la oportunidad de reducirlo
 en algunos casos específicos.
 Porque se explora un mayor número de nodos en el mismo tiempo.
-(Véase Figura 2.2)
+(Véase \ref{fig:A*Comparison})
 
-\begin{figure}[h]
+\begin{figure}
 \begin{subfigure}{.5\textwidth}
 \begin{center}
 \begin{tikzpicture}[node distance=1.5cm]
@@ -487,11 +591,16 @@ Porque se explora un mayor número de nodos en el mismo tiempo.
 \end{center}
 \end{subfigure}
 \caption{Comparativa entre algoritmos monohilo y multihilo}
+\label{fig:A*Comparison}
 \end{figure}
 
+\subsubsection{Secciones críticas}
+
 El diseño paralelo propuesto no es sin inconvenientes,
-tiene varias instancias de secciones críticas que suponen
+su implementación contiene varias secciones críticas que suponen
 una amenaza para el rendimiento del algoritmo.
+
+\paragraph{Variables de control de flujo}~
 
 Primero, al paralelizar el algoritmo siguiendo esta estrategia,
 se han añadido variables de control compartidas por todos
@@ -502,9 +611,11 @@ El acceso a estas variables debe estar controlado
 para evitar el acceso simultaneo a las mismas.
 De cualquier forma, es improbable que dos hilos tengan
 la necesidad de acceder esta sección crítica ya que sólo
-se ejecuta una vez.
+se ejecuta una vez por lo que los efectos en el rendimiento serán nulos.
 Sería necesario que dos hilos hallasen dos soluciones diferentes al
 problema al mismo tiempo.
+
+\paragraph{\lstinline{open_set}}~
 
 Segundo, el acceso al \lstinline{open_set} también 
 debe estar controlado de forma que sólo un hilo
@@ -516,20 +627,19 @@ y otra para insertar los nuevos vecinos.
 Si bien la obtención del nodo a procesar se realiza en $O(1)$
 ya que el \lstinline{open_set} está ordenado y
 siempre se accede al nodo en la cabeza de la lista,
-la inserción de vecinos no corre la misma suerte,
-es necesario que estos nuevos nodos sean insertados en orden,
-resultando en una complejidad $O(n)$
+la inserción de vecinos no corre la misma suerte.
+Para que la lectura del nodo a procesar sea en $O(1)$
+el \lstinline{open_set} se mantiene ordenado,
+esto implica que la inserción ser haría en $O(n)$
 \footnote{Esta implementación utiliza iteradores y
 \lstinline{std::deque<T>} para hallar la posición de cada
 nuevo elemento e insertarlo en el mismo barrido.}.
 
 \begin{notebox}
     La sección crítica correspondiente al \lstinline{open_set}
-    tiene una complejidad proporcional al tamaño del \lstinline{open_set}.
-    Esto es, si el \lstinline{open_set} tiene pocos elementos,
-    la sección crítica tendrá pocos efectos en el rendimiento del programa,
-    pero si contiene un número mayor de elementos,
-    será necesario más tiempo para resolver la sección crítica.
+    tiene una complejidad proporcional al tamaño del mismo.
+    Esto es, a mayor tamaño tenga el \lstinline{open_set},
+    mayor tiempo será necesario para resolver la sección crítica.\\
 
     Nótese que a medida que avanza el programa,
     el tamaño del \lstinline{open_set} crece,
@@ -537,28 +647,28 @@ nuevo elemento e insertarlo en el mismo barrido.}.
     reduciendo la paralelización del algoritmo. 
 \end{notebox}
 
-\begin{figure}[h]
+\begin{figure}
 \begin{center}
-\begin{tikzpicture}[node distance=2cm]
+\begin{tikzpicture}[node distance=4cm]
     \node (A) [startstop] {Obtener nodo};
 
-    \node (B) [decision, below of=A, yshift=-2cm] {
+    \node (B) [decision, below of=A] {
         ¿Es el nodo final?
     };
 
-    \node (C) [process, right of=B, xshift=3cm] {
+    \node (C) [process, right of=B, xshift=1cm] {
         Anotar como resultado y levantar \italic{flag}
     };
 
-    \node (D) [process, below of=B, yshift=-2cm] {
+    \node (D) [process, below of=B] {
         Calcular nodos vecinos del nodo actual
     };
 
-    \node (E) [decision, below of=D, yshift=-2cm] {
+    \node (E) [decision, below of=D] {
         ¿Hay vecinos?
     };
 
-    \node (F) [process, right of=E, xshift=3cm] {
+    \node (F) [process, right of=E, xshift=1cm] {
         Procesar vecino
     };
 
