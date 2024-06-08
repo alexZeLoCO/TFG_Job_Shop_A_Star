@@ -13,4 +13,4 @@ class Task:
 
     def __repr__(self) -> str:
         return (f"({self.duration}, "
-                f"({repr(self.qualified_workers)}))")
+                f"{repr(self.qualified_workers)})")
