@@ -19,7 +19,7 @@ std::vector<std::vector<Task>> get_jobs_from_file(const std::string &);
 
 std::vector<std::vector<Task>> cut(std::vector<std::vector<Task>>, float);
 
-using Processor = std::function<State(std::vector<std::vector<Task>>, int, std::optional<Chronometer>)>;
+using Processor = std::function<State(std::vector<std::vector<Task>>, int, Chronometer)>;
 State timeit(
     const Processor &,
     const std::vector<std::vector<Task>> &, int);

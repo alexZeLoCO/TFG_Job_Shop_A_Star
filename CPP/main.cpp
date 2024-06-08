@@ -3,7 +3,6 @@
 #include <vector>
 #include <omp.h>
 #include <algorithm>
-#include <optional>
 #include <thread>
 
 #include "chronometer.h"
@@ -23,7 +22,7 @@ void add_neighbors(
 State a_star(
     std::vector<std::vector<Task>> jobs,
     std::size_t n_workers,
-    std::optional<Chronometer> c)
+    Chronometer c)
 {
     const std::size_t n_jobs = jobs.size();
     if (n_jobs == 0)
@@ -61,6 +60,7 @@ State a_star(
     {
         State current_state = get_state(open_set, found_goal_state);
 
+        c.process_iteration(current_state);
         if (current_state.is_goal_state())
         {
             goal_state = current_state;
@@ -120,7 +120,7 @@ int main(int argc, char **argv)
 
     // std::cout << a_star({{2, 5, 1}, {3, 3, 3}}, 2, std::optional<Chronometer>()) << std::endl;
 
-    std::string dataset_file = "../datasets/abz5.csv";
+    std::string dataset_file = "../datasets/ft06.csv";
 
     std::vector<std::vector<Task>> jobs =
         cut(get_jobs_from_file(dataset_file), 1);
