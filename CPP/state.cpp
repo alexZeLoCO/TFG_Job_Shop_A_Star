@@ -9,6 +9,20 @@ unsigned int State::get_max_worker_status() const
     return max_element;
 }
 
+float State::calculate_completion_percentage() const
+{
+    unsigned int n_scheduled_tasks = 0;
+    unsigned int total_tasks = int(this->m_jobs.size());
+    if (total_tasks == 0)
+        return 1;
+    total_tasks *= int(this->m_jobs[0].size());
+    for (std::vector<int> job : this->m_schedule)
+        for (int task : job)
+            if (task != -1)
+                n_scheduled_tasks++;
+    return float(n_scheduled_tasks) / float(total_tasks);
+}
+
 unsigned int State::calculate_h_cost() const
 {
     std::vector<int> h_costs;
@@ -26,6 +40,8 @@ unsigned int State::calculate_h_cost() const
 
 bool State::is_goal_state() const
 {
+    if (this->m_jobs.empty())
+        return false;
     for (const std::vector<int> &job : this->get_schedule())
         for (const int task : job)
             if (task == -1)
@@ -77,9 +93,10 @@ std::vector<State> State::get_neighbors_of() const
 {
     std::vector<State> neighbors;
 
-    std::vector<int> first_unscheduled_task_idxs = this->get_first_unscheduled_task_idxs();
-    std::vector<int> first_unscheduled_task_start_times = this->get_first_unscheduled_task_start_times(first_unscheduled_task_idxs);
+    std::vector<int> first_unscheduled_task_idxs = this->get_first_unscheduled_task_idxs();                                          // O(n^2)
+    std::vector<int> first_unscheduled_task_start_times = this->get_first_unscheduled_task_start_times(first_unscheduled_task_idxs); // O(n)
 
+    // O(n) if there is only one qualified_worker per task, else O(n^2)
     for (size_t job_idx = 0; job_idx < this->get_schedule().size(); job_idx++)
     {
         int task_start_time = first_unscheduled_task_start_times[job_idx];
@@ -89,9 +106,10 @@ std::vector<State> State::get_neighbors_of() const
             Task currentTask = this->m_jobs[job_idx][unscheduled_task_idx];
             std::vector<unsigned int> qualified_workers = currentTask.get_qualified_workers();
             if (qualified_workers.empty())
+                // This loop does not run on actual datasets, I don't count it for complexity
                 for (std::size_t i = 0; i < this->get_workers_status().size(); i++)
-                    qualified_workers.push_back(i);
-            for (const unsigned int worker_id : qualified_workers)
+                    qualified_workers.push_back(int(i));
+            for (const unsigned int worker_id : qualified_workers) // A task only has one qualified worker
             {
                 // int worker_start_time = std::max(this->get_workers_status()[worker_id], task_start_time);
                 int worker_start_time = this->get_workers_status()[worker_id] > task_start_time
