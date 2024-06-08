@@ -13,11 +13,13 @@
 #include "vector_ostreams.h"
 
 State get_state(SortedList<State> &, const bool &);
+
 void add_neighbors(
     const std::vector<State> &,
     std::unordered_map<State, unsigned int, StateHash, StateEqual> &,
     std::unordered_map<State, unsigned int, StateHash, StateEqual> &,
-    SortedList<State> &);
+    std::vector<std::vector<State>> &,
+    const unsigned int);
 
 State a_star(
     std::vector<std::vector<Task>> jobs,
@@ -54,49 +56,56 @@ State a_star(
     State goal_state;
     bool found_goal_state = false;
 
-// O(n^2 + 2n + n^2 + n * (l + n + n^2 + k)) or O(n^2 + n + 2n^2 + n^2 * (l + n + n^2 + k))
-#pragma omp parallel shared(found_goal_state, goal_state, open_set, f_costs, g_costs)
+    std::vector<State> to_be_processed(omp_get_num_threads());
+    std::vector<std::vector<State>> to_be_added(omp_get_num_threads());
+
+    // O(n^2 + 2n + n^2 + n * (l + n + n^2 + k)) or O(n^2 + n + 2n^2 + n^2 * (l + n + n^2 + k))
     while (!found_goal_state)
     {
-        State current_state = get_state(open_set, found_goal_state);
-
-        c.process_iteration(current_state);
-        if (current_state.is_goal_state())
+        const unsigned int amount_states_to_be_processed = (unsigned int)omp_get_num_threads() < (unsigned int)open_set.size()
+                                                               ? (unsigned int)omp_get_num_threads()
+                                                               : (unsigned int)open_set.size();
+        for (unsigned int i = 0; i < amount_states_to_be_processed; i++)
         {
-            goal_state = current_state;
-            found_goal_state = true;
+            to_be_processed[i] = open_set.pop();
+            if (to_be_processed[i].is_goal_state())
+            {
+                goal_state = to_be_processed[i];
+                found_goal_state = true;
+            }
         }
 
-        const std::vector<State> neighbor_states = current_state.get_neighbors_of(); // O(2n + n^2) or (n + 2n^2)
-        add_neighbors(neighbor_states, g_costs, f_costs, open_set);
+        if (found_goal_state)
+        {
+            break;
+        }
+
+#pragma omp parallel for
+        for (unsigned int thread_id = 0; thread_id < amount_states_to_be_processed; thread_id++)
+        {
+            State current_state = to_be_processed[thread_id];
+#pragma omp critical(chronometer)
+            c.process_iteration(current_state);
+
+            const std::vector<State> neighbor_states = current_state.get_neighbors_of(); // O(2n + n^2) or (n + 2n^2)
+            add_neighbors(neighbor_states, g_costs, f_costs, to_be_added, thread_id);
+        }
+
+        for (unsigned int thread_id = 0; thread_id < amount_states_to_be_processed; thread_id++)
+            for (const State &neighbor : to_be_added[thread_id])
+                open_set.append(neighbor);
     }
     return goal_state;
-}
-
-State get_state(SortedList<State> &open_set, const bool &found_goal_state)
-{
-    bool has_state;
-    State current_state;
-    do
-    {
-#pragma omp critical(open_set)
-            {
-                has_state = !open_set.empty();
-                if (has_state)
-                {
-                    current_state = open_set.pop(); // O(1)
-                }
-            }
-    } while (!has_state && !found_goal_state);
-    return current_state;
 }
 
 void add_neighbors(
     const std::vector<State> &neighbors,
     std::unordered_map<State, unsigned int, StateHash, StateEqual> &g_costs,
     std::unordered_map<State, unsigned int, StateHash, StateEqual> &f_costs,
-    SortedList<State> &open_set)
+    std::vector<std::vector<State>> &to_be_added,
+    const unsigned int thread_id)
 {
+    to_be_added[thread_id] = std::vector<State>();
     for (const State &neighbor : neighbors)
     {
         const unsigned int tentative_g_cost = neighbor.get_g_cost();
@@ -106,8 +115,7 @@ void add_neighbors(
             {
                 g_costs[neighbor] = tentative_g_cost;
                 f_costs[neighbor] = tentative_g_cost + neighbor.get_h_cost();
-#pragma omp critical(open_set)
-                open_set.append(neighbor);
+                to_be_added[thread_id].emplace_back(neighbor);
             }
         }
     }

@@ -178,10 +178,11 @@ std::size_t StateHash::operator()(State key) const
     if (key.get_state_hash() != UNINITIALIZED_HASH)
         return key.get_state_hash();
     std::vector<std::vector<int>> schedule = key.get_schedule();
-    std::size_t seed = schedule.size() * schedule[0].size();
+    std::size_t seed = schedule.size();
     if (schedule.empty())
         return seed;
     const std::size_t nTasks = schedule[0].size();
+    seed *= nTasks;
 #pragma omp parallel for collapse(2) reduction(+ : seed)
     for (std::size_t i = 0; i < schedule.size(); i++)
         for (std::size_t j = 0; j < nTasks; j++)
