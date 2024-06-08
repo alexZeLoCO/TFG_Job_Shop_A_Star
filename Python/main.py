@@ -5,28 +5,10 @@ from SortedList import SortedList
 from State import State
 from Task import Task
 from Wrappers import timeit
-import csv
+from FileReader import cut, read_from_file
 
 
 logger = Logger(level=logging.NOTSET)
-
-
-def read_from_file(filename: str) -> List[List[Task]]:
-    jobs: List[List[Task]] = []
-    with open(filename) as csvfile:
-        spamreader = csv.reader(csvfile, delimiter=';')
-        for job_idx, tasks in enumerate(spamreader):
-            jobs.append([])
-            is_worker: bool = True
-            for task in tasks:
-                if (is_worker):
-                    worker: int = int(task)
-                    is_worker: bool = False
-                else:
-                    jobs[job_idx].append(Task(int(task), (int(worker),)))
-                    is_worker: bool = True
-    logger.debug(f"IO has read file {filename} jobs {jobs}")
-    return jobs
 
 
 def get_n_worker_types(
@@ -116,6 +98,13 @@ def process_jobs(
         a_star(jobs, n_workers)
 
 
+def process_file(
+    jobs: List[List[Task]]
+) -> None:
+    for i in [0.25, 0.5, 0.75, 1]:
+        a_star(cut(jobs, i), 1)
+
+
 def main():
 
     # CSV HEADER
@@ -124,7 +113,7 @@ def main():
 
     jobs: List[List[Task]] = read_from_file('../datasets/ft06.csv')
 
-    process_jobs(jobs)
+    process_file(jobs)
 
 
 """
