@@ -27,25 +27,25 @@ int main()
         if (numbers.empty())
             has_number = false;
 
-        if (!has_number)
-            break;
-
-#pragma omp critical(numbers)
-        current_number = numbers.pop();
-
-        int limit = 2e6;
-        for (int i = 0; i < limit; i++)
+        if (has_number)
         {
-            int new_number = current_number * i;
-            if (new_number == target_number)
-                target_found = true;
-            else
 #pragma omp critical(numbers)
-                numbers.append(new_number);
-        }
+            current_number = numbers.pop();
 
 #pragma omp critical(io)
-        std::cout << "Thread " << omp_get_thread_num() << " has processed item " << current_number << std::endl;
+            std::cout << "Thread " << omp_get_thread_num() << " is processing item " << current_number << std::endl;
+
+            int limit = 2e6;
+            for (int i = 0; i < limit; i++)
+            {
+                int new_number = current_number * i;
+                if (new_number == target_number)
+                    target_found = true;
+                else
+#pragma omp critical(numbers)
+                    numbers.append(new_number);
+            }
+        }
     }
     std::cout << "Target has been found" << std::endl;
 }
