@@ -13,6 +13,13 @@
 #include "task.h"
 #include "vector_ostreams.h"
 
+State get_state(SortedList<State> &, const bool &);
+void add_neighbors(
+    const std::vector<State> &,
+    std::unordered_map<State, unsigned int, StateHash, StateEqual> &,
+    std::unordered_map<State, unsigned int, StateHash, StateEqual> &,
+    SortedList<State> &);
+
 State a_star(
     std::vector<std::vector<Task>> jobs,
     std::size_t n_workers,
@@ -32,9 +39,9 @@ State a_star(
 
     const State starting_state(jobs, starting_schedule, starting_workers_status);
 
-    std::unordered_map<State, int, StateHash, StateEqual> g_costs;
+    std::unordered_map<State, unsigned int, StateHash, StateEqual> g_costs;
     g_costs.try_emplace(starting_state, 0);
-    std::unordered_map<State, int, StateHash, StateEqual> f_costs;
+    std::unordered_map<State, unsigned int, StateHash, StateEqual> f_costs;
     f_costs.try_emplace(starting_state, starting_state.get_f_cost());
 
     const auto comparator = [&f_costs](const State &lhs, const State &rhs)
@@ -52,20 +59,7 @@ State a_star(
 #pragma omp parallel shared(found_goal_state, goal_state, open_set, f_costs, g_costs)
     while (!found_goal_state)
     {
-        State current_state;
-        bool has_state;
-
-        do
-        {
-#pragma omp critical(open_set)
-            {
-                has_state = !open_set.empty();
-                if (has_state)
-                {
-                    current_state = open_set.pop(); // O(1)
-                }
-            }
-        } while (!has_state && !found_goal_state);
+        State current_state = get_state(open_set, found_goal_state);
 
         if (current_state.is_goal_state())
         {
@@ -74,23 +68,49 @@ State a_star(
         }
 
         const std::vector<State> neighbor_states = current_state.get_neighbors_of(); // O(2n + n^2) or (n + 2n^2)
-        for (const State &neighbor : neighbor_states) // O(n*(l + n + n^2 + k)) or O(n^2 * (l + n + n^2 + k))
-        {
-#pragma omp critical(costs)
-            {
-                int tentative_g_cost = neighbor.get_g_cost();  // O(n)
-                if (g_costs.find(neighbor) == g_costs.end() || // O(k) where k is g_costs.size()
-                    tentative_g_cost < g_costs[neighbor])
-                {
-                    g_costs[neighbor] = tentative_g_cost;
-                    f_costs[neighbor] = tentative_g_cost + neighbor.get_h_cost(); // O(n^2)
+        add_neighbors(neighbor_states, g_costs, f_costs, open_set);
+    }
+    return goal_state;
+}
+
+State get_state(SortedList<State> &open_set, const bool &found_goal_state)
+{
+    bool has_state;
+    State current_state;
+    do
+    {
 #pragma omp critical(open_set)
-                    open_set.append(neighbor); // O(l) where l is open_set.size()
+            {
+                has_state = !open_set.empty();
+                if (has_state)
+                {
+                    current_state = open_set.pop(); // O(1)
                 }
+            }
+    } while (!has_state && !found_goal_state);
+    return current_state;
+}
+
+void add_neighbors(
+    const std::vector<State> &neighbors,
+    std::unordered_map<State, unsigned int, StateHash, StateEqual> &g_costs,
+    std::unordered_map<State, unsigned int, StateHash, StateEqual> &f_costs,
+    SortedList<State> &open_set)
+{
+    for (const State &neighbor : neighbors)
+    {
+        const unsigned int tentative_g_cost = neighbor.get_g_cost();
+#pragma omp critical(costs)
+        {
+            if (g_costs.find(neighbor) == g_costs.end() || tentative_g_cost < g_costs[neighbor])
+            {
+                g_costs[neighbor] = tentative_g_cost;
+                f_costs[neighbor] = tentative_g_cost + neighbor.get_h_cost();
+#pragma omp critical(open_set)
+                open_set.append(neighbor);
             }
         }
     }
-    return goal_state;
 }
 
 int main(int argc, char **argv)
@@ -103,7 +123,7 @@ int main(int argc, char **argv)
     std::string dataset_file = "../datasets/abz5.csv";
 
     std::vector<std::vector<Task>> jobs =
-        cut(get_jobs_from_file(dataset_file), 0.5);
+        cut(get_jobs_from_file(dataset_file), 1);
 
     timeit(a_star, jobs, calculate_n_workers(jobs));
 
