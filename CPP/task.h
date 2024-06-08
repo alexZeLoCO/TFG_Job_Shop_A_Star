@@ -4,6 +4,8 @@
 #include <vector>
 #include <iostream>
 
+#include "vector_ostreams.h"
+
 class Task
 {
 private:

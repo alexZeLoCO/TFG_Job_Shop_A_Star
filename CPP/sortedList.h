@@ -7,6 +7,7 @@
 #include <deque>
 
 #include "state.h"
+#include "vector_ostreams.h"
 
 constexpr int STARTING_VECTOR_CAPACITY = 128;
 

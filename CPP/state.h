@@ -7,6 +7,7 @@
 #include <omp.h>
 
 #include "task.h"
+#include "vector_ostreams.h"
 
 constexpr std::size_t UNINITIALIZED_HASH = 0;
 
@@ -20,6 +21,7 @@ private:
 
     unsigned int h_cost{};
     unsigned int g_cost{};
+    float m_completion_percentage;
 
     std::size_t state_hash = UNINITIALIZED_HASH;
     std::size_t full_hash = UNINITIALIZED_HASH;
@@ -41,14 +43,17 @@ public:
     {
         this->g_cost = this->get_max_worker_status();
         this->h_cost = this->calculate_h_cost();
+        this->m_completion_percentage = this->calculate_completion_percentage();
     };
 
+    std::vector<std::vector<Task>> get_jobs() const { return this->m_jobs; }
     std::vector<std::vector<int>> get_schedule() const { return this->m_schedule; }
     std::vector<int> get_workers_status() const { return this->m_workers_status; }
 
     unsigned int get_g_cost() const { return this->g_cost; }
     unsigned int get_h_cost() const { return this->h_cost; }
     unsigned int get_f_cost() const { return this->get_g_cost() + this->get_h_cost(); }
+    float get_completion_percentage() const { return this->m_completion_percentage; }
 
     std::size_t get_state_hash() const { return this->state_hash; }
     std::size_t get_full_hash() const { return this->full_hash; }
@@ -58,6 +63,7 @@ public:
 
     unsigned int get_max_worker_status() const;
     unsigned int calculate_h_cost() const;
+    float calculate_completion_percentage() const;
     bool is_goal_state() const;
     int distance_to(std::vector<std::vector<int>> &) const;
     std::vector<int> get_first_unscheduled_task_idxs() const;
