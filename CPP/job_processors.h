@@ -14,14 +14,14 @@
 #include "chronometer.h"
 #include "task.h"
 #include "state.h"
+#include "aStarSolver.h"
 
 std::vector<std::vector<Task>> get_jobs_from_file(const std::string &);
 
 std::vector<std::vector<Task>> cut(std::vector<std::vector<Task>>, float);
 
-using Processor = std::function<State(std::vector<std::vector<Task>>, int, Chronometer)>;
 State timeit(
-    const Processor &,
+    AStarSolver &,
     const std::vector<std::vector<Task>> &, int);
 
 unsigned int calculate_n_workers(const std::vector<std::vector<Task>> &);

@@ -56,13 +56,13 @@ std::vector<std::vector<Task>> cut(std::vector<std::vector<Task>> jobs, float pe
 }
 
 State timeit(
-    const Processor &foo,
+    AStarSolver &solver,
     const std::vector<std::vector<Task>> &jobs, int n_workers)
 {
-    // foo(jobs, n_workers, Chronometer()); // Cache warm up
+    // solver.solve(jobs, n_workers, Chronometer()); // Cache warm up
     auto c = Chronometer({{1, false}, {2, false}, {3, false}, {4, false}, {5, false}, {6, false}, {7, false}, {8, false}, {9, false}});
     c.start();
-    const State result = foo(jobs, n_workers, c);
+    const State result = solver.solve(jobs, n_workers, c);
     std::chrono::duration<double> total_time = c.time();
     std::cout << "c++;" << omp_get_max_threads() << ";a_star;1;" << jobs.size() << ";" << jobs[0].size() << ";"
               << n_workers << ";" << std::setprecision(5) << std::scientific

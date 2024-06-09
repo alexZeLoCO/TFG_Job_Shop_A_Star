@@ -46,6 +46,16 @@ public:
         this->m_completion_percentage = this->calculate_completion_percentage();
     };
 
+    State(
+        const State &other_state) : m_jobs(other_state.get_jobs()),
+                                    m_schedule(other_state.get_schedule()),
+                                    m_workers_status(other_state.get_workers_status())
+    {
+        this->g_cost = this->get_max_worker_status();
+        this->h_cost = this->calculate_h_cost();
+        this->m_completion_percentage = this->calculate_completion_percentage();
+    }
+
     std::vector<std::vector<Task>> get_jobs() const { return this->m_jobs; }
     std::vector<std::vector<int>> get_schedule() const { return this->m_schedule; }
     std::vector<int> get_workers_status() const { return this->m_workers_status; }
