@@ -22,7 +22,7 @@ std::vector<std::vector<Task>> cut(std::vector<std::vector<Task>>, float);
 
 State timeit(
     unsigned int,
-    AStarSolver &,
+    const AStarSolver &,
     const std::vector<std::vector<Task>> &, int);
 
 unsigned int calculate_n_workers(const std::vector<std::vector<Task>> &);

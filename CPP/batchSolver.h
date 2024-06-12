@@ -15,7 +15,7 @@ public:
     State solve(
         std::vector<std::vector<Task>>,
         std::size_t,
-        std::optional<Chronometer> &) override;
+        std::optional<Chronometer> &) const override;
 
     std::string get_name() const override { return "Batch Solver"; };
 
@@ -30,7 +30,7 @@ public:
 State BatchSolver::solve(
     std::vector<std::vector<Task>> jobs,
     std::size_t n_workers,
-    std::optional<Chronometer> &c)
+    std::optional<Chronometer> &c) const
 {
     const std::size_t n_jobs = jobs.size();
     if (n_jobs == 0)

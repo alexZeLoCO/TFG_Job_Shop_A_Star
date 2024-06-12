@@ -18,7 +18,7 @@ public:
     virtual State solve(
         std::vector<std::vector<Task>>,
         std::size_t,
-        std::optional<Chronometer> &) = 0;
+        std::optional<Chronometer> &) const = 0;
 
     virtual std::string get_name() const = 0;
 };

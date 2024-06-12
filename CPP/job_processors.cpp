@@ -57,7 +57,7 @@ std::vector<std::vector<Task>> cut(std::vector<std::vector<Task>> jobs, float pe
 
 State timeit(
     unsigned int n_iters,
-    AStarSolver &solver,
+    const AStarSolver &solver,
     const std::vector<std::vector<Task>> &jobs, int n_workers)
 {
     auto opt = std::optional<Chronometer>();

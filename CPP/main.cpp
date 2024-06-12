@@ -21,16 +21,19 @@ int main(int argc, char **argv)
     std::string dataset_file = "../datasets/abz5.csv";
 
     std::vector<std::vector<Task>> jobs =
-        cut(get_jobs_from_file(dataset_file), 0.5);
+        cut(get_jobs_from_file(dataset_file), 0.6);
+
+    const auto task = [&jobs](const AStarSolver &solver)
+    { timeit(5, solver, jobs, calculate_n_workers(jobs)); };
 
     RecursiveSolver recursiveSolver;
-    timeit(5, recursiveSolver, jobs, calculate_n_workers(jobs));
+    task(recursiveSolver);
     FcfsSolver fcfsSolver;
-    timeit(5, fcfsSolver, jobs, calculate_n_workers(jobs));
+    task(fcfsSolver);
     BatchSolver batchSolver;
-    timeit(5, batchSolver, jobs, calculate_n_workers(jobs));
+    task(batchSolver);
     HdaSolver hdaSolver;
-    timeit(5, hdaSolver, jobs, calculate_n_workers(jobs));
+    task(hdaSolver);
 
     return 0;
 }
