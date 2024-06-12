@@ -15,7 +15,9 @@ public:
     State solve(
         std::vector<std::vector<Task>>,
         std::size_t,
-        Chronometer &) override;
+        std::optional<Chronometer> &) override;
+
+    std::string get_name() const override { return "Batch Solver"; };
 
     void add_neighbors(
         const std::vector<State> &,
@@ -28,7 +30,7 @@ public:
 State BatchSolver::solve(
     std::vector<std::vector<Task>> jobs,
     std::size_t n_workers,
-    Chronometer &c)
+    std::optional<Chronometer> &c)
 {
     const std::size_t n_jobs = jobs.size();
     if (n_jobs == 0)
@@ -89,7 +91,10 @@ State BatchSolver::solve(
         {
             State current_state = to_be_processed[thread_id];
 #pragma omp critical(chronometer)
-            c.process_iteration(current_state);
+            {
+                if (c.has_value())
+                    c.value().process_iteration(current_state);
+            }
 
             const std::vector<State> neighbor_states = current_state.get_neighbors_of(); // O(2n + n^2) or (n + 2n^2)
             add_neighbors(neighbor_states, g_costs, f_costs, to_be_added, thread_id);
@@ -99,6 +104,7 @@ State BatchSolver::solve(
             for (const State &neighbor : to_be_added[thread_id])
                 open_set.append(neighbor);
     }
+    c->log_timestamp(10, goal_state);
     return goal_state;
 }
 

@@ -56,17 +56,25 @@ std::vector<std::vector<Task>> cut(std::vector<std::vector<Task>> jobs, float pe
 }
 
 State timeit(
+    unsigned int n_iters,
     AStarSolver &solver,
     const std::vector<std::vector<Task>> &jobs, int n_workers)
 {
-    // solver.solve(jobs, n_workers, Chronometer()); // Cache warm up
-    auto c = Chronometer({{1, false}, {2, false}, {3, false}, {4, false}, {5, false}, {6, false}, {7, false}, {8, false}, {9, false}});
-    c.start();
-    const State result = solver.solve(jobs, n_workers, c);
-    std::chrono::duration<double> total_time = c.time();
-    std::cout << "c++;" << omp_get_max_threads() << ";a_star;1;" << jobs.size() << ";" << jobs[0].size() << ";"
-              << n_workers << ";" << std::setprecision(5) << std::scientific
-              << total_time.count() << ";" << result << ";" << result.get_max_worker_status() << std::endl;
+    auto opt = std::optional<Chronometer>();
+    // solver.solve(jobs, n_workers, opt); // Cache warm up
+    State result;
+    std::map<unsigned short, bool> goals = {{1, false}, {2, false}, {3, false}, {4, false}, {5, false}, {6, false}, {7, false}, {8, false}, {9, false}, {10, false}};
+    auto c = std::optional<Chronometer>(Chronometer(goals, solver.get_name()));
+    for (unsigned int iter = 0; iter < n_iters; iter++)
+    {
+        c.value().enable_goals();
+        c.value().start();
+        result = solver.solve(jobs, n_workers, c);
+    }
+    for (const auto &[goal, timestamp] : c.value().get_timestamps())
+        std::cout << "c++;" << omp_get_max_threads() << ";a_star;" << solver.get_name() << ";AVERAGE " << goal << ";" << jobs.size() << ";" << jobs[0].size() << ";"
+                  << n_workers << ";" << std::setprecision(5) << std::scientific
+                  << timestamp / n_iters << ";" << result << ";" << result.get_max_worker_status() << std::endl;
     return result;
 }
 

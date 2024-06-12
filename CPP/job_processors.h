@@ -21,6 +21,7 @@ std::vector<std::vector<Task>> get_jobs_from_file(const std::string &);
 std::vector<std::vector<Task>> cut(std::vector<std::vector<Task>>, float);
 
 State timeit(
+    unsigned int,
     AStarSolver &,
     const std::vector<std::vector<Task>> &, int);
 

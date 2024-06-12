@@ -15,7 +15,9 @@ public:
     State solve(
         std::vector<std::vector<Task>>,
         std::size_t,
-        Chronometer &) override;
+        std::optional<Chronometer> &) override;
+
+    std::string get_name() const override { return "FCFS Solver"; };
 
     State get_state(
         SortedList<State> &,
@@ -30,7 +32,7 @@ public:
 State FcfsSolver::solve(
     std::vector<std::vector<Task>> jobs,
     std::size_t n_workers,
-    Chronometer &c)
+    std::optional<Chronometer> &c)
 {
     const std::size_t n_jobs = jobs.size();
     if (n_jobs == 0)
@@ -43,7 +45,6 @@ State FcfsSolver::solve(
 
     const std::vector<std::vector<int>> starting_schedule(n_jobs, std::vector<int>(n_tasks, -1));
     const std::vector<int> starting_workers_status(n_workers, 0);
-
     const State starting_state(jobs, starting_schedule, starting_workers_status);
 
     std::unordered_map<State, unsigned int, StateHash, StateEqual> g_costs;
@@ -63,12 +64,16 @@ State FcfsSolver::solve(
     bool found_goal_state = false;
 
 // O(n^2 + 2n + n^2 + n * (l + n + n^2 + k)) or O(n^2 + n + 2n^2 + n^2 * (l + n + n^2 + k))
-#pragma omp parallel shared(found_goal_state, goal_state, open_set, f_costs, g_costs)
+#pragma omp parallel shared(found_goal_state, goal_state, open_set, f_costs, g_costs, c)
     while (!found_goal_state)
     {
         State current_state = this->get_state(open_set, found_goal_state);
 
-        c.process_iteration(current_state);
+#pragma omp critical(chronometer)
+        {
+            if (c.has_value())
+                c.value().process_iteration(current_state);
+        }
         if (current_state.is_goal_state())
         {
             goal_state = current_state;
@@ -79,6 +84,7 @@ State FcfsSolver::solve(
         const std::vector<State> neighbor_states = current_state.get_neighbors_of(); // O(2n + n^2) or (n + 2n^2)
         this->add_neighbors(neighbor_states, g_costs, f_costs, open_set);
     }
+    c->log_timestamp(10, goal_state);
     return goal_state;
 }
 

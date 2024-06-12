@@ -177,45 +177,37 @@ std::size_t StateHash::operator()(State key) const
 {
     if (key.get_state_hash() != UNINITIALIZED_HASH)
         return key.get_state_hash();
-    std::vector<std::vector<int>> schedule = key.get_schedule();
-    std::size_t seed = schedule.size();
-    if (schedule.empty())
-        return seed;
-    const std::size_t nTasks = schedule[0].size();
-    seed *= nTasks;
-#pragma omp parallel for collapse(2) reduction(+ : seed)
-    for (std::size_t i = 0; i < schedule.size(); i++)
-        for (std::size_t j = 0; j < nTasks; j++)
-            seed += (schedule[i][j] * 10 ^ (i * j + j));
-    key.set_state_hash(seed);
-    return seed;
+
+    std::size_t hashValue = 0;
+
+    for (const unsigned int worker_status : key.get_workers_status())
+        hashValue ^= std::hash<unsigned int>()(worker_status) + 0x9e3779b9 + (hashValue << 6) + (hashValue >> 2);
+
+    for (const std::vector<int> &job : key.get_schedule())
+        for (const int timestamp : job)
+            hashValue ^= std::hash<int>()(timestamp) + 0x9e3779b9 + (hashValue << 6) + (hashValue >> 2);
+
+    key.set_state_hash(hashValue);
+    return hashValue;
 }
 
 std::size_t FullHash::operator()(State key) const
 {
     if (key.get_full_hash() != UNINITIALIZED_HASH)
         return key.get_full_hash();
-    std::vector<std::vector<int>>
-        schedule = key.get_schedule();
-    std::vector<int> workers_status = key.get_workers_status();
-    std::size_t seed = schedule.size() * schedule[0].size() * workers_status.size();
 
-#pragma omp parallel for reduction(+ : seed)
-    for (size_t i = 0; i < workers_status.size(); i++)
-        seed += (workers_status[i] * 10 ^ i);
+    std::size_t hashValue = StateHash()(key);
 
-    if (schedule.empty())
-        return seed;
+    for (const std::vector<Task> &job : key.get_jobs())
+        for (const Task &task : job)
+        {
+            hashValue ^= std::hash<unsigned int>()(task.get_duration()) + 0x9e3779b9 + (hashValue << 6) + (hashValue >> 2);
+            for (const unsigned int qualifiedWorker : task.get_qualified_workers())
+                hashValue ^= std::hash<unsigned int>()(qualifiedWorker) + 0x9e3779b9 + (hashValue << 6) + (hashValue >> 2);
+        }
 
-    const std::size_t nTasks = schedule[0].size();
-#pragma omp parallel for collapse(2) reduction(+ : seed)
-    for (size_t i = 0; i < schedule.size(); i++)
-    {
-        for (size_t j = 0; j < nTasks; j++)
-            seed += (schedule[i][j] * 10 ^ ((1 + i + workers_status.size()) * j + j));
-    }
-    key.set_full_hash(seed);
-    return seed;
+    key.set_full_hash(hashValue);
+    return hashValue;
 }
 
 bool StateEqual::operator()(const State &a, const State &b) const

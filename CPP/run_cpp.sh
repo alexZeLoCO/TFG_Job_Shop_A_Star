@@ -10,5 +10,7 @@ fi
 
 export OMP_NUM_THREADS=$n_thr
 ./main # | column -t -s ';'
+export OMP_NUM_THREADS=4
+./main # | column -t -s ';'
 export OMP_NUM_THREADS=1
 ./main # | column -t -s ';'
