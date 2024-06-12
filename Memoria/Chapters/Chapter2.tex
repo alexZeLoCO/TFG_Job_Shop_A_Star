@@ -19,6 +19,7 @@ procesados en formato CSV:
 \begin{itemize}[itemsep=0.25px]
     \item Lenguaje
     \item Número de hilos
+    \item Porcentaje del trabajo resuelto
     \item Trabajos
     \item Tareas
     \item Trabajadores
@@ -27,54 +28,65 @@ procesados en formato CSV:
     \item \italic{Makespan}
 \end{itemize}
 
-\subsection{Python}
+La alta complejidad del JSP implica que un mínimo aumento en el tamaño del problema
+puede implicar que el algoritmo no finalice su ejecución en un tiempo polinomial.
+Por ello, en lugar de tomar una única medición al inicio y final de la ejecución
+se ha optado por utilizar un objeto personalizado que toma mediciones en intervalos
+predefinidos.
+De esta forma, de una única ejecución se podría obtener:
 
-Se utiliza un \italic{Wrapper} de python que se encarga de tomar
-una medición de tiempo antes y después de iniciar el algoritmo.
-
-\begin{lstlisting}[language=Python]
-def timeit(func):
-    @wraps(func)
-    def timeit_wrapper(*args, **kwargs):
-        n_jobs: int = len(args[0])
-        n_tasks: int = len(args[0][0])
-        n_workers: int = args[1]
-        func(*args, **kwargs)  # Cache warm up
-        start_time = time.perf_counter()
-        result: State = func(*args, **kwargs)
-        end_time = time.perf_counter()
-        total_time = end_time - start_time
-        print(
-            (f"py;1;{func.__name__};{args};{n_jobs};{n_tasks};"
-             f"{n_workers};{total_time:1.5E};{result.schedule};"
-             f"{max(result.workers_status)}")
-        )
-        return result
-    return timeit_wrapper
-\end{lstlisting}
-
-\subsection{C++}
-
+\begin{itemize}[itemsep=0.25px]
+    \item Tiempo de inicio.
+    \item Tiempo necesario para resolver el $10\percentsign$ del problema.
+    \item Tiempo necesario para resolver el $20\percentsign$ del problema.
+    \item \dots
+    \item Tiempo necesario para resolver el $90\percentsign$ del problema.
+    \item Tiempo necesario para resolver el $100\percentsign$ del problema.
+\end{itemize}
 Se utiliza una función que se encarga de tomar una medición de tiempo
 antes y después de iniciar el algoritmo.
 
 \begin{lstlisting}[language=C++]
-State timeit(
-    const std::function<State(std::vector<std::vector<Task>>, int)> &foo,
-    const std::vector<std::vector<Task>> &jobs, int n_workers)
+class Chronometer
 {
-    foo(jobs, n_workers); // Cache warm up
-    auto start_time = std::chrono::high_resolution_clock::now();
-    const State result = foo(jobs, n_workers);
-    auto end_time = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> total_time = end_time - start_time;
-    std::cout << "c++;" << omp_get_max_threads() << ";a_star" << ";(" << jobs << ", "
-              << n_workers << ");" << jobs.size() << ";" << jobs[0].size() << ";"
-              << n_workers << ";" << std::setprecision(5) << std::scientific
-              << total_time.count() << ";" << result << ";" << result.get_max_worker_status() << std::endl;
-    return result;
-}
+private:
+    std::chrono::_V2::system_clock::time_point m_start_time;
+    std::map<unsigned short, bool> m_goals;
+    std::map<unsigned short, double> m_times;
+    std::string m_solver_name;
+
+public:
+    Chronometer() : Chronometer(
+        std::map<unsigned short, bool>(),
+        "Unknown Solver") {}
+    explicit Chronometer(
+        const std::map<unsigned short, bool> &goals,
+        std::string const &solver_name) : m_goals(goals),
+                                          m_solver_name(solver_name) {}
+
+    void start()
+    {
+        this->m_start_time = std::chrono::high_resolution_clock::now();
+    }
+    std::chrono::duration<double> time() const
+    {
+        return (
+            std::chrono::high_resolution_clock::now() -
+            this->m_start_time
+        );
+    }
+
+    void process_iteration(const State &state);
+    void log_timestamp(unsigned short goal, const State &state);
+    void enable_goals();
+    std::map<unsigned short, double> get_timestamps() const;
+};
 \end{lstlisting}
+
+Esta clase se utiliza para tomar las mediciones de todas las iteraciones
+\footnote{Ignorando la primera para calentar la caché}
+y posteriormente estos datos se utilizan para calcular tiempos medios de ejecución,
+máximos y mínimos.
 
 \subsection{FPGA}
 

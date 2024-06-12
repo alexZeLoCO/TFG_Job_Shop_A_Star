@@ -1,17 +1,18 @@
 \Chapter{Problema a investigar}{Análisis, implementación y optimización}
 
 \section{Job Shop Scheduling Problem}
+\index{Job Shop Scheduling Problem}
 
-Se estudiará la implementación de una solución al problema
+Se estudia la implementación de una solución al problema
 \italic{Job Shop Scheduling (JSP)}~\cite{Yan77}
 \footnote{El problema también es conocido por otros nombres similares
-como \italic{Job Shop Scheduling Problem (JSSP)} o Job Scheduling Problem (JSP).}.
+como \italic{Job Shop Scheduling Problem (JSSP)} o Job Scheduling Problem (JSP).}
+resuelto utilizando el algoritmo A*.
 Como su nombre indica, se trata de un problema en el que se debe
 crear una planificación.
-Desde el punto de vista de la ingeniería informática,
-el JSP es un problema de optimización.
+Claramente, el JSP es un problema de optimización.
 
-El problema JSP busca una planificación para una serie de
+El JSP busca una planificación para una serie de
 máquinas (o trabajadores) que deben realizar un número conocido
 de trabajos.
 Cada trabajo está formado por una serie de operaciones (o tareas),
@@ -19,7 +20,7 @@ con una duración conocida.
 Las tareas de un mismo trabajo deben ser ejecutadas en un orden específico.
 
 Existen numerosas variantes de este problema,
-entre ellas existen variantes que permiten la ejecución
+algunas permiten la ejecución
 en paralelo de algunas tareas o requieren que alguna tarea
 en específico sea ejecutada por un trabajador (o tipo de trabajador)
 en particular.
@@ -47,6 +48,7 @@ el problema JSP\@:
 \section{Método a resolver}
 
 \subsection{Algoritmo}
+\index{Algoritmo A*}
 
 Existen numerosos algoritmos capaces de resolver el problema del JSP\@.
 Estrategias más simples como listas ordenadas en función de la duración
@@ -60,7 +62,7 @@ Su principal diferencia es la implementación de una función heurística
 que se utiliza para decidir el siguiente nodo a expandir.
 De esta forma, se podría decir que el algoritmo A* va `guiado'
 hacia la solución, mientras que el algoritmo de Dijkstra
-sigue los caminos con menor coste.
+sigue los caminos con menor coste (Véase figura \ref{fig:DijkstraA*Comparison}).
 
 \begin{figure}
 \begin{subfigure}{.5\textwidth}
@@ -139,19 +141,21 @@ sigue los caminos con menor coste.
 El algoritmo A* utiliza varios componentes para resolver problemas
 de optimización. A continuación se describe cada uno de ellos.
 
-\subsubsection{Componentes}
+\subsubsection{Componentes A*}
 
 \paragraph{Estado}~
+\index{A*: Estado}
 
 El estado es una estructura de datos que describe la situación
 del problema en un punto determinado.
 Estos estados deben ser comparables,
 debe ser posible dados dos estados conocer si son iguales o distintos.
-En el caso del JSP, el estado podría estar formado por lo siguiente:
+En el caso del JSP, el estado podría estar formado por la siguiente información:
 
 \begin{itemize}[itemsep=0.25px]
     \item Instante de tiempo en el que comienza cada tarea planificada.
-    \item Instante de tiempo futuro en el que cada trabajador estará libre.
+    \item Instante de tiempo futuro en el que cada trabajador estará libre
+    (i.e. finaliza la tarea que estaba realizando).
 \end{itemize}
 
 El resultado final del JSP será un estado donde todas las tareas han sido planificadas.
@@ -161,6 +165,7 @@ El resultado final del JSP será un estado donde todas las tareas han sido plani
 El algoritmo A* utiliza 3 costes distintos para resolver el problema de optimización:
 
 \subparagraph{Coste G}~
+\index{A*: Coste G}
 
 El coste G (de ahora en adelante $cost_g$) es el coste desde el estado inicial
 hasta el estado actual.
@@ -168,16 +173,15 @@ Este coste es calculado buscando el mayor tiempo de fin de
 las tareas ya planificadas.
 
 \subparagraph{Coste H}~
+\index{A*: Coste H}
 
 El coste H (de ahora en adelante $cost_h$) es el coste estimado desde el estado actual
 hasta el estado final.
 Este coste es calculado utilizando una función heurística,
 que estima el coste.
-Esta función debe no debe ser optimista,
-por lo que en este estudio se utilizará el sumatorio de duraciones
-de las tareas restantes por planificar.
 
 \subparagraph{Coste F}~
+\index{A*: Coste F}
 
 El coste F (de ahora en adelante $cost_f$) es el coste estimado desde el estado inicial
 hasta el estado final pasando por el estado actual.
@@ -185,16 +189,27 @@ hasta el estado final pasando por el estado actual.
 Por lo tanto, \[cost_f = cost_g + cost_h\]
 
 \paragraph{Generación de sucesores}~
+\index{A*: Sucesores / Vecinos / Hijos}
 
-El algoritmo A* debe generar un número de estados sucesores dado un estado actual.
+El algoritmo A* debe generar un número de estados sucesores dado un estado cualquiera
+\footnote{Dependiendo de la implementación, puede existir alguna excepción a esta norma,
+como el estado objetivo que puede no tener sucesores.}.
 Por lo que será necesario una función que dado un estado retorne un listado de estados.
 
 Dado un estado donde existen $N$ tareas por ejecutar ($T_0 \dots T_N$) y
 un trabajador cualquiera sin tarea asignada tendrá $N$ estados sucesores.
 En cada uno, el trabajador libre tendrá asignada cada una de las tareas,
-desde $T_0$ hasta $T_N$.
+desde $T_0$ hasta $T_N$
+\footnote{Suponiendo que:
+\begin{enumerate}[itemsep=0.25px]
+    \item Todas las tareas $T_x \in (T_0 \dots T_N$)
+pueden ser ejecutadas por el trabajador libre.
+    \item Todas las tareas $T_x \in (T_0 \dots T_N$)
+pueden ser ejecutadas en este instante (e.g. cada una es de un trabajo diferente).
+\end{enumerate}}.
 
 \paragraph{Listas de prioridad}~
+\index{A*: Lista de prioridad}
 
 El algoritmo A* utiliza dos listas de estados: la lista abierta y la lista cerrada.
 La lista cerrada contiene los estados que ya han sido estudiados mientras que
@@ -245,6 +260,7 @@ Este algoritmo es implementado y optimizado en diversas arquitecturas.
 Posteriormente, se realizan comparaciones entre ellas.
 
 \subsubsection{Arquitectura x86}
+\index{Arquitectura x86}
 
 Inicialmente, se realiza una implementación del algoritmo utilizando \Python.
 Esta versión permite comprobar rápidamente el correcto funcionamiento del mismo
@@ -252,20 +268,16 @@ así como llevar a cabo pruebas rápidas sin necesidad de compilación y
 estudiar los posibles cuellos de botella del algoritmo.
 
 Posteriormente, se desarrolla una nueva versión del mismo algoritmo
-utilizando C++, un lenguaje compilado, declarativo y orientado a objetos
+utilizando C++, un lenguaje compilado, imperativo y orientado a objetos
 que facilita la paralelización gracias a librerías como 
 \href{https://www.openmp.org/}{OpenMP}\@.
 
-Una vez desarrolladas,
-se realizan comparativas entre las distintas implementaciones
-de esta aquitectura, en particular:
-
-\begin{enumerate}[itemsep=0.25px]
-    \item Comparativa entre el rendimiento monohilo de Python y C++.
-    \item Comparativa entre el rendimiento monohilo de C++ y multihilo de C++.
-\end{enumerate}
+Una vez desarrolladas ambas versiones monohilo,
+se comienza la implementación de versiones multihilo
+que serán posteriormente comparadas.
 
 \subsubsection{FPGA}
+\index{FPGA}
 
 Finalmente, se desarrolla una implementación del algoritmo
 diseñado para ser ejecutado en una FPGA\@.
@@ -288,7 +300,7 @@ Principalmente:
 
 \begin{enumerate}[itemsep=0.25px]
     \item Tiempo de ejecución.
-    \item Consumo de memoria volátil.
+    \item Calidad de la solución.
 \end{enumerate}
 
 Como es lógico, el algoritmo es ejecutado utilizando
@@ -299,7 +311,7 @@ distintos datos de entrada múltiples veces.
     requerir menos tiempo debido al funcionamiento de la caché.
     
     Para evitar este fenómeno, el algoritmo se ejecuta
-    siempre dos veces ignorando las métricas de la primera ejecución.
+    siempre $N$ veces ignorando las métricas de la primera ejecución.
 \end{notebox}
 
 \section{Implementación}
@@ -309,6 +321,7 @@ Esta sección contiene las descripciones de las diferentes
 clases diseñadas para dar soporte al algoritmo.
 
 \subsection{Task}
+\index{Task}
 
 La clase \lstinline{Task} correspone a una tarea a realizar.
 Una instancia de esta clase está definida por los atributos:
@@ -318,6 +331,7 @@ Una instancia de esta clase está definida por los atributos:
 \end{itemize}
 
 \subsection{State}
+\index{State}
 
 La clase \lstinline{State} corresponde a un estado (o nodo).
 Una instancia de esta clase está definida por los atributos:
@@ -332,6 +346,9 @@ Una instancia de esta clase está definida por los atributos:
     en todos los estados de un mismo problema.
     Por lo que no será necesario revisarlo en
     \lstinline{State::operator==} ni \lstinline{State::operator()}.
+    Si el consumo de memoria fuese de importancia,
+    sería posible utilizar una referencia para evitar
+    almacenar esta estructura múltiples veces.
 \end{notebox}
 
 El algoritmo A* requiere que se creen estructuras de datos que contendrán instancias
@@ -356,9 +373,8 @@ se estudian previamente los atributos que componen la clase \lstinline{State}:
 Por ello, será necesario definir dos operadores \lstinline{State::operator()}:
 uno que sea indiferente al atributo \lstinline{std::vector<int> workers_status}
 (\lstinline{StateHash::operator()})
-y otro que sí lo utilice para distinguir diferentes instancias de \lstinline{State}
+y otro que sí lo tenga en cuenta para distinguir diferentes instancias de \lstinline{State}
 (\lstinline{FullHash::operator()}).
-
 
 \section{Optimización}
 
@@ -367,7 +383,7 @@ y otro que sí lo utilice para distinguir diferentes instancias de \lstinline{St
 La operación \lstinline{operator()} es ejecutada varias veces para cada
 \lstinline{State}, este método tiene una complejidad de $O(n^2)$,
 por lo que su valor se almacena tras calcularlo por primera vez
-para evitar tener que recalcularlo.
+en un atributo del propio \lstinline{State}.
 
 La operación \lstinline{operator()} contiene 2 bucles \lstinline{for} anidados.
 Su principal objetivo es calcular una reducción de los atributos de la instancia
@@ -414,22 +430,13 @@ los \lstinline{operator()} correspondientes.
     Las funciones hash utilizadas en los \lstinline{operator()}
     son resistentes a colisiones,
     esto es, $
-    (\nexists (State_a, State_b) / h(State_a) = h(State_b))
-    \rightarrow
-    (h(State_a) \ne h(State_b) \iff State_a \ne State_b)
+    h(State_a) \ne h(State_b) \iff State_a \ne State_b
     $
     por lo que se pueden
     utilizar para comparar elementos en \lstinline{operator==}.
 \end{notebox}
 
 \subsection{A*}
-
-A la hora de paralelizar un algoritmo existen dos principales direcciones
-en las que basar el diseño:
-\begin{itemize}[itemsep=0.25px]
-    \item Paralelización de datos: $N$ datos independientes sufren el mismo procesamiento de forma paralela.
-    \item Paralelización de tareas: $N$ tareas independientes son ejecutadas de forma paralela.
-\end{itemize}
 
 \begin{figure}
 \begin{center}
@@ -441,8 +448,7 @@ en las que basar el diseño:
     };
 
     \node (C) [decision, below of=B, yshift=-2cm] {
-        ¿Se ha encontrado el objetivo o
-        el \lstinline{open_set} está vacío?
+        ¿Se ha encontrado el objetivo?
     };
 
     \node (D) [startstop, right of=C, xshift=3.5cm] {
@@ -503,25 +509,37 @@ en las que basar el diseño:
 \label{fig:AlgoritmoA*}
 \end{figure}
 
-Visto el diagrama (\ref{fig:AlgoritmoA*}),
-está claro que las tareas del algoritmo A* no son paralelizables
-y el número de datos (nodos) varía según se ejecuta el algoritmo.
-Ignorando las posibles oportunidades de paralelismo que se puedan encontrar
-en los procesos individuales del algoritmo,
-la principal paralelización se encuentra en el
-procesamiento de los nodos.
-
 \subsection{Paralelización}
+
+\subsubsection{First Come First Serve (FCFS) Solver}
+\index{First Come First Serve (FCFS) Solver}
 
 Sería posible desarrollar una implementación que paralelice el procesamiento de los nodos,
 asignando uno a cada hilo de forma que para $N$ hilos se procesen $N$ nodos
 de forma simultánea.
+Esta estrategia permite que los hilos procesen los nodos a medida que entran en 
+el \lstinline{open_set} (Véase Figura \ref{fig:RepresentacionFCFS}).
 
-De cualquier forma, este diseño es particular no tiene por qué reducir el tiempo
+\begin{figure}
+    \begin{center}
+        \begin{tikzpicture}[node distance=2cm]
+            \node (00) [process] {\lstinline{open_set}};
+            \node (01) [process, right of=00, xshift=6cm] {Procesa nodo};
+
+            \draw [arrow] (00) to [bend left] node [anchor=south] {Extrae nodo} (01);
+            \draw [arrow] (01) to [bend left] node [anchor=north] {Inserta vecinos} (00);
+        \end{tikzpicture}
+    \end{center}
+    \caption{Representación de la estrategia FCFS}
+    \label{fig:RepresentacionFCFS}
+\end{figure}
+
+De cualquier forma, este diseño en particular no tiene por qué reducir el tiempo
 requerido para hallar un nodo solución, simplemente tiene la oportunidad de reducirlo
 en algunos casos específicos.
-Porque se explora un mayor número de nodos en el mismo tiempo.
-(Véase \ref{fig:A*Comparison})
+Esto se debe a que la única diferencia entre las versiones monohilo y multihilo
+es que en la multihilo se procesan más nodos en el mismo tiempo.
+(Véase Figura \ref{fig:A*Comparison})
 
 \begin{figure}
 \begin{subfigure}{.5\textwidth}
@@ -594,13 +612,23 @@ Porque se explora un mayor número de nodos en el mismo tiempo.
 \label{fig:A*Comparison}
 \end{figure}
 
-\subsubsection{Secciones críticas}
+\begin{notebox}
+    Nótese que este acercamiento no tiene sincronización entre diferentes iteraciones,
+    esto implica que la solución está sujeta a una condición de carrera
+    (i.e. la solución depende de qué hilo finalice primero su ejecución).
+    Por lo que sería posible ejecutar $N$ veces este algoritmo y obtener
+    $N$ soluciones diferentes.
+\end{notebox}
+
+\paragraph{Secciones críticas}~
 
 El diseño paralelo propuesto no es sin inconvenientes,
 su implementación contiene varias secciones críticas que suponen
 una amenaza para el rendimiento del algoritmo.
+A continuación se observan cada una de estas secciones y se
+analizan las razones por las cuales son necesarias.
 
-\paragraph{Variables de control de flujo}~
+\subparagraph{Variables de control de flujo}~
 
 Primero, al paralelizar el algoritmo siguiendo esta estrategia,
 se han añadido variables de control compartidas por todos
@@ -615,7 +643,7 @@ se ejecuta una vez por lo que los efectos en el rendimiento serán nulos.
 Sería necesario que dos hilos hallasen dos soluciones diferentes al
 problema al mismo tiempo.
 
-\paragraph{\lstinline{open_set}}~
+\subparagraph{\lstinline{open_set}}~
 
 Segundo, el acceso al \lstinline{open_set} también 
 debe estar controlado de forma que sólo un hilo
@@ -636,8 +664,9 @@ esto implica que la inserción ser haría en $O(n)$
 nuevo elemento e insertarlo en el mismo barrido.}.
 
 \begin{notebox}
-    La sección crítica correspondiente al \lstinline{open_set}
-    tiene una complejidad proporcional al tamaño del mismo.
+    La complejidad de la sección crítica en la que se insertan
+    elementos en el \lstinline{open_set}
+    tiene como factor la longitud del \lstinline{open_set}. 
     Esto es, a mayor tamaño tenga el \lstinline{open_set},
     mayor tiempo será necesario para resolver la sección crítica.\\
 
@@ -647,41 +676,122 @@ nuevo elemento e insertarlo en el mismo barrido.}.
     reduciendo la paralelización del algoritmo. 
 \end{notebox}
 
+\subsubsection{Batch Solver}
+\index{Batch Solver}
+
+La siguiente estrategia es una evolución del FCFS Solver anterior,
+utiliza el mismo principio (los hilos exploran nodos del \lstinline{open_set}
+a medida que éste se va llenando),
+pero en este caso se implanta una barrera de sincronización en cada iteración.
+Esta barrera obliga a los hilos a esperar al resto de sus compañeros
+antes de extraer otro nodo del \lstinline{open_set}.
+
+La diferencia más notable entre este acercamiento y el anterior es que
+las secciones críticas se ven reducidas porque las secciones paralelas
+son menores.
+Además, al sincronizar los hilos en cada iteración, ahora no existe ninguna
+condición de carrera que pueda alterar el resultado, por lo que
+para el mismo problema este algoritmo siempre retornará el mismo resultado
+y utilizará la misma ruta para llegar a él.
+
+Se utiliza un \lstinline{std::vector<State>} para almacenar los nodos
+a explorar por cada hilo y un \lstinline{std::vector<std::vector<State>>}
+para que cada hilo almacene los vecinos que ha encontrado.
+Cada uno de estos vectores tiene una longitud igual al número de hilos
+de forma que el hilo con ID $N$ tiene asignada la posición $N$ de cada
+vector.
+
 \begin{figure}
-\begin{center}
-\begin{tikzpicture}[node distance=4cm]
-    \node (A) [startstop] {Obtener nodo};
+    \begin{center}
+        \begin{tikzpicture}[node distance=2cm]
+            \node (00) [process] {\lstinline{open_set}};
+            \node (01) [process, below of=00] {Nodos a explorar};
+            \node (02) [process, below of=01] {Procesa nodo};
+            \node (03) [process, below of=02] {Vecinos a insertar};
 
-    \node (B) [decision, below of=A] {
-        ¿Es el nodo final?
-    };
+            \draw [arrow] (00) -- (01);
+            
+            \draw [arrow] (01.south) -- ([xshift=-15mm]00.south |- 02.north);
+            \draw [arrow] (01.south) -- ([xshift=-10mm]00.south |- 02.north);
+            \draw [arrow] (01.south) -- ([xshift=-5mm]00.south |- 02.north);
+            \draw [arrow] (01.south) -- (00.south |- 02.north);
+            \draw [arrow] (01.south) -- ([xshift=15mm]00.south |- 02.north);
+            \draw [arrow] (01.south) -- ([xshift=10mm]00.south |- 02.north);
+            \draw [arrow] (01.south) -- ([xshift=5mm]00.south |- 02.north);
 
-    \node (C) [process, right of=B, xshift=1cm] {
-        Anotar como resultado y levantar \italic{flag}
-    };
+            \draw [arrow] (02.south) -- (03);
+            \draw [arrow] (02.south)+(5mm,0) -- (03);
+            \draw [arrow] (02.south)+(-5mm,0) -- (03);
+            \draw [arrow] (02.south)+(10mm,0) -- (03);
+            \draw [arrow] (02.south)+(-10mm,0) -- (03);
+            \draw [arrow] (02.south)+(15mm,0) -- (03);
+            \draw [arrow] (02.south)+(-15mm,0) -- (03);
 
-    \node (D) [process, below of=B] {
-        Calcular nodos vecinos del nodo actual
-    };
-
-    \node (E) [decision, below of=D] {
-        ¿Hay vecinos?
-    };
-
-    \node (F) [process, right of=E, xshift=1cm] {
-        Procesar vecino
-    };
-
-    \draw [arrow] (A) -- (B);
-    \draw [arrow] (B) -- node [anchor=north] {Sí} (C);
-    \draw [arrow] (B) -- node [anchor=east] {No} (D);
-    \draw [arrow] (D) -- (E);
-    \draw [arrow] (E) -- node [anchor=north] {Sí} (F);
-    \draw [arrow] (E) to [bend left=2cm] node [anchor=east] {No} (A);
-    \draw [arrow] (F) to [bend left=2cm] (E);
-
-    
-\end{tikzpicture}
-\caption{Representación de la sección paralela del algoritmo}
-\end{center}
+            \draw [arrow] (03) to [bend left=3cm] node [anchor=east] {Inserta vecinos} (00);
+        \end{tikzpicture}
+    \end{center}
+    \caption{Representación de la estrategia Batch}
+    \label{fig:RepresentacionBatch}
 \end{figure}
+
+\paragraph{Secciones críticas}~
+
+A diferencia de la estrategia FCFS,
+no es posible que dos hilos accedan al mismo recurso
+de forma simultánea.
+Las únicas estructuras de datos compartidas
+(los dos \lstinline{std::vector})
+ofrecen a los hilos un índice privado al que acceder.
+
+Las secciones críticas de la estrategia FCFS
+ahora son ejecutadas por un hilo:
+una al registrar los nodos a explorar y
+otra al retirar los vecinos e insertarlos en el \lstinline{open_set}.
+
+\subsubsection{Recursive Solver}
+\index{Recursive Solver}
+
+La estrategia propuesta en \cite{Zag17} se basa en la ejecución
+simultánea de varias instancias del algoritmo A* en el mismo problema.
+\begin{enumerate}[itemsep=0.25px]
+    \item Calcular vecinos del estado inicial.
+    \item Asignar un hilo a cada vecino.
+    \item Para cada vecino, resolver el problema como si fuese el estado inicial.
+    \item Recoger resultados obtenidos.
+    \item Obtener resultado con menor coste.
+    \item Retornar.
+\end{enumerate}
+
+Al igual que la solución por batches,
+no existe ninguna condición de carrera que permita
+al algoritmo retornar resultados diferentes
+en varias ejecuciones.
+Originalmente cada hilo utiliza sus propias estructuras
+de datos, por lo que no existen secciones críticas.
+No obstante, sería posible hacer una versión en la que
+los distintos hilos compartiesen las estructuras de costes
+y el \lstinline{open_set}.
+Implementar el algoritmo de esta forma añadiría las
+tediosas secciones críticas que podrían ser más
+dañinas que beneficiosas.
+
+Este diseño puede ser de gran interés para otros problemas
+distintos al JSP donde existan varios estados iniciales,
+ya que sería posible calcular una solución del A*
+para cada uno de ellos.
+El algoritmo permitiría conocer el mejor estado inicial
+así como la ruta a seguir para llegar al estado objetivo.
+
+\subsection{Hash Distributed A* (HDA*) Solver}
+\index{Hash Distributed A* (HDA*) Solver}
+
+El algoritmo propuesto en \cite{KFB09}
+utiliza tantos \lstinline{open_set} como hilos
+y una función hash para asignar cada nodo a uno de los
+\lstinline{open_set}.
+Cada hilo es `propietario' de uno de los \lstinline{open_set}
+y por consecuente, de los nodos que estén contenidos
+dentro del mismo.
+Cada hilo está encargado de explorar los nodos de su
+\lstinline{open_set} y de añadir sus vecinos
+al \lstinline{open_set} correspondiente.

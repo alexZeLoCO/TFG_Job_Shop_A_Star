@@ -116,6 +116,8 @@ headsepline, % Uncomment to get a line under the header
 	\hypersetup{pdfkeywords=\keywordnames} % Set the PDF's keywords to your keywords
 }
 
+\makeindex
+
 \begin{document}
 
 \frontmatter % Use roman page numbering style (i, ii, iii, iv...) for the pre-content pages
@@ -215,7 +217,25 @@ headsepline, % Uncomment to get a line under the header
 \begin{abstract}
 % TODO: Add the abstract
 \addchaptertocentry{\abstractname}
+La gran mayoría de ordenadores hoy en día poseen varios núcleos en sus procesadores,
+gracias a ellos se nos permite realizar diversas tareas de forma concurrente
+sin percatarnos de que un único procesador sólo puede hacer una tarea a la vez.
+La mayoría de programas deberían aprovechar este principio para acelerar y
+presentar resultados a sus usuarios más rápido.\\
 
+En algunos casos esto no es así, generalmente porque sus desarrolladores no se han dignado
+a explorar los beneficios del paralelismo.
+No obstante, el simple uso de varios hilos no implica una mejora en rendimiento,
+el diseño del algoritmo y sus secciones paralelas son de crucial importancia
+para obtener beneficios tangibles.\\
+
+Algunos algoritmos son más propensos al paralelismo,
+en ellos resulta más fácil hallar zonas en las que el uso de múltiples hilos:
+la implementación es sencilla y no existe mucho sobrecoste.
+Desafortunadamente esto no sucede en todos los algoritmos,
+en esta investigación se analiza el algoritmo A*,
+un claro ejemplo de cómo el paralelismo no siempre es
+garantía de rendimiento.
 \end{abstract}
 
 %----------------------------------------------------------------------------------------
@@ -268,6 +288,17 @@ headsepline, % Uncomment to get a line under the header
 %\textbf{P} & Cantidad pagada en \textbf{P}réstamos por hipotecas de vivienda habitual comprada antes de 2013\\
 %\textbf{R} & \textbf{R}etenciones\\
 %\textbf{SP} & \textbf{S}ituación de \textbf{P}rueba\\
+\textbf{CSV} & \textbf{C}omma \textbf{S}eparated \textbf{V}alue\\
+\textbf{FCFS} & \textbf{F}irst \textbf{C}ome \textbf{F}irst \textbf{S}erve\\
+\textbf{FPGA} & \textbf{F}ield \textbf{P}rogrammable \textbf{G}ate \textbf{A}rray\\
+\textbf{HDA*} & \textbf{H}ash \textbf{D}istributed \textbf{A}*\\
+\textbf{HDL} & \textbf{H}ardware \textbf{D}escription \textbf{L}anguage\\
+\textbf{HLS} & \textbf{H}igh \textbf{L}evel \textbf{S}ynthesis\\
+\textbf{HTTP} & \textbf{H}yper \textbf{T}ext \textbf{T}ransfer \textbf{P}rotocol\\
+\textbf{JSP} & \textbf{J}ob \textbf{S}hop \textbf{P}roblem\\
+\textbf{JSSP} & \textbf{J}ob \textbf{S}hop \textbf{S}cheduling \textbf{P}roblem\\
+\textbf{SoC} & \textbf{S}ystem on \textbf{C}hip\\
+
 
 \end{abbreviations}
 
@@ -340,6 +371,8 @@ headsepline, % Uncomment to get a line under the header
 % Uncomment the lines as you write the Appendices
 
 %\include{Appendices/AppendixA}
+\include{Appendices/AppendixA_Code}
+\include{Appendices/AppendixB_Data}
 
 %----------------------------------------------------------------------------------------
 %	BIBLIOGRAPHY
@@ -349,5 +382,7 @@ headsepline, % Uncomment to get a line under the header
 \printbibliography[heading=bibintoc]
 
 %----------------------------------------------------------------------------------------
+
+\printindex
 
 \end{document}  

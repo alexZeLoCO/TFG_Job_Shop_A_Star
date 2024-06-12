@@ -1,40 +1,46 @@
 \Chapter{Hipótesis de Partida y Alcance}{Estado del Arte}
 
 \section{Objeto de la investigación}
+\index{Objeto de la investigación}
 
 El presente proyecto tiene como objetivo principal descubrir los
-beneficios de paralelizar una implementación del algoritmo A*
-diseñado para resolver el Job Shop Scheduling Problem.
+beneficios del paralelismo aplicado al algoritmo A*.
+Para estudiar el rendimiento de las implementaciones desarrolladas
+se utilizará el Job Shop Scheduling Problem.
 Adicionalmente, se observará el rendimiento de una implementación
 de la misma solución en una FPGA.
 
 La motivación principal para la realización de este proyecto
 emana en un interés personal por el diseño, implementación y optimización
-de algoritmos aplicables a problemas reales,
-un ejemplo de estos algoritmos sería el A*.
+de algoritmos aplicables a problemas reales.
 
-Respecto al Job Shop Scheduling Problem, presenta un problema establecido
-años atrás, profundamente estudiado y cuyas soluciones
-puden ser obtenidas aplicando diversos algoritmos.
+El Job Shop Scheduling Problem es un problema de optimización
+sobre la planificación de horarios.
+Este problema en particular es mundialmente conocido,
+ha sido resuelto utilizando un gran abanico de algoritmo diferentes
+y ha sido profundamente estudiado.
 
-Un algoritmo capaz de recibir como entrada las descripciones de una plantilla
+La resolución del Job Shop Scheduling Problem requiere el diseño e implementación de
+un algoritmo capaz de recibir como entrada las descripciones de una plantilla
 de trabajadores y un listado de trabajos y tareas a realizar puede ser
 aplicable en ámbitos industriales donde la automatización de la creación
 de planificaciones pueda ser de interés.
 
 \section{Estado del arte}
+\index{Estado del arte}
 
 Este proyecto abarca diversos tópicos, cuyas bibliografías
-(incluso en individual) son extensas.
+(incluso en individual) tienen una gran extensión.
 A pesar de ello, resulta complicado hallar estudios previos sobre implementaciones
-paralelas del algoritmo A* enfocadas a la resolución del Job Shop Scheduling Problem.
+paralelas del algoritmo A* enfocadas a la resolución del Job Shop Scheduling Problem
+utilizando FPGAs.
 Así pues, el punto de partida de este proyecto
-se compone principalmente de bibliografía
-sobre los distintos tópicos individuales.
+se compone principalmente de estudios
+sobre los distintos tópicos de forma individual.
 
 El Job Shop Scheduling Problem tiene su origen en la década de 1960,
 desde entonces ha sido utilizado frecuentemente (incluso hasta el día de hoy)
-como herramienta de medición del rendimiento de algoritmos
+como herramienta de medición del rendimiento de algoritmos que sean 
 capaces de resolverlo \cite{Man67}.
 
 A lo largo de los años, se han realizado numerosos trabajos con el objetivo
@@ -48,13 +54,22 @@ métodos gráficos como diagramas Gantt y Pert.
 
 El algoritmo A* fue diseñado a finales de la década de 1960
 con el objetivo de implementar el enrutamiento de un robot
-conocido como \italic{"Shakey the Robot"} (\cite{Nil84}).
+conocido como \italic{"Shakey the Robot"} \cite{Nil84}.
 A* es una evolución del conocido algoritmo de Dijkstra
 frecuentemente utilizado también para la búsqueda en grafos.
 La principal diferencia entre estos dos algoritmos es el
 uso de una función heurística en el A* que `guía' al algoritmo
 en la dirección de la solución.
 \cite{HNR68}, \cite{MSV13}, \cite{Kon14}.
+
+El algoritmo A* no es propenso a la paralelización,
+no existe una implementación simple que aproveche el funcionamiento de
+varios procesadores de forma simultanea.
+En su lugar existen varias alternativas que paralelizan el algoritmo,
+cada una de ellas con sus fortalezas y debilidades.
+Estas diferentes versiones serán estudiadas, implementadas y
+probadas en esta investigación.
+\cite{Zag17}, \cite{WH16}.
 
 El tópico sobre el que menor cantidad de documentación existe
 y que supone una mayor curva de aprendizaje es sin lugar a duda
@@ -65,6 +80,7 @@ que reporta una aceleración de casi el $400\percentsign$.
 \cite{ZJW20}.
 
 \section{Requisitos}
+\index{Requisitos}
 
 El algoritmo a desarrollar en esta investigación deberá recibir como entrada
 una estructura de datos que contenga los trabajos,
@@ -79,13 +95,15 @@ El máximo elemento del listado de instantes de tiempo en los que cada trabajado
 se define como el \italic{makespan}, el tiempo necesario para finalizar todos los trabajos.
 
 \section{Alcance}
+\index{Alcance}
 
 El presente documento describe el problema a resolver en detalle,
-los métodos utilizados para resolverlo y
-los equipos en los que se ejecutan las diferentes versiones de las soluciones.
+los diferentes algoritmos implementados,
+observaciones sobre los mismos,
+casos de prueba utilizados para obtener métricas de rendimiento
+y observaciones sobre las métricas obtenidas.
 
-Entre los contenidos de este documento se encuentran detalles sobre
-la implementación de las soluciones, así como
-los cuellos de botella hallados, problemas y razonamientos a la hora de
-tomar ciertas decisiones en el desarrollo así como estudios teóricos
-realizados con el objetivo de hallar inconvenientes de forma preventiva.
+Entre las observaciones tanto de los algoritmos como de las métricas
+obtenidas, se encontrarán razonamientos sobre los resultados así
+como explicaciones de las razones por las cuales un algoritmo
+presenta un rendimiento distinto a otro.

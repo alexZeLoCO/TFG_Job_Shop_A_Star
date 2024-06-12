@@ -277,6 +277,7 @@
 %	HEADERS AND FOOTERS
 %----------------------------------------------------------------------------------------
 
+\RequirePackage{time}
 \RequirePackage[markcase=used]{scrlayer-scrpage}
 \providepairofpagestyles{thesisSimple}{%
 	\clearpairofpagestyles%
@@ -288,7 +289,8 @@
 \ofoot{}% Outer footer
 \pagestyle{thesisSimple}
 \providepairofpagestyles[thesisSimple]{thesis}{%
-	\automark*[section]{}%
+	%\automark*[section]{}%
+	\ifoot{\today{}, \now}
 }
 \providepairofpagestyles[thesisSimple]{review}{%
 	\ofoot[\shorttitle/\authorname]{\shorttitle/\authorname}
