@@ -13,27 +13,29 @@
 
 int main(int argc, char **argv)
 {
-    // CSV HEADER
-    std::cout << "lang;n_threads;function;solver;percentage;n_jobs;n_tasks;n_workers;runtime;schedule;makespan" << std::endl;
-
-    // std::cout << a_star({{2, 5, 1}, {3, 3, 3}}, 2, std::optional<Chronometer>()) << std::endl;
-
-    std::string dataset_file = "../datasets/abz5.csv";
+    if (argc < 3)
+    {
+        std::cerr << "ERR. USE: ./main FILE PERCENTAGE [SOLVER NAME: RECURSIVE | FCFS | BATCH | HDA | ALL]" << std::endl;
+        return 1;
+    }
+    const std::string filename = *(argv + 1);
+    const auto percentage = (float)atof(*(argv + 2));
+    const std::string solver = argc >= 4 ? *(argv + 3) : "ALL";
 
     std::vector<std::vector<Task>> jobs =
-        cut(get_jobs_from_file(dataset_file), 0.6);
+        cut(get_jobs_from_file(filename), percentage);
 
     const auto task = [&jobs](const AStarSolver &solver)
     { timeit(5, solver, jobs, calculate_n_workers(jobs)); };
 
-    RecursiveSolver recursiveSolver;
-    task(recursiveSolver);
-    FcfsSolver fcfsSolver;
-    task(fcfsSolver);
-    BatchSolver batchSolver;
-    task(batchSolver);
-    HdaSolver hdaSolver;
-    task(hdaSolver);
+    if (solver == "RECURSIVE" || solver == "ALL")
+        task(RecursiveSolver());
+    if (solver == "FCFS" || solver == "ALL")
+        task(FcfsSolver());
+    if (solver == "BATCH" || solver == "ALL")
+        task(BatchSolver());
+    if (solver == "HDA" || solver == "ALL")
+        task(HdaSolver());
 
     return 0;
 }

@@ -795,3 +795,13 @@ dentro del mismo.
 Cada hilo está encargado de explorar los nodos de su
 \lstinline{open_set} y de añadir sus vecinos
 al \lstinline{open_set} correspondiente.
+
+El rendimiento de este acercamiento depende en gran medida de la
+función hash que se utilice para distribuir a los diferentes nodos.
+Una función hash que no sea uniforme
+\footnote{Una función hash es uniforme si los valores que retorna
+tienen la misma probabilidad de ser retornados.}
+distribuirá los nodos de forma poco equitativa
+sobrecargando algunos hilos.
+Por otro lado, al utilizar varios \lstinline{open_set},
+el tiempo de inserción es menor porque tienen un menor tamaño.
