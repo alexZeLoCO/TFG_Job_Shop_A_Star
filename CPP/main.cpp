@@ -20,7 +20,7 @@ int main(int argc, char **argv)
     }
     const std::string filename = *(argv + 1);
     const auto percentage = (float)atof(*(argv + 2));
-    const std::string solver = argc >= 4 ? *(argv + 3) : "ALL";
+    const std::string solvername = argc >= 4 ? *(argv + 3) : "ALL";
 
     std::vector<std::vector<Task>> jobs =
         cut(get_jobs_from_file(filename), percentage);
@@ -28,13 +28,13 @@ int main(int argc, char **argv)
     const auto task = [&jobs](const AStarSolver &solver)
     { timeit(5, solver, jobs, calculate_n_workers(jobs)); };
 
-    if (solver == "RECURSIVE" || solver == "ALL")
+    if (solvername == "RECURSIVE" || solvername == "ALL")
         task(RecursiveSolver());
-    if (solver == "FCFS" || solver == "ALL")
+    if (solvername == "FCFS" || solvername == "ALL")
         task(FcfsSolver());
-    if (solver == "BATCH" || solver == "ALL")
+    if (solvername == "BATCH" || solvername == "ALL")
         task(BatchSolver());
-    if (solver == "HDA" || solver == "ALL")
+    if (solvername == "HDA" || solvername == "ALL")
         task(HdaSolver());
 
     return 0;
