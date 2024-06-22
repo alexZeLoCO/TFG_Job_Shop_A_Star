@@ -43,8 +43,6 @@ De esta forma, de una única ejecución se podría obtener:
     \item Tiempo necesario para resolver el $90\percentsign$ del problema.
     \item Tiempo necesario para resolver el $100\percentsign$ del problema.
 \end{itemize}
-Se utiliza una función que se encarga de tomar una medición de tiempo
-antes y después de iniciar el algoritmo.
 
 \begin{lstlisting}[language=C++]
 class Chronometer
@@ -88,6 +86,95 @@ Esta clase se utiliza para tomar las mediciones de todas las iteraciones
 y posteriormente estos datos se utilizan para calcular tiempos medios de ejecución,
 máximos y mínimos.
 
-\section{Resultados}
+Para realizar las mediciones, se utilizará el 60\percentsign{}
+del conjunto \lstinline{abz5} originalmente comprendido por
+10 trabajos con 10 tareas cada uno a ser ejecutadas por 10 trabajadores
+\footnote{Tras aplicar la reducción de tamaño, se planificarán 6 trabajos
+con 6 tareas cada uno y 10 trabajadores}.
 
-\section{Análisis}
+\section{Resultados y Análisis}
+
+A continuación, se observan algunos resultados destacados.
+
+\subsection{Complejidad del problema}
+
+En la siguiente gráfica, se puede ver el tiempo de ejecución
+necesario para completar el problema utilizando uno de los
+algoritmos.
+
+INSERTAR GRÁFICO
+
+Como se puede ver, el diagrama es de poca utilidad debido a la
+complejidad del problema.
+Para poder observar con mejor los resultados,
+se utiliza un eje vertical con una escala logarítmica.
+
+INSERTAR GRÁFICO
+
+Estas observaciones verifican que la complejidad del problema
+a resolver es cuadrática, como era de esperar.
+
+\subsection{Cuellos de botella en secciones críticas}
+
+Los algoritmos que utilizan estructuras de datos compartidas
+para almacenar los nodos y sus costes se ven gravemente
+afectadas cuando el tamaño de estas estructuras incrementa.
+Como esta información es compartida por todos los hilos,
+es necesario acceder a ella de forma serializada,
+reduciendo notablemente el \italic{speedup}.
+
+En algunos casos extremos es posible incluso
+que versiones monohilo del mismo algoritmo
+tengan mejor rendimiento que versiones paralelas.
+
+INSERTAR GRÁFICO
+
+Por otro lado, algoritmos como el HDA*
+que utilizan una estructura de datos privada para cada hilo
+no ven sus tareas serializadas,
+incrementando notablemente el \italic{speedup}.
+
+INSERTAR GRÁFICO
+
+\subsection{Comparativa de algoritmos}
+
+\subsection{Casos particulares}
+
+Vistos los resultados anteriores
+se podrían dar como obsoletas algunas de las versiones
+paralelas por ofrecer muy pocas mejoras frente a otras
+versiones monohilo.
+No obstante, existen casos particulares del problema
+donde estas versiones fácilmente descartables
+podrían presentar una solución mucho más interesante.
+
+Estos casos particulares generalmente involucran
+la posibilidad de que la población de nodos sea
+repartida entre los diferentes hilos de forma
+que cada uno tenga una sección parcial o totalmente
+independiente del resto.
+A continuación se presentan algunos de estos casos.
+
+\subsubsection{Varios estados iniciales}
+
+Si el problema a resolver tiene varios estados iniciales
+sería posible asignar cada estado a un hilo (o grupo de hilos)
+de forma que cada uno busque una solución desde su estado inicial.
+
+\subsubsection{Estados solución intermedios}
+
+Si se conoce algún nodo intermedio de la solución
+sería posible dividir el problema en dos,
+de forma que un hilo resuelva una de las partes
+\footnote{Si existiese más de un nodo intermedio conocido,
+el problema se podría seguir subdividiendo entre más hilos.}.
+Por ejemplo, si del problema se conocen el nodo inicial $A$,
+el final $E$ y los intermedios $B$, $C$ y $D$,
+la solución se podría obtener repartiendo el
+trabajo entre 4 hilos diferentes:
+\begin{enumerate}[itemsep=0.25px]
+    \item Hilo 0: Resolver camino desde nodo $A$ hasta $B$.
+    \item Hilo 1: Resolver camino desde nodo $B$ hasta $C$.
+    \item Hilo 2: Resolver camino desde nodo $C$ hasta $D$.
+    \item Hilo 3: Resolver camino desde nodo $D$ hasta $E$.
+\end{enumerate}
