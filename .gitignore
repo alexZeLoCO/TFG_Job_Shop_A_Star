@@ -525,7 +525,7 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
-**/main.pdf
+main.pdf
 **/main
 **/.vscode/
 ./output
