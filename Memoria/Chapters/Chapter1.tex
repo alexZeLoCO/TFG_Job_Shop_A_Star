@@ -378,7 +378,14 @@ y otro que sí lo tenga en cuenta para distinguir diferentes instancias de \lsti
 
 \section{Optimización}
 
-\subsection{State}
+\subsection{A*}
+
+La siguiente subsección estudia la optimización
+del algoritmo A* sin tener en cuenta el paralelismo,
+esto es, se trata de optimizar el rendimiento
+monohilo del mismo.
+
+\subsubsection{State}
 
 La operación \lstinline{operator()} es ejecutada varias veces para cada
 \lstinline{State}, este método tiene una complejidad de $O(n^2)$,
@@ -436,7 +443,87 @@ los \lstinline{operator()} correspondientes.
     utilizar para comparar elementos en \lstinline{operator==}.
 \end{notebox}
 
-\subsection{A*}
+\subsubsection{Coste H - Heurístico}
+
+La principal decisión que afectará al tiempo de ejecución
+del algoritmo se encuentra en la Implementación
+de la función heurística encargada de calcular el coste H.
+Este coste se utiliza para seleccionar el siguiente nodo
+a expandir, por lo que un buen heurístico es aquel que
+mejor dirige al algoritmo en la dirección del nodo objetivo.
+
+El rendimiento y calidad del resultado del algoritmo
+dependerán en gran medida de la función seleccionada.
+En algunos casos la implementación retornará resultados
+óptimos (o cercanos al óptimo) pero requerirá un mayor tiempo
+de ejecución, mientras que otras implementaciones
+requerirán un menor tiempo de ejecución pero sus resultados
+no serán óptimos.
+Dependiendo del problema a resolver será conveniente implementar
+una función heurística de un tipo u otro.
+
+\paragraph{Heurístico para optimalidad}~
+
+La siguiente implementación de la función heurística
+dirigirá al algoritmo hacia nodos solución que sean óptimos
+o se encuentren relativamente cerca del óptimo.
+
+\begin{lstlisting}[language=C++]
+unsigned int State::calculate_h_cost() const
+{
+    std::vector<int> h_costs;
+    for (size_t job_idx = 0; job_idx < this->m_jobs.size(); job_idx++)
+    {
+        h_costs.emplace_back(0);
+        std::vector<Task> job = this->m_jobs[job_idx];
+        for (size_t task_idx = 0; task_idx < job.size(); task_idx++)
+            if (this->get_schedule()[job_idx][task_idx] == -1)
+                h_costs[job_idx] += job[task_idx].get_duration();
+    }
+    auto max_element = std::max_element(h_costs.begin(), h_costs.end());
+    return max_element == h_costs.end() ? 0 : *max_element;
+}
+\end{lstlisting}
+
+La función calcula el tiempo necesario para completar cada trabajo
+y retorna el tiempo mayor.
+
+\paragraph{Heurístico para tiempo}~
+
+La siguiente implementación de la función heurística
+dirigirá al algoritmo hacia cualquier nodo solución
+independientemente de si es óptimo o no.
+
+\begin{lstlisting}[language=C++]
+unsigned int State::calculate_h_cost() const
+{
+    unsigned int unscheduled_tasks_count = 0;
+    for (std::size_t job_idx = 0; job_idx < this->m_jobs.size(); job_idx++)
+        for (std::size_t task_idx = 0; task_idx < this->m_jobs[job_idx].size(); task_idx++)
+            if (this->m_schedule[job_idx][task_idx] == -1)
+                unscheduled_tasks_count += this->m_jobs[job_idx][task_idx].get_duration();
+    return unscheduled_tasks_count; 
+}
+\end{lstlisting}
+
+La función calcula el tiempo necesario para completar
+las tareas restantes si se ejecutasen una a una
+y retorna esta suma.
+
+\begin{notebox}
+    A pesar de que ambas implementaciones tienen la misma complejidad ($O(n^2)$),
+    un algoritmo A* utilizando de ellas tardará varias magnitudes de tiempo más que
+    si utilizase la otra aunque retornará resultados notablemente mejores en algunos casos.
+\end{notebox}
+
+\subsection{Paralelización}
+
+En la siguiente subsección
+se estudia la paralelización
+del algoritmo A*.
+Este estudio está compuesto por la descripción y
+comparación de distintas alternativas discutidas en
+la literatura.
 
 \begin{figure}
 \begin{center}
@@ -508,8 +595,6 @@ los \lstinline{operator()} correspondientes.
 \caption{Representación del algoritmo A*}
 \label{fig:AlgoritmoA*}
 \end{figure}
-
-\subsection{Paralelización}
 
 \subsubsection{First Come First Serve (FCFS) Solver}
 \index{First Come First Serve (FCFS) Solver}
