@@ -44,6 +44,7 @@ public:
                 this->m_times.try_emplace(goal, this->m_times[goal] + timestamp);
             this->m_goals[goal] = true;
             auto n_workers = (unsigned int)state.get_workers_status().size();
+#pragma omp critical(io)
             std::cout << "c++;" << omp_get_max_threads() << ";a_star;" << this->m_solver_name << ";" << ((float)goal) / 10 << ";" << state.get_jobs().size() << ";" << state.get_jobs()[0].size() << ";"
                       << n_workers << ";" << std::setprecision(5) << std::scientific
                       << timestamp << std::defaultfloat << ";" << state << ";" << state.get_max_worker_status() << std::endl;
