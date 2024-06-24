@@ -1,4 +1,5 @@
 \Chapter{Problema a investigar}{Análisis, implementación y optimización}
+\index{Problema a investigar}
 
 \section{Job Shop Scheduling Problem}
 \index{Job Shop Scheduling Problem}
@@ -141,10 +142,12 @@ sigue los caminos con menor coste (Véase figura \ref{fig:DijkstraA*Comparison})
 El algoritmo A* utiliza varios componentes para resolver problemas
 de optimización. A continuación se describe cada uno de ellos.
 
+\pagebreak
+
 \subsubsection{Componentes A*}
 
 \paragraph{Estado}~
-\index{A*: Estado}
+\index{Algoritmo A*!Estado}
 
 El estado es una estructura de datos que describe la situación
 del problema en un punto determinado.
@@ -161,11 +164,12 @@ En el caso del JSP, el estado podría estar formado por la siguiente informació
 El resultado final del JSP será un estado donde todas las tareas han sido planificadas.
 
 \paragraph{Costes}~
+\index{Algoritmo A*!Costes}
 
 El algoritmo A* utiliza 3 costes distintos para resolver el problema de optimización:
 
 \subparagraph{Coste G}~
-\index{A*: Coste G}
+\index{Algoritmo A*!Costes!Coste G}
 
 El coste G (de ahora en adelante $cost_g$) es el coste desde el estado inicial
 hasta el estado actual.
@@ -173,7 +177,7 @@ Este coste es calculado buscando el mayor tiempo de fin de
 las tareas ya planificadas.
 
 \subparagraph{Coste H}~
-\index{A*: Coste H}
+\index{Algoritmo A*!Costes!Coste H}
 
 El coste H (de ahora en adelante $cost_h$) es el coste estimado desde el estado actual
 hasta el estado final.
@@ -181,15 +185,17 @@ Este coste es calculado utilizando una función heurística,
 que estima el coste.
 
 \subparagraph{Coste F}~
-\index{A*: Coste F}
+\index{Algoritmo A*!Costes!Coste F}
 
 El coste F (de ahora en adelante $cost_f$) es el coste estimado desde el estado inicial
 hasta el estado final pasando por el estado actual.
 
 Por lo tanto, \[cost_f = cost_g + cost_h\]
 
+\pagebreak
+
 \paragraph{Generación de sucesores}~
-\index{A*: Sucesores / Vecinos / Hijos}
+\index{Algoritmo A*!Generación de sucesores}
 
 El algoritmo A* debe generar un número de estados sucesores dado un estado cualquiera
 \footnote{Dependiendo de la implementación, puede existir alguna excepción a esta norma,
@@ -209,7 +215,7 @@ pueden ser ejecutadas en este instante (e.g. cada una es de un trabajo diferente
 \end{enumerate}}.
 
 \paragraph{Listas de prioridad}~
-\index{A*: Lista de prioridad}
+\index{Algoritmo A*!Listas de prioridad}
 
 El algoritmo A* utiliza dos listas de estados: la lista abierta y la lista cerrada.
 La lista cerrada contiene los estados que ya han sido estudiados mientras que
@@ -224,7 +230,10 @@ Los estados de la lista abierta están ordenados en función de su $cost_f$,
 de menor a mayor.
 De esta forma, se tiene acceso inmediato al elemento con menor $cost_f$.
 
+\pagebreak
+
 \subsubsection{Pseudocódigo}
+\index{Algoritmo A*!Pseudocódigo}
 
 \begin{lstlisting}[language=Python]
     lista_abierta = SortedList()
@@ -255,12 +264,13 @@ De esta forma, se tiene acceso inmediato al elemento con menor $cost_f$.
 \end{lstlisting}
 
 \subsection{Equipo de Estudio}
+\index{Equipo de Estudio}
 
 Este algoritmo es implementado y optimizado en diversas arquitecturas.
 Posteriormente, se realizan comparaciones entre ellas.
 
 \subsubsection{Arquitectura x86}
-\index{Arquitectura x86}
+\index{Equipo de Estudio!Arquitectura x86}
 
 Inicialmente, se realiza una implementación del algoritmo utilizando \Python.
 Esta versión permite comprobar rápidamente el correcto funcionamiento del mismo
@@ -277,7 +287,7 @@ se comienza la implementación de versiones multihilo
 que serán posteriormente comparadas.
 
 \subsubsection{FPGA}
-\index{FPGA}
+\index{Equipo de Estudio!FPGA}
 
 Finalmente, se desarrolla una implementación del algoritmo
 diseñado para ser ejecutado en una FPGA\@.
@@ -291,6 +301,8 @@ Este programa ofrece entre muchas otras herramientas
 un sintetizador capaz de transpilar código C++ a Verilog
 que puede ser entonces compilado
 para ejecutarse en la FPGA\@.
+
+\pagebreak
 
 \section{Método de comparativas}
 
@@ -314,14 +326,17 @@ distintos datos de entrada múltiples veces.
     siempre $N$ veces ignorando las métricas de la primera ejecución.
 \end{notebox}
 
+\pagebreak
+
 \section{Implementación}
+\index{Implementación A*}
 
 Tanto \Python como C++ son lenguajes orientados a objetos.
 Esta sección contiene las descripciones de las diferentes
 clases diseñadas para dar soporte al algoritmo.
 
 \subsection{Task}
-\index{Task}
+\index{Implementación A*!Task}
 
 La clase \lstinline{Task} correspone a una tarea a realizar.
 Una instancia de esta clase está definida por los atributos:
@@ -331,7 +346,7 @@ Una instancia de esta clase está definida por los atributos:
 \end{itemize}
 
 \subsection{State}
-\index{State}
+\index{Implementación A*!State}
 
 La clase \lstinline{State} corresponde a un estado (o nodo).
 Una instancia de esta clase está definida por los atributos:
@@ -376,9 +391,13 @@ uno que sea indiferente al atributo \lstinline{std::vector<int> workers_status}
 y otro que sí lo tenga en cuenta para distinguir diferentes instancias de \lstinline{State}
 (\lstinline{FullHash::operator()}).
 
+\pagebreak
+
 \section{Optimización}
+\index{Optimización A*}
 
 \subsection{A*}
+\index{Optimización A*!Monohilo}
 
 La siguiente subsección estudia la optimización
 del algoritmo A* sin tener en cuenta el paralelismo,
@@ -386,64 +405,28 @@ esto es, se trata de optimizar el rendimiento
 monohilo del mismo.
 
 \subsubsection{State}
+\index{Optimización A*!Monohilo!State}
 
 La operación \lstinline{operator()} es ejecutada varias veces para cada
 \lstinline{State}, este método tiene una complejidad de $O(n^2)$,
 por lo que su valor se almacena tras calcularlo por primera vez
 en un atributo del propio \lstinline{State}.
 
-La operación \lstinline{operator()} contiene 2 bucles \lstinline{for} anidados.
-Su principal objetivo es calcular una reducción de los atributos de la instancia
-\lstinline{State}.
-Se utiliza \lstinline{#pragma omp parallel for collapse(2) reduction(+: seed)}
-para paralelizar la reducción.
-
-\begin{lstlisting}[
-    language=C++,
-    caption=Implementación de \lstinline{FullHash::operator()}
-]
-std::size_t FullHash::operator()(State key) const
-{
-    if (key.get_full_hash() != UNINITIALIZED_HASH)
-        return key.get_full_hash();
-    std::vector<std::vector<int>>
-        schedule = key.get_schedule();
-    std::vector<int> workers_status = key.get_workers_status();
-    std::size_t seed = schedule.size() * schedule[0].size() * workers_status.size();
-
-#pragma omp parallel for reduction(+ : seed)
-    for (size_t i = 0; i < workers_status.size(); i++)
-        seed += (workers_status[i] * 10 ^ i);
-
-    if (schedule.empty())
-        return seed;
-
-    const std::size_t nTasks = schedule[0].size();
-#pragma omp parallel for collapse(2) reduction(+ : seed)
-    for (size_t i = 0; i < schedule.size(); i++)
-    {
-        for (size_t j = 0; j < nTasks; j++)
-            seed += (schedule[i][j] * 10 ^ ((1 + i + workers_status.size()) * j + j));
-    }
-    key.set_full_hash(seed);
-    return seed;
-}
-\end{lstlisting}
-
 Los operadores \lstinline{operator==} necesarios se implementan utilizando
 los \lstinline{operator()} correspondientes.
+Las funciones hash utilizadas en los \lstinline{operator()}
+son resistentes a colisiones,
+esto es, $
+h(State_a) \ne h(State_b) \iff State_a \ne State_b
+$
+por lo que se pueden
+utilizar para comparar elementos en \lstinline{operator==}.
 
-\begin{notebox}
-    Las funciones hash utilizadas en los \lstinline{operator()}
-    son resistentes a colisiones,
-    esto es, $
-    h(State_a) \ne h(State_b) \iff State_a \ne State_b
-    $
-    por lo que se pueden
-    utilizar para comparar elementos en \lstinline{operator==}.
-\end{notebox}
+\pagebreak
 
+\label{ssec:Heuristicos}
 \subsubsection{Coste H - Heurístico}
+\index{Optimización A*!Monohilo!Heurísticos}
 
 La principal decisión que afectará al tiempo de ejecución
 del algoritmo se encuentra en la Implementación
@@ -463,6 +446,7 @@ Dependiendo del problema a resolver será conveniente implementar
 una función heurística de un tipo u otro.
 
 \paragraph{Heurístico para optimalidad}~
+\index{Optimización A*!Monohilo!Heurísticos!Resultado Óptimo}
 
 La siguiente implementación de la función heurística
 dirigirá al algoritmo hacia nodos solución que sean óptimos
@@ -488,7 +472,10 @@ unsigned int State::calculate_h_cost() const
 La función calcula el tiempo necesario para completar cada trabajo
 y retorna el tiempo mayor.
 
+\pagebreak
+
 \paragraph{Heurístico para tiempo}~
+\index{Optimización A*!Monohilo!Heurísticos!Rápido}
 
 La siguiente implementación de la función heurística
 dirigirá al algoritmo hacia cualquier nodo solución
@@ -516,7 +503,10 @@ y retorna esta suma.
     si utilizase la otra aunque retornará resultados notablemente mejores en algunos casos.
 \end{notebox}
 
+\pagebreak
+
 \subsection{Paralelización}
+\index{Optimización A*!Multihilo}
 
 En la siguiente subsección
 se estudia la paralelización
@@ -525,79 +515,79 @@ Este estudio está compuesto por la descripción y
 comparación de distintas alternativas discutidas en
 la literatura.
 
-\begin{figure}
-\begin{center}
-\begin{tikzpicture}[node distance=2cm]
-    \node (A) [startstop] {Inicio};
+%\begin{figure}
+%\begin{center}
+%\begin{tikzpicture}[node distance=2cm]
+    %\node (A) [startstop] {Inicio};
 
-    \node (B) [process, right of=A, xshift=2cm] {
-        Inicializar \lstinline{g_costs}, \lstinline{f_costs} y \lstinline{open_set}
-    };
+    %\node (B) [process, right of=A, xshift=2cm] {
+        %Inicializar \lstinline{g_costs}, \lstinline{f_costs} y \lstinline{open_set}
+    %};
 
-    \node (C) [decision, below of=B, yshift=-2cm] {
-        ¿Se ha encontrado el objetivo?
-    };
+    %\node (C) [decision, below of=B, yshift=-2cm] {
+        %¿Se ha encontrado el objetivo?
+    %};
 
-    \node (D) [startstop, right of=C, xshift=3.5cm] {
-        Retornar
-    };
+    %\node (D) [startstop, right of=C, xshift=3.5cm] {
+        %Retornar
+    %};
 
-    \node (E) [process, left of=C, xshift=-3.5cm] {
-        Asignar el primer elemento de \lstinline{open_set}
-        al nodo actual
-    };
+    %\node (E) [process, left of=C, xshift=-3.5cm] {
+        %Asignar el primer elemento de \lstinline{open_set}
+        %al nodo actual
+    %};
 
-    \node (F) [process, below of=E, yshift=-1cm] {
-        Calcular nodos vecinos del nodo actual
-    };
+    %\node (F) [process, below of=E, yshift=-1cm] {
+        %Calcular nodos vecinos del nodo actual
+    %};
 
-    \node (G) [decision, below of=F, yshift=-2cm] {
-        ¿Hay vecinos? 
-    };
+    %\node (G) [decision, below of=F, yshift=-2cm] {
+        %¿Hay vecinos? 
+    %};
     
-    \node (H) [process, below of=G, yshift=-2cm] {
-        Calcular el coste G del vecino actual
-    };
+    %\node (H) [process, below of=G, yshift=-2cm] {
+        %Calcular el coste G del vecino actual
+    %};
 
-    \node (I) [decision, right of=H, xshift=3.5cm] {
-        ¿Es el mejor coste G que se conoce para este estado?
-    };
+    %\node (I) [decision, right of=H, xshift=3.5cm] {
+        %¿Es el mejor coste G que se conoce para este estado?
+    %};
 
-    \node (J) [process, right of=I, xshift=3.5cm] {
-        Guardar coste G y nodo en \lstinline{g_costs} y \lstinline{f_costs}
-    };
+    %\node (J) [process, right of=I, xshift=3.5cm] {
+        %Guardar coste G y nodo en \lstinline{g_costs} y \lstinline{f_costs}
+    %};
 
-    \node (K) [decision, above of=J, yshift=2cm] {
-        ¿Existe el nodo en el \lstinline{open_set}?
-    };
+    % \node (K) [decision, above of=J, yshift=2cm] {
+        % ¿Existe el nodo en el \lstinline{open_set}?
+    % };
 
-    \node (L) [process, left of=K, xshift=-3.5cm] {
-        Insertar en \lstinline{open_set}
-    };
+    % \node (L) [process, left of=K, xshift=-3.5cm] {
+        % Insertar en \lstinline{open_set}
+    % };
 
-    \draw [arrow] (A) -- (B);
-    \draw [arrow] (B) -- (C);
-    \draw [arrow] (C) -- node [anchor=north] {Sí} (D);
-    \draw [arrow] (C) -- node [anchor=north] {No} (E);
-    \draw [arrow] (E) -- (F);
-    \draw [arrow] (F) -- (G);
-    \draw [arrow] (G) -- node [anchor=north west] {No} (C);
-    \draw [arrow] (G) -- node [anchor=east] {Sí} (H);
-    \draw [arrow] (H) -- (I);
-    \draw [arrow] (I) -- node [anchor=north east] {No} (G);
-    \draw [arrow] (I) -- node [anchor=north] {Sí} (J);
-    \draw [arrow] (J) -- (K);
-    \draw [arrow] (K) -- node [anchor=north east] {No} (C);
-    \draw [arrow] (K) -- node [anchor=north] {Sí} (L);
-    \draw [arrow] (L) -- (G);
-\end{tikzpicture}
-\end{center}
-\caption{Representación del algoritmo A*}
-\label{fig:AlgoritmoA*}
-\end{figure}
+    % \draw [arrow] (A) -- (B);
+    % \draw [arrow] (B) -- (C);
+    % \draw [arrow] (C) -- node [anchor=north] {Sí} (D);
+    % \draw [arrow] (C) -- node [anchor=north] {No} (E);
+    % \draw [arrow] (E) -- (F);
+    % \draw [arrow] (F) -- (G);
+    % \draw [arrow] (G) -- node [anchor=north west] {No} (C);
+    % \draw [arrow] (G) -- node [anchor=east] {Sí} (H);
+    % \draw [arrow] (H) -- (I);
+    % \draw [arrow] (I) -- node [anchor=north east] {No} (G);
+    % \draw [arrow] (I) -- node [anchor=north] {Sí} (J);
+    % \draw [arrow] (J) -- (K);
+    % \draw [arrow] (K) -- node [anchor=north east] {No} (C);
+    % \draw [arrow] (K) -- node [anchor=north] {Sí} (L);
+    % \draw [arrow] (L) -- (G);
+% \end{tikzpicture}
+% \end{center}
+% \caption{Representación del algoritmo A*}
+% \label{fig:AlgoritmoA*}
+% \end{figure}
 
 \subsubsection{First Come First Serve (FCFS) Solver}
-\index{First Come First Serve (FCFS) Solver}
+\index{Optimización A*!Multihilo!First Come First Serve (FCFS) Solver}
 
 Sería posible desarrollar una implementación que paralelice el procesamiento de los nodos,
 asignando uno a cada hilo de forma que para $N$ hilos se procesen $N$ nodos
@@ -605,7 +595,7 @@ de forma simultánea.
 Esta estrategia permite que los hilos procesen los nodos a medida que entran en 
 el \lstinline{open_set} (Véase Figura \ref{fig:RepresentacionFCFS}).
 
-\begin{figure}
+\begin{figure}[h]
     \begin{center}
         \begin{tikzpicture}[node distance=2cm]
             \node (00) [process] {\lstinline{open_set}};
@@ -626,7 +616,7 @@ Esto se debe a que la única diferencia entre las versiones monohilo y multihilo
 es que en la multihilo se procesan más nodos en el mismo tiempo.
 (Véase Figura \ref{fig:A*Comparison})
 
-\begin{figure}
+\begin{figure}[h]
 \begin{subfigure}{.5\textwidth}
 \begin{center}
 \begin{tikzpicture}[node distance=1.5cm]
@@ -762,7 +752,7 @@ nuevo elemento e insertarlo en el mismo barrido.}.
 \end{notebox}
 
 \subsubsection{Batch Solver}
-\index{Batch Solver}
+\index{Optimización A*!Multihilo!Batch Solver}
 
 La siguiente estrategia es una evolución del FCFS Solver anterior,
 utiliza el mismo principio (los hilos exploran nodos del \lstinline{open_set}
@@ -784,9 +774,9 @@ a explorar por cada hilo y un \lstinline{std::vector<std::vector<State>>}
 para que cada hilo almacene los vecinos que ha encontrado.
 Cada uno de estos vectores tiene una longitud igual al número de hilos
 de forma que el hilo con ID $N$ tiene asignada la posición $N$ de cada
-vector.
+vector. Véase figura \ref{fig:RepresentacionBatch}.
 
-\begin{figure}
+\begin{figure}[h]
     \begin{center}
         \begin{tikzpicture}[node distance=2cm]
             \node (00) [process] {\lstinline{open_set}};
@@ -827,14 +817,13 @@ de forma simultánea.
 Las únicas estructuras de datos compartidas
 (los dos \lstinline{std::vector})
 ofrecen a los hilos un índice privado al que acceder.
-
 Las secciones críticas de la estrategia FCFS
 ahora son ejecutadas por un hilo:
 una al registrar los nodos a explorar y
 otra al retirar los vecinos e insertarlos en el \lstinline{open_set}.
 
 \subsubsection{Recursive Solver}
-\index{Recursive Solver}
+\index{Optimización A*!Multihilo!Recursive Solver}
 
 La estrategia propuesta en \cite{Zag17} se basa en la ejecución
 simultánea de varias instancias del algoritmo A* en el mismo problema.
@@ -867,8 +856,19 @@ para cada uno de ellos.
 El algoritmo permitiría conocer el mejor estado inicial
 así como la ruta a seguir para llegar al estado objetivo.
 
-\subsection{Hash Distributed A* (HDA*) Solver}
-\index{Hash Distributed A* (HDA*) Solver}
+Uno de los posibles problemas que puede presentar esta
+estrategia consiste en la posibilidad de que dos hilos
+terminen calculando caminos muy similares.
+Esto implica que uno de los hilos ha malgastado un tiempo
+que podría haber sido invertido en rutas diferentes.
+Para resolver este problema, sería necesario que
+los hilos compartiesen alguna estructura de datos
+para que sean conscientes de lo que está calculando cada uno.
+
+\pagebreak
+
+\subsubsection{Hash Distributed A* (HDA*) Solver}
+\index{Optimización A*!Multihilo!Hash Distributed A* (HDA*) Solver}
 
 El algoritmo propuesto en \cite{KFB09}
 utiliza tantos \lstinline{open_set} como hilos
@@ -890,3 +890,37 @@ distribuirá los nodos de forma poco equitativa
 sobrecargando algunos hilos.
 Por otro lado, al utilizar varios \lstinline{open_set},
 el tiempo de inserción es menor porque tienen un menor tamaño.
+
+\begin{figure}[h]
+    \begin{center}
+        \begin{tikzpicture}[node distance=4cm]
+            \node (00) [stack] {\lstinline{open_set_0}};
+            \node (01) [stack, right of=00] {\lstinline{open_set_1}};
+            \node (02) [stack, right of=01] {\lstinline{open_set_2}};
+            \node (03) [stack, right of=02] {\lstinline{open_set_3}};
+
+            \node (04) [dot, below of=01, yshift=-2cm] {\lstinline{current_state}};
+
+            \node (06) [process, below of=04] {\lstinline{Calculate neighbors}};
+
+            \node (05) [dot, left of=06, yshift=2cm] {\lstinline{n_0}};
+            \node (07) [dot, right of=06, yshift=2cm] {\lstinline{n_1}};
+            \node (08) [dot, right of=06, xshift=4cm] {\lstinline{n_2}};
+
+            \draw [arrow] (01.south) to node [anchor=west] {\lstinline{pop()}} (04);
+
+            \draw [arrow] (04.south) to node [anchor=west] {\lstinline{process()}} (06);
+
+            \draw [arrow] (06.west) to [bend left] node [anchor=north] {\lstinline{neighbor_0}} (05);
+            \draw [arrow] (06.east) to [bend right] node [anchor=west] {\lstinline{neighbor_1}} (07);
+            \draw [arrow] (06.east) to node [anchor=north] {\lstinline{neighbor_2}} (08);
+
+            \draw [arrow] (05.north) to node [anchor=east] {\lstinline{insert()}} (00);
+            \draw [arrow] (07.north) to node [anchor=east] {\lstinline{insert()}} (02);
+            \draw [arrow] (08.north) to node [anchor=east] {\lstinline{insert()}} (03);
+
+       \end{tikzpicture}
+    \end{center}
+    \caption{Representación de la estrategia HDA*}
+    \label{fig:RepresentacionHDA}
+\end{figure}

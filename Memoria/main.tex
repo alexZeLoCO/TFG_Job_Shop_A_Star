@@ -116,7 +116,7 @@ headsepline, % Uncomment to get a line under the header
 	\hypersetup{pdfkeywords=\keywordnames} % Set the PDF's keywords to your keywords
 }
 
-\makeindex
+\makeindex[columns=1, options= -s index_style.ist]
 
 \begin{document}
 
@@ -223,19 +223,19 @@ sin percatarnos de que un único procesador sólo puede hacer una tarea a la vez
 La mayoría de programas deberían aprovechar este principio para acelerar y
 presentar resultados a sus usuarios más rápido.\\
 
-En algunos casos esto no es así, generalmente porque sus desarrolladores no se han dignado
+En algunos casos esto no es así, tal vez porque sus desarrolladores no se han dignado
 a explorar los beneficios del paralelismo.
-No obstante, el simple uso de varios hilos no implica una mejora en rendimiento,
+Otra posibilidad es que el simple uso de varios hilos no implica una mejora en rendimiento,
 el diseño del algoritmo y sus secciones paralelas son de crucial importancia
 para obtener beneficios tangibles.\\
 
 Algunos algoritmos son más propensos al paralelismo,
-en ellos resulta más fácil hallar zonas en las que el uso de múltiples hilos:
-la implementación es sencilla y no existe mucho sobrecoste.
-Desafortunadamente esto no sucede en todos los algoritmos,
-en esta investigación se analiza el algoritmo A*,
-un claro ejemplo de cómo el paralelismo no siempre es
-garantía de rendimiento.
+en ellos resulta más fácil hallar zonas en las que el uso de múltiples hilos
+es sencillo de implementar y no existe mucho sobrecoste.
+Desafortunadamente esto no sucede en todos los algoritmos.
+En esta investigación se analiza el algoritmo A*,
+un claro ejemplo de cómo el paralelismo requiere
+una muy detenida atención a la estrategia para que sea rentable.
 \end{abstract}
 
 %----------------------------------------------------------------------------------------
@@ -288,6 +288,7 @@ garantía de rendimiento.
 %\textbf{P} & Cantidad pagada en \textbf{P}réstamos por hipotecas de vivienda habitual comprada antes de 2013\\
 %\textbf{R} & \textbf{R}etenciones\\
 %\textbf{SP} & \textbf{S}ituación de \textbf{P}rueba\\
+\textbf{CPU} & \textbf{Central} \textbf{Processing} \textbf{Unit}\\
 \textbf{CSV} & \textbf{C}omma \textbf{S}eparated \textbf{V}alue\\
 \textbf{FCFS} & \textbf{F}irst \textbf{C}ome \textbf{F}irst \textbf{S}erve\\
 \textbf{FPGA} & \textbf{F}ield \textbf{P}rogrammable \textbf{G}ate \textbf{A}rray\\
@@ -297,8 +298,8 @@ garantía de rendimiento.
 \textbf{HTTP} & \textbf{H}yper \textbf{T}ext \textbf{T}ransfer \textbf{P}rotocol\\
 \textbf{JSP} & \textbf{J}ob \textbf{S}hop \textbf{P}roblem\\
 \textbf{JSSP} & \textbf{J}ob \textbf{S}hop \textbf{S}cheduling \textbf{P}roblem\\
+\textbf{OS} & \textbf{O}perative \textbf{S}ystem\\
 \textbf{SoC} & \textbf{S}ystem on \textbf{C}hip\\
-
 
 \end{abbreviations}
 
@@ -383,6 +384,7 @@ garantía de rendimiento.
 
 %----------------------------------------------------------------------------------------
 
+\addchaptertocentry{Índice alfabético}
 \printindex
 
 \end{document}  
