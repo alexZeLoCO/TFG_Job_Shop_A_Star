@@ -15,7 +15,7 @@ public:
     State solve(
         std::vector<std::vector<Task>>,
         std::size_t,
-        std::optional<Chronometer> &) const override;
+        Chronometer &) const override;
 
     std::string get_name() const override { return "Batch Solver"; };
 
@@ -30,7 +30,7 @@ public:
 State BatchSolver::solve(
     std::vector<std::vector<Task>> jobs,
     std::size_t n_workers,
-    std::optional<Chronometer> &c) const
+    Chronometer &c) const
 {
     const std::size_t n_jobs = jobs.size();
     if (n_jobs == 0)
@@ -47,9 +47,9 @@ State BatchSolver::solve(
     const State starting_state(jobs, starting_schedule, starting_workers_status);
 
     std::unordered_map<State, unsigned int, StateHash, StateEqual> g_costs;
-    g_costs.try_emplace(starting_state, 0);
+    g_costs[starting_state] = 0;
     std::unordered_map<State, unsigned int, StateHash, StateEqual> f_costs;
-    f_costs.try_emplace(starting_state, starting_state.get_f_cost());
+    f_costs[starting_state] = starting_state.get_f_cost();
 
     const auto comparator = [&f_costs](const State &lhs, const State &rhs)
     {
@@ -92,8 +92,7 @@ State BatchSolver::solve(
             State current_state = to_be_processed[thread_id];
 #pragma omp critical(chronometer)
             {
-                if (c.has_value())
-                    c.value().process_iteration(current_state);
+                c.process_iteration(current_state);
             }
 
             const std::vector<State> neighbor_states = current_state.get_neighbors_of(); // O(2n + n^2) or (n + 2n^2)
@@ -104,7 +103,7 @@ State BatchSolver::solve(
             for (const State &neighbor : to_be_added[thread_id])
                 open_set.append(neighbor);
     }
-    c->log_timestamp(10, goal_state);
+    c.log_timestamp(10, goal_state);
     return goal_state;
 }
 

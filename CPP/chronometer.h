@@ -34,14 +34,14 @@ public:
 
     void log_timestamp(unsigned short goal, const State &state)
     {
-        if (!this->m_goals[goal])
+        if (goal > 0 && !this->m_goals[goal])
         {
             double timestamp = this->time().count();
             this->m_goals[goal] = true;
             if (this->m_times.find(goal) == this->m_times.end())
-                this->m_times.try_emplace(goal, timestamp);
+                this->m_times[goal] = timestamp;
             else
-                this->m_times.try_emplace(goal, this->m_times[goal] + timestamp);
+                this->m_times[goal] = this->m_times[goal] + timestamp;
             this->m_goals[goal] = true;
             auto n_workers = (unsigned int)state.get_workers_status().size();
 #pragma omp critical(io)

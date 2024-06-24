@@ -7,7 +7,7 @@
 class HdaSolver : public AStarSolver
 {
 private:
-    State get_state(SortedList<State> &, const unsigned short) const;
+    State get_state(SortedList<State> &) const;
 
 public:
     HdaSolver() = default;
@@ -16,7 +16,7 @@ public:
     State solve(
         std::vector<std::vector<Task>>,
         std::size_t,
-        std::optional<Chronometer> &) const override;
+        Chronometer &) const override;
 
     std::string get_name() const override { return "HDA* Solver"; };
 };
@@ -24,7 +24,7 @@ public:
 State HdaSolver::solve(
     std::vector<std::vector<Task>> jobs,
     std::size_t n_workers,
-    std::optional<Chronometer> &c) const
+    Chronometer &c) const
 {
     const std::size_t n_jobs = jobs.size();
     if (n_jobs == 0)
@@ -63,7 +63,7 @@ State HdaSolver::solve(
         State currentState;
         while (!found_goal_state)
         {
-            currentState = this->get_state(open_sets[threadIdx], threadIdx);
+            currentState = this->get_state(open_sets[threadIdx]);
 
             if (currentState.is_goal_state())
             {
@@ -75,8 +75,7 @@ State HdaSolver::solve(
             }
 
 #pragma omp critical(chronometer)
-            if (c.has_value())
-                c.value().process_iteration(currentState);
+            c.process_iteration(currentState);
 
             for (const State &neighbor : currentState.get_neighbors_of())
             {
@@ -98,16 +97,14 @@ State HdaSolver::solve(
     return goal_state;
 }
 
-State HdaSolver::get_state(
-    SortedList<State> &myOpenSet,
-    const unsigned short threadIdx) const
+State HdaSolver::get_state(SortedList<State> &myOpenSet) const
 {
-    std::optional<State> maybeState;
+    Optional<State> maybeState;
     do
     {
 #pragma omp critical(open_set)
         if (!myOpenSet.empty())
-            maybeState = std::optional<State>(myOpenSet.pop());
+            maybeState = Optional<State>(myOpenSet.pop());
     } while (!maybeState.has_value());
     return maybeState.value();
 }

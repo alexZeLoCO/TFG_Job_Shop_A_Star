@@ -1,9 +1,9 @@
 #ifndef A_STAR_SOLVER_H
 #define A_STAR_SOLVER_H
 
-#include <optional>
 #include <vector>
 
+#include "optional.h"
 #include "chronometer.h"
 #include "state.h"
 #include "task.h"
@@ -18,7 +18,7 @@ public:
     virtual State solve(
         std::vector<std::vector<Task>>,
         std::size_t,
-        std::optional<Chronometer> &) const = 0;
+        Chronometer &) const = 0;
 
     virtual std::string get_name() const = 0;
 };

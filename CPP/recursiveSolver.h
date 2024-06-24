@@ -15,7 +15,7 @@ public:
     State solve(
         std::vector<std::vector<Task>>,
         std::size_t,
-        std::optional<Chronometer> &) const override;
+        Chronometer &) const override;
 
     std::string get_name() const override { return "Recursive Solver"; };
 };
@@ -23,7 +23,7 @@ public:
 State RecursiveSolver::solve(
     std::vector<std::vector<Task>> jobs,
     std::size_t n_workers,
-    std::optional<Chronometer> &c) const
+    Chronometer &c) const
 {
     const std::size_t n_jobs = jobs.size();
     if (n_jobs == 0)
@@ -46,9 +46,9 @@ State RecursiveSolver::solve(
     for (const State local_start : neighbors)
     {
         std::unordered_map<State, unsigned int, StateHash, StateEqual> g_costs;
-        g_costs.try_emplace(starting_state, 0);
+        g_costs[starting_state] = 0;
         std::unordered_map<State, unsigned int, StateHash, StateEqual> f_costs;
-        f_costs.try_emplace(starting_state, starting_state.get_f_cost());
+        f_costs[starting_state] = starting_state.get_f_cost();
 
         const auto comparator = [&f_costs](const State &lhs, const State &rhs)
         {
@@ -64,13 +64,12 @@ State RecursiveSolver::solve(
             if (current_state.is_goal_state())
             {
 #pragma omp critical(solutions)
-                solutions.try_emplace(omp_get_thread_num(), current_state);
+                solutions[omp_get_thread_num()] = current_state;
                 break;
             }
 #pragma omp critical(chronometer)
             {
-                if (c.has_value())
-                    c.value().process_iteration(current_state);
+                c.process_iteration(current_state);
             }
             std::vector<State> thread_neighbors = current_state.get_neighbors_of();
             for (const State &thread_neighbor : thread_neighbors)
@@ -94,7 +93,7 @@ State RecursiveSolver::solve(
             best_solution = solution.second;
         first = false;
     }
-    c->log_timestamp(10, best_solution);
+    c.log_timestamp(10, best_solution);
     return best_solution;
 }
 
