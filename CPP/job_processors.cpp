@@ -72,9 +72,12 @@ State timeit(
         result = solver.solve(jobs, n_workers, c);
     }
     for (const auto &[goal, timestamp] : c.value().get_timestamps())
+    {
+#pragma omp critical(io)
         std::cout << "c++;" << omp_get_max_threads() << ";a_star;" << solver.get_name() << ";AVERAGE " << goal << ";" << jobs.size() << ";" << jobs[0].size() << ";"
                   << n_workers << ";" << std::setprecision(5) << std::scientific
                   << timestamp / n_iters << ";" << result << ";" << result.get_max_worker_status() << std::endl;
+    }
     return result;
 }
 
