@@ -527,6 +527,7 @@ dkms.conf
 
 main.pdf
 **/main
+**/main*
 **/.vscode/
 ./output
 ./data
