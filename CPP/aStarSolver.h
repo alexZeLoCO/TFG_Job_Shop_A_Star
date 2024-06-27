@@ -3,7 +3,6 @@
 
 #include <vector>
 
-#include "optional.h"
 #include "chronometer.h"
 #include "state.h"
 #include "task.h"

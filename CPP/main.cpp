@@ -1,7 +1,6 @@
 #include <iostream>
 #include <vector>
 
-#include "optional.h"
 #include "vector_ostreams.h"
 #include "job_processors.h"
 #include "task.h"
@@ -10,6 +9,7 @@
 #include "batchSolver.h"
 #include "recursiveSolver.h"
 #include "hdaSolver.h"
+#include "randomSolver.h"
 
 int main(int argc, char **argv)
 {
@@ -26,7 +26,7 @@ int main(int argc, char **argv)
         cut(get_jobs_from_file(filename), percentage);
 
     const auto task = [&jobs](const AStarSolver &solver)
-    { timeit(5, solver, jobs, calculate_n_workers(jobs)); };
+    { timeit(100, solver, jobs, calculate_n_workers(jobs)); };
 
     if (solvername == "RECURSIVE" || solvername == "ALL")
         task(RecursiveSolver());
@@ -36,6 +36,8 @@ int main(int argc, char **argv)
         task(BatchSolver());
     if (solvername == "HDA" || solvername == "ALL")
         task(HdaSolver());
+    if (solvername == "RANDOM" || solvername == "ALL")
+        task(RandomSolver());
 
     return 0;
 }

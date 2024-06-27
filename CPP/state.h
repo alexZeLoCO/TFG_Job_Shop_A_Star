@@ -17,6 +17,7 @@ private:
     std::vector<std::vector<Task>> m_jobs{};
 
     std::vector<std::vector<int>> m_schedule{};
+    std::vector<int> first_unscheduled_task_idxs{};
     std::vector<int> m_workers_status{};
 
     unsigned int h_cost{};
@@ -25,6 +26,12 @@ private:
 
     std::size_t state_hash = UNINITIALIZED_HASH;
     std::size_t full_hash = UNINITIALIZED_HASH;
+
+    unsigned int calculate_max_worker_status() const;
+    unsigned int calculate_h_cost() const;
+    float calculate_completion_percentage() const;
+    std::vector<int> calculate_first_unscheduled_task_idxs() const;
+    std::vector<int> calculate_first_unscheduled_task_start_times() const;
 
 public:
     State() : State(
@@ -41,7 +48,8 @@ public:
                                                   m_schedule(schedule),
                                                   m_workers_status(workers_status)
     {
-        this->g_cost = this->get_max_worker_status();
+        this->g_cost = this->calculate_max_worker_status();
+        this->first_unscheduled_task_idxs = this->calculate_first_unscheduled_task_idxs();
         this->h_cost = this->calculate_h_cost();
         this->m_completion_percentage = this->calculate_completion_percentage();
     };
@@ -49,11 +57,12 @@ public:
     State(
         const State &other_state) : m_jobs(other_state.get_jobs()),
                                     m_schedule(other_state.get_schedule()),
-                                    m_workers_status(other_state.get_workers_status())
+                                    first_unscheduled_task_idxs(other_state.first_unscheduled_task_idxs),
+                                    m_workers_status(other_state.get_workers_status()),
+                                    h_cost(other_state.get_h_cost()),
+                                    g_cost(other_state.get_g_cost()),
+                                    m_completion_percentage(other_state.get_completion_percentage())
     {
-        this->g_cost = this->get_max_worker_status();
-        this->h_cost = this->calculate_h_cost();
-        this->m_completion_percentage = this->calculate_completion_percentage();
     }
 
     std::vector<std::vector<Task>> get_jobs() const { return this->m_jobs; }
@@ -63,7 +72,6 @@ public:
     unsigned int get_g_cost() const { return this->g_cost; }
     unsigned int get_h_cost() const { return this->h_cost; }
     unsigned int get_f_cost() const { return this->get_g_cost() + this->get_h_cost(); }
-    float get_completion_percentage() const { return this->m_completion_percentage; }
 
     std::size_t get_state_hash() const { return this->state_hash; }
     std::size_t get_full_hash() const { return this->full_hash; }
@@ -71,15 +79,10 @@ public:
     void set_state_hash(std::size_t new_state_hash) { this->state_hash = new_state_hash; }
     void set_full_hash(std::size_t new_full_hash) { this->full_hash = new_full_hash; }
 
-    unsigned int get_max_worker_status() const;
-    unsigned int calculate_h_cost() const;
-    float calculate_completion_percentage() const;
     bool is_goal_state() const;
-    int distance_to(std::vector<std::vector<int>> &) const;
-    std::vector<int> get_first_unscheduled_task_idxs() const;
-    std::vector<int> get_first_unscheduled_task_start_times(
-        std::vector<int> &) const;
     std::vector<State> get_neighbors_of() const;
+
+    float get_completion_percentage() const { return this->m_completion_percentage; }
 
     State &operator=(const State &);
 };

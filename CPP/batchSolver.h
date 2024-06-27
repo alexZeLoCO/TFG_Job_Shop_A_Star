@@ -8,6 +8,14 @@
 
 class BatchSolver : public AStarSolver
 {
+private:
+    void add_neighbors(
+        const std::vector<State> &,
+        std::unordered_map<State, unsigned int, StateHash, StateEqual> &,
+        std::unordered_map<State, unsigned int, StateHash, StateEqual> &,
+        std::vector<std::vector<State>> &,
+        const unsigned int) const;
+
 public:
     BatchSolver() = default;
     ~BatchSolver() override = default;
@@ -18,13 +26,6 @@ public:
         Chronometer &) const override;
 
     std::string get_name() const override { return "Batch Solver"; };
-
-    void add_neighbors(
-        const std::vector<State> &,
-        std::unordered_map<State, unsigned int, StateHash, StateEqual> &,
-        std::unordered_map<State, unsigned int, StateHash, StateEqual> &,
-        std::vector<std::vector<State>> &,
-        const unsigned int) const;
 };
 
 State BatchSolver::solve(

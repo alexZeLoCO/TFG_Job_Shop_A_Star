@@ -8,6 +8,16 @@
 
 class FcfsSolver : public AStarSolver
 {
+private:
+    State get_state(
+        SortedList<State> &,
+        const bool &) const;
+    void add_neighbors(
+        const std::vector<State> &,
+        std::unordered_map<State, unsigned int, StateHash, StateEqual> &,
+        std::unordered_map<State, unsigned int, StateHash, StateEqual> &,
+        SortedList<State> &) const;
+
 public:
     FcfsSolver() = default;
     ~FcfsSolver() override = default;
@@ -18,15 +28,6 @@ public:
         Chronometer &) const override;
 
     std::string get_name() const override { return "FCFS Solver"; };
-
-    State get_state(
-        SortedList<State> &,
-        const bool &) const;
-    void add_neighbors(
-        const std::vector<State> &,
-        std::unordered_map<State, unsigned int, StateHash, StateEqual> &,
-        std::unordered_map<State, unsigned int, StateHash, StateEqual> &,
-        SortedList<State> &) const;
 };
 
 State FcfsSolver::solve(

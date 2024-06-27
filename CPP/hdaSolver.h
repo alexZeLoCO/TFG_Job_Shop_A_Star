@@ -1,6 +1,7 @@
 #ifndef HDA_SOLVER_H
 #define HDA_SOLVER_H
 
+#include "optional.h"
 #include "aStarSolver.h"
 #include "sortedList.h"
 
