@@ -229,6 +229,17 @@ Otra posibilidad es que el simple uso de varios hilos no implica una mejora en r
 el diseño del algoritmo y sus secciones paralelas son de crucial importancia
 para obtener beneficios tangibles.\\
 
+Existen situaciones donde la capacidad de cómputo de todos los hilos
+de una CPU no es suficiente.
+En estos casos se suele utilizar hardware específico como las tarjetas
+gráficas de propósito general (GPGPU) para incrementar la velocidad.
+Mayor capacidad aún que una CPU y una GPGPU es la que ofrecería un
+circuito integrado (SoC) diseñado ad-hoc para resolver el problema en particular.
+El principal problema de este acercamiento es el alto coste y riesgo
+de la producción de este tipo de herramientas.
+Una FPGA es un dispositivo capaz de simular un SoC
+con un riesgo mucho menor ya que la FPGA es reprogramable.\\
+
 Algunos algoritmos son más propensos al paralelismo,
 en ellos resulta más fácil hallar zonas en las que el uso de múltiples hilos
 es sencillo de implementar y no existe mucho sobrecoste.
@@ -292,6 +303,7 @@ una muy detenida atención a la estrategia para que sea rentable.
 \textbf{CSV} & \textbf{C}omma \textbf{S}eparated \textbf{V}alue\\
 \textbf{FCFS} & \textbf{F}irst \textbf{C}ome \textbf{F}irst \textbf{S}erve\\
 \textbf{FPGA} & \textbf{F}ield \textbf{P}rogrammable \textbf{G}ate \textbf{A}rray\\
+\textbf{GPGPU} & \textbf{G}eneral \textbf{P}urpose \textbf{G}raphics \textbf{P}rocessing \textbf{U}nit\\
 \textbf{HDA*} & \textbf{H}ash \textbf{D}istributed \textbf{A}*\\
 \textbf{HDL} & \textbf{H}ardware \textbf{D}escription \textbf{L}anguage\\
 \textbf{HLS} & \textbf{H}igh \textbf{L}evel \textbf{S}ynthesis\\
@@ -357,10 +369,15 @@ una muy detenida atención a la estrategia para que sea rentable.
 % Include the chapters of the thesis as separate files from the Chapters folder
 % Uncomment the lines as you write the chapters
 
-\include{Chapters/Chapter0}
-\include{Chapters/Chapter1}
-\include{Chapters/Chapter2}
-\include{Chapters/Chapter3}
+% \include{Chapters/Chapter0}
+% \include{Chapters/Chapter1}
+% \include{Chapters/Chapter2}
+% \include{Chapters/Chapter3}
+\include{Chapters/XChapter1_HipotesisAlcance}
+\include{Chapters/XChapter2_ObjetivosEstado}
+\include{Chapters/XChapter3_Metodologia}
+\include{Chapters/XChapter4_TrabajoResultados}
+\include{Chapters/XChapter5_Conclusiones}
 
 %----------------------------------------------------------------------------------------
 %	THESIS CONTENT - APPENDICES

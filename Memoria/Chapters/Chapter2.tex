@@ -114,7 +114,7 @@ La alta complejidad del JSP implica que un mínimo aumento en el tamaño del pro
 puede implicar que el algoritmo no finalice su ejecución en un tiempo polinomial.
 Por ello, en lugar de tomar una única medición al inicio y final de la ejecución
 se ha optado por utilizar un objeto personalizado que toma mediciones en intervalos
-predefinidos.
+predefinidos\footnote{Véase \ref{lst:Chronometer}}.
 De esta forma, de una única ejecución se podría obtener:
 
 \begin{itemize}[itemsep=0.25px]
@@ -125,52 +125,6 @@ De esta forma, de una única ejecución se podría obtener:
     \item Tiempo necesario para resolver el $90\percentsign$ del problema.
     \item Tiempo necesario para resolver el $100\percentsign$ del problema.
 \end{itemize}
-
-\pagebreak
-
-\begin{lstlisting}[language=C++]
-class Chronometer
-{
-private:
-    std::chrono::_V2::system_clock::time_point m_start_time;
-    std::map<unsigned short, bool> m_goals;
-    std::map<unsigned short, double> m_times;
-    std::string m_solver_name;
-
-public:
-    Chronometer() : Chronometer(
-        std::map<unsigned short, bool>(),
-        "Unknown Solver") {}
-    explicit Chronometer(
-        const std::map<unsigned short, bool> &goals,
-        std::string const &solver_name) : m_goals(goals),
-                                          m_solver_name(solver_name) {}
-
-    void start()
-    {
-        this->m_start_time = std::chrono::high_resolution_clock::now();
-    }
-    std::chrono::duration<double> time() const
-    {
-        return (
-            std::chrono::high_resolution_clock::now() -
-            this->m_start_time
-        );
-    }
-
-    void process_iteration(const State &state);
-    void log_timestamp(unsigned short goal, const State &state);
-    void enable_goals();
-    std::map<unsigned short, double> get_timestamps() const;
-};
-\end{lstlisting}
-
-Esta clase se utiliza para tomar las mediciones de todas las iteraciones
-\footnote{Ignorando la primera para calentar la caché}
-y posteriormente estos datos se utilizan para estudiar
-el rendimiento de cada implementación.
-
-\pagebreak
 
 \section{Métricas}
 
@@ -526,7 +480,7 @@ Por ejemplo, si del problema se conocen el nodo inicial $A$,
 el final $E$ y los intermedios $B$, $C$ y $D$,
 la solución se podría obtener repartiendo el
 trabajo entre 4 hilos diferentes:
-\begin{enumerate}[itemsep=0.25px]
+\begin{enumerate}[start=0, itemsep=0.25px]
     \item Hilo 0: Resolver camino desde nodo $A$ hasta $B$.
     \item Hilo 1: Resolver camino desde nodo $B$ hasta $C$.
     \item Hilo 2: Resolver camino desde nodo $C$ hasta $D$.

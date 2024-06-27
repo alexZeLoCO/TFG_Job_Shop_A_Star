@@ -1,0 +1,249 @@
+\Chapter{Objetivos y estado actual}{Objetivos y estado del arte}
+
+\section{Objetivos}
+\index{Objetivos y estado actual!Objetivos}
+
+\section{Estado del arte}
+\index{Objetivos y estado actual!Estado del arte}
+
+Este proyecto abarca diversos tópicos, cuyas bibliografías
+(incluso en individual) tienen una gran extensión.
+A pesar de ello, resulta complicado hallar estudios previos sobre implementaciones
+paralelas del algoritmo A* enfocadas a la resolución del Job Shop Scheduling Problem
+utilizando FPGAs.
+Así pues, el punto de partida de este proyecto
+se compone principalmente de estudios
+sobre los distintos tópicos de forma individual.
+
+El Job Shop Scheduling Problem tiene su origen en la década de 1960,
+desde entonces ha sido utilizado frecuentemente (incluso hasta el día de hoy)
+como herramienta de medición del rendimiento de algoritmos que sean 
+capaces de resolverlo \cite{Man67}.
+
+A lo largo de los años, se han realizado numerosos trabajos con el objetivo
+de recoger distintos algoritmos que resuelvan el problema.
+Dichos algoritmos provienen de diferentes ámbitos de la computación.
+Entre ellos se pueden encontrar búsquedas en grafos,
+listas de prioridad, ramificación y poda, algoritmos genéticos,
+simulaciones Monte Carlo o
+métodos gráficos como diagramas Gantt y Pert.
+\cite{Yan77}, \cite{Nil69}, \cite{KTM99}, \cite{BC22}, \cite{Pin08}.
+
+El algoritmo A* fue diseñado a finales de la década de 1960
+con el objetivo de implementar el enrutamiento de un robot
+conocido como \italic{"Shakey the Robot"} \cite{Nil84}.
+A* es una evolución del conocido algoritmo de Dijkstra
+frecuentemente utilizado también para la búsqueda en grafos.
+La principal diferencia entre estos dos algoritmos es el
+uso de una función heurística en el A* que `guía' al algoritmo
+en la dirección de la solución.
+\cite{HNR68}, \cite{MSV13}, \cite{Kon14}.
+
+El algoritmo A* no es propenso a la paralelización,
+no existe una implementación simple que aproveche el funcionamiento de
+varios procesadores de forma simultanea.
+En su lugar existen varias alternativas que paralelizan el algoritmo,
+cada una de ellas con sus fortalezas y debilidades.
+Estas diferentes versiones serán estudiadas, implementadas y
+probadas en esta investigación.
+\cite{Zag17}, \cite{WH16}.
+
+El tópico sobre el que menor cantidad de documentación existe
+y que supone una mayor curva de aprendizaje es sin lugar a duda
+la implementación del algoritmo A* en una FPGA.
+A diferencia de este proyecto, la principal fuente de bibliografía
+sobre este tópico desarrolla una implementación personalizada del algoritmo
+que reporta una aceleración de casi el $400\percentsign$.
+\cite{ZJW20}.
+
+\pagebreak
+
+\section{Job Shop Scheduling Problem}
+\index{Objetivos y estado actual!Job Shop Scheduling Problem}
+
+Se estudia la implementación de una solución al problema
+\italic{Job Shop Scheduling (JSP)}~\cite{Yan77}
+\footnote{El problema también es conocido por otros nombres similares
+como \italic{Job Shop Scheduling Problem (JSSP)} o Job Scheduling Problem (JSP).}
+utilizando el algoritmo A*.
+Como su nombre indica, se trata de un problema en el que se debe
+crear una planificación.
+Como se especifica en la literatura, el JSP es un problema de optimización np-hard.
+
+El JSP busca una planificación para una serie de
+máquinas (o trabajadores) que deben realizar un número conocido
+de trabajos.
+Cada trabajo está formado por una serie de operaciones (o tareas),
+con una duración conocida.
+Las tareas de un mismo trabajo deben ser ejecutadas en un orden específico.
+
+Existen numerosas variantes de este problema,
+algunas permiten la ejecución
+en paralelo de algunas tareas o requieren que alguna tarea
+en específico sea ejecutada por un trabajador (o tipo de trabajador)
+en particular.
+Por ello, es clave denotar las restricciones que definen el problema JSP\@:
+
+\begin{enumerate}[start=0, itemsep=0.25px]
+    \item Existen un número natural conocido de trabajos.
+    \item A excepción de la primera tarea de cada trabajo,
+    todas tienen una única tarea predecesora del mismo trabajo
+    que debe ser completada antes de iniciar su ejecución.
+    \item Cada tarea puede tener una duración distinta.
+    \item La duración de cada tarea es un número natural conocido.
+    \item Existe un número natural conocido de trabajadores.
+    \item Cada tarea tiene un trabajador asignado,
+    de forma que sólo ese trabajador puede ejecutar la tarea.
+    \item Una vez iniciada una tarea, no se puede interrumpir su ejecución.
+    \item Un mismo trabajador puede intercalar la ejecución de tareas de diferentes trabajos.
+    \item Un trabajador sólo puede realizar una tarea al mismo tiempo.
+    \item Los tiempos de preparación de un trabajador antes de realizar una tarea son nulos.
+    \item Los tiempos de espera entre la realización de una tarea y otra son nulos.
+\end{enumerate}
+
+\subsection{Notación}
+
+Con el objetivo de simplicar los ejemplos contenidos en este documento
+se ha diseñado una notación capaz de describir trabajos, tareas y estados.
+A continuación se encuentra una explicación de dicha notación
+necesaria para comprender correctamente los ejemplos.
+
+\subsubsection{Tarea}
+
+Una tarea está compuesta por dos datos: La duración y el trabajador que la debe ejecutar:
+$(A, B)$ donde $A$ es la duración y $B$ el ID del trabajador.
+$(5, 0)$ es una tarea que dura $5$ instantes de tiempo y debe ser ejecutada por el
+trabajador $0$.
+
+\subsubsection{Trabajo}
+
+Un trabajo está compuesto por un listado de tareas.
+$(A, B), (C, D)$ es un trabajo compuesto por dos tareas:
+$(A, B)$ es una tarea que dura $A$ instantes de tiempo y debe ser ejecutada por $B$ y
+$(C, D)$ es una tarea que dura $C$ instantes de tiempo y debe ser ejecutada por $D$.
+
+\subsubsection{Conjunto de datos}
+
+Un conjunto de datos está compuesto por un listado de trabajos:
+\begin{enumerate}[start=0, itemsep=0.25px]
+    \item (A, B), (C, D)
+    \item (E, F), (G, H)
+\end{enumerate}
+El conjunto está compuesto por dos trabajos (IDs 0 y 1) cada uno con dos tareas.
+Para referirse a la tarea (A, B) se utilizaría T00 (Trabajo 0, tarea 0)
+mientras que para la tarea (G, H) se utilizaría T11 (Trabajo 1, tarea 1).
+Adicionalmente, se podrá añadir la duración de la tarea a esta notación:
+T00(A) corresponde al trabajo 0, tarea 0 con duración A instantes de tiempo.
+
+\subsubsection{Planificación}
+
+La planificación es un dato propio del estado.
+Indica el instante de tiempo en el que se inicia cada tarea:
+$(0, 3, -1)$ indica que la tarea 0 se inicia en el instante 0,
+la 1 en el 3 y la 2 aún está sin planificar.
+
+Generalmente se muestra la planificación de todo el conjunto de datos
+utilizando un listado:
+\begin{enumerate}[start=0, itemsep=0.25px]
+    \item $(0, 3, -1)$
+    \item $(0, -1, -1)$
+\end{enumerate}
+La T00 se inicia en el instante 0 mientras que la T11 está aún sin planificar.
+
+\subsubsection{Estado trabajadores}
+
+Propio también del estado es la información sobre
+el instante de tiempo en el que cada trabajador quedará libre.
+Estos datos se muestran en forma de lista donde el elemento $K$
+corresponde al instante de tiempo donde el trabajador con ID $K$
+queda libre.
+$(2, 8, 0)$ indica que el trabajador 0 esta libre a partir del instante 2,
+el 1 a partir del 8 y el 2 a partir del 0.
+
+\pagebreak
+\subsection{Ejemplo}
+\label{ssec:A*Example}
+
+A continuación se muestra un ejemplo de menor tamaño resuelto manualmente
+donde cada línea corresponde a un trabajo y cada tupla al par (duración, trabajador).
+
+\begin{enumerate}[start=0, itemsep=0.25px]
+    \item (2, 0), (5, 1), (1, 2)
+    \item (3, 1), (3, 2), (3, 0)
+\end{enumerate}
+
+Se crea un diagrama Pert (figura \ref{fig:ExamplePert}) donde cada arco es una tarea,
+ignorando a los trabajadores,
+atendiendo únicamente a la duración de cada tarea.
+Los arcos están etiquetados con la tarea a ejecutar y su duración.
+Los nodos contienen dos números: el primero corresponde al primer instante de tiempo
+en el que la tarea se puede ejecutar y el segundo al último
+(tiempos \italic{early} y \italic{late}).
+
+\begin{figure}[h]
+    \begin{center}
+        \begin{tikzpicture}[node distance=4cm]
+            % \node (08) [dot, right of=06, xshift=4cm] {\lstinline{n_2}};
+            % \draw [arrow] (01.south) to node [anchor=west] {\lstinline{pop()}} (04);
+            % \draw [arrow] (04.south) to node [anchor=west] {\lstinline{process()}} (06);
+            % \draw [arrow] (06.west) to [bend left] node [anchor=north] {\lstinline{neighbor_0}} (05);
+
+            \node (A) [dot] {0, 0};
+
+            \node (B) [dot, right of=A, above of=A] {2, 3};
+            \node (C) [dot, right of=A, below of=A] {3, 3};
+
+            \node (D) [dot, right of=B] {7, 8};
+            \node (E) [dot, right of=C] {6, 6};
+
+            \node (F) [dot, right of=D, below of=D] {9, 9};
+
+            \draw [arrow] (A.east) to node [anchor=south east] {T00(2)} (B);
+            \draw [arrow] (A.east) to node [anchor=north east] {T10(3)} (C);
+
+            \draw [arrow] (B.east) to node [anchor=south] {T01(5)} (D);
+            \draw [arrow] (C.east) to node [anchor=north] {T11(3)} (E);
+
+            \draw [arrow] (D.east) to node [anchor=south west] {T02(1)} (F);
+            \draw [arrow] (E.east) to node [anchor=north west] {T12(3)} (F);
+        \end{tikzpicture}
+    \end{center}
+    \caption{Diagrama Pert ejemplo.}
+    \label{fig:ExamplePert}
+\end{figure}
+
+El diagrama siguiente diagrama Gantt (\ref{fig:PlanificacionEjemplo}) tiene en cuenta la disponibilidad de cada trabajador,
+nótese que la tarea T01 comienza en el instante 3 en lugar del 2,
+esto se debe a que el trabajador no está disponible hasta ese instante.
+Los nodos del diagrama muestran el instante de inicio de la tarea,
+la tarea y su duración y el instante de fin.
+Cada trabajador tiene asignado un color distinto,
+por lo que no es posible que dos tareas del mismo color
+se encuentren planificadas en el mismo instante de tiempo.
+
+\begin{figure}[h]
+    \begin{center}
+        \begin{tikzpicture}[node distance=4cm]
+            \node (T00) [dot] at (0, 12) {T00};
+            \node (T01) [dot] at (0, 10) {T01};
+            \node (T02) [dot] at (0, 8) {T02};
+
+            \node (T10) [dot] at (0, 4) {T10};
+            \node (T11) [dot] at (0, 2) {T11};
+            \node (T12) [dot] at (0, 0) {T12};
+
+            \node (00) [process, fill=yellow!60] at(4, 12) {0 - T00(2) - 2};
+            \node (10) [process, fill=green!60] at(4, 4) {0 - T10(3) - 3};
+
+            \node (01) [process, fill=green!60] at(8, 10) {3 - T01(5) - 8};
+            \node (11) [process, fill=red!60] at(8, 2) {3 - T11(3) - 6};
+
+            \node (02) [process, fill=red!60] at(12, 8) {8 - T02(1) - 9};
+            \node (12) [process, fill=yellow!60] at(12, 0) {6 - T12(3) - 9};
+        \end{tikzpicture}
+    \end{center}
+    \caption{Diagrama Gantt ejemplo.}
+    \label{fig:PlanificacionEjemplo}
+\end{figure}
+
+\pagebreak

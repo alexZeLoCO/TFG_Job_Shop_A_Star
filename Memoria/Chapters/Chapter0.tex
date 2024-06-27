@@ -1,8 +1,8 @@
 \Chapter{Hipótesis de Partida y Alcance}{Estado del Arte}
 \index{Hipótesis de Partida y Alcance}
 
-\section{Objeto de la investigación}
-\index{Hipótesis de Partida y Alcance!Objeto de la investigación}
+\section{Hipótesis de partida}
+\index{Hipótesis de Partida y Alcance!Hipótesis de partida}
 
 El presente proyecto tiene como objetivo principal descubrir los
 beneficios del paralelismo aplicado al algoritmo A*.
@@ -14,10 +14,15 @@ de la misma solución en una FPGA.
 La motivación principal para la realización de este proyecto
 emana en un interés personal por el diseño, implementación y optimización
 de algoritmos aplicables a problemas reales.
+Adicionalmente, conocer la utilidad y límites de un dispositivo frecuentemente utilizado
+en entornos industriales como las FPGAs, entornos donde los problemas
+de optimización son comunes pero suelen ser resueltos utilizando
+CPUs tradicionales en servidores.
 
 El Job Shop Scheduling Problem es un problema de optimización
 sobre la planificación de horarios.
-Este problema en particular es mundialmente conocido,
+Este es un problema np-hard mundialmente conocido
+por la comunidad científica y
 ha sido resuelto utilizando un gran abanico de algoritmo diferentes
 y ha sido profundamente estudiado.
 
@@ -53,7 +58,7 @@ Entre ellos se pueden encontrar búsquedas en grafos,
 listas de prioridad, ramificación y poda, algoritmos genéticos,
 simulaciones Monte Carlo o
 métodos gráficos como diagramas Gantt y Pert.
-\cite{Yan77}, \cite{Nil69}, \cite{KTM99}, \cite{BC22}.
+\cite{Yan77}, \cite{Nil69}, \cite{KTM99}, \cite{BC22}, \cite{Pin08}.
 
 El algoritmo A* fue diseñado a finales de la década de 1960
 con el objetivo de implementar el enrutamiento de un robot
@@ -83,21 +88,6 @@ que reporta una aceleración de casi el $400\percentsign$.
 \cite{ZJW20}.
 
 \pagebreak
-
-\section{Requisitos}
-\index{Hipótesis de Partida y Alcance!Requisitos}
-
-El algoritmo a desarrollar en esta investigación deberá recibir como entrada
-una estructura de datos que contenga los trabajos,
-para cada trabajo la lista de tareas que lo compone,
-para cada tarea su duración y el listado de trabajadores cualificados para realizarla
-(generalmente, la longitud de esta lista será 1).
-
-Como resultado, el algoritmo deberá retornar un listado de trabajos,
-para cada trabajo el instante de tiempo en el que se inicia cada una de sus tareas
-y un listado con los instantes de tiempo en los que cada trabajador quedará libre.
-El máximo elemento del listado de instantes de tiempo en los que cada trabajador queda libre
-se define como el \italic{makespan}, el tiempo necesario para finalizar todos los trabajos.
 
 \section{Alcance}
 \index{Hipótesis de Partida y Alcance!Alcance}

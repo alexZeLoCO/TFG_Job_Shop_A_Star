@@ -1,0 +1,350 @@
+\Chapter{Metodología de trabajo}{Método de resolución y comparativas}
+\index{Metodología de trabajo}
+
+\section{Método de resolución}
+\index{Metodología de trabajo!Método de resolución}
+
+\subsection{El Algoritmo A*}
+\index{Algoritmo A*}
+
+Existen numerosos algoritmos capaces de resolver el problema del JSP\@.
+Estrategias más simples como listas ordenadas en función de la duración
+de los trabajos, algoritmos genéticos, técnicas gráficas,
+algoritmos \italic{Branch and Bound} y heurísticos.
+En este estudio se utilizará un algoritmo heurístico, A* (\italic{A star})~\cite{HNR68}
+para resolver el problema JSP\@.
+
+El A* es una evolución del algoritmo de Dijkstra.
+Su principal diferencia es la implementación de una función heurística
+que se utiliza para decidir el siguiente nodo a expandir.
+De esta forma, se podría decir que el algoritmo A* va `guiado'
+hacia la solución, mientras que el algoritmo de Dijkstra
+sigue los caminos con menor coste (Véase figura \ref{fig:DijkstraA*Comparison}).
+
+\begin{figure}[h]
+\begin{subfigure}{.5\textwidth}
+\begin{center}
+\begin{tikzpicture}[node distance=1.5cm]
+    \node (00) [dot, fill=green!30] {00};
+    \node (01) [dot, right of=00, fill=blue!30] {01};
+    \node (02) [dot, right of=01] {02};
+    \node (03) [dot, right of=02, fill=blue!30] {03};
+
+    \node (10) [dot, below of=00] {10};
+    \node (11) [dot, right of=10, fill=blue!30] {11};
+    \node (12) [dot, right of=11, fill=blue!30] {12};
+    \node (13) [dot, right of=12, fill=blue!30] {13};
+
+    \node (20) [dot, below of=10] {20};
+    \node (21) [dot, right of=20] {21};
+    \node (22) [dot, right of=21, fill=blue!30] {22};
+    \node (23) [dot, right of=22] {23};
+
+    \node (30) [dot, below of=20] {30};
+    \node (31) [dot, right of=30, fill=blue!30] {31};
+    \node (32) [dot, right of=31, fill=blue!30] {32};
+    \node (33) [dot, right of=32, fill=yellow!30] {33};
+
+    \draw [arrow] (00) -- (11);
+    \draw [arrow] (00) -- (01);
+
+    \draw [arrow] (11) -- (22);
+    \draw [arrow] (11) -- (12);
+    \draw [arrow] (12) -- (13);
+    \draw [arrow] (13) -- (03);
+
+    \draw [arrow] (22) -- (33);
+    \draw [arrow] (22) -- (32);
+
+    \draw [arrow] (32) -- (31);
+\end{tikzpicture}
+\subcaption{Algoritmo Dijkstra}
+\end{center}
+\end{subfigure}
+\begin{subfigure}{.5\textwidth}
+\begin{center}
+\begin{tikzpicture}[node distance=1.5cm]
+    \node (00) [dot, fill=green!30] {00};
+    \node (01) [dot, right of=00] {01};
+    \node (02) [dot, right of=01] {02};
+    \node (03) [dot, right of=02] {03};
+
+    \node (10) [dot, below of=00] {10};
+    \node (11) [dot, right of=10, fill=blue!30] {11};
+    \node (12) [dot, right of=11] {12};
+    \node (13) [dot, right of=12] {13};
+
+    \node (20) [dot, below of=10] {20};
+    \node (21) [dot, right of=20] {21};
+    \node (22) [dot, right of=21, fill=blue!30] {22};
+    \node (23) [dot, right of=22] {23};
+
+    \node (30) [dot, below of=20] {30};
+    \node (31) [dot, right of=30] {31};
+    \node (32) [dot, right of=31] {32};
+    \node (33) [dot, right of=32, fill=yellow!30] {33};
+
+    \draw [arrow] (00) -- (11);
+    \draw [arrow] (11) -- (22);
+    \draw [arrow] (22) -- (33);
+\end{tikzpicture}
+\subcaption{Algoritmo A*}
+\end{center}
+\end{subfigure}
+\caption{Comparativa entre algoritmos Dijkstra y A*}
+\label{fig:DijkstraA*Comparison}
+\end{figure}
+
+El algoritmo A* utiliza varios componentes para resolver problemas
+de optimización. A continuación se describe cada uno de ellos.
+
+\pagebreak
+
+\subsubsection{Pseudocódigo}
+\index{Algoritmo A*!Pseudocódigo}
+
+\begin{lstlisting}[language=Python, caption=Pseudocódigo del algoritmo A*, label=lst:PseudocodigoA*]
+    lista_abierta = SortedList()
+    lista_abierta.append(estado_inicial)
+
+    g_costes = {estado_inicial: 0}
+    f_costes = {estado_inicial: calcular_h_coste(estado_inicial)}
+
+    while (not lista_abierta.empty()):
+        estado_actual = lista_abierta.pop()
+
+        if (estado_actual == estado_final):
+            return estado_actual
+
+        estados_sucesores = calcular_sucesores(estado_actual)
+
+        for estado_sucesor in estados_sucesores:
+            sucesor_g_coste = calcular_g_coste(estado_sucesor)
+            if (sucesor_g_coste < g_costes[estado_sucesor]):
+                g_costes[estado_sucesor] = sucesor_g_coste
+                f_costes[estado_sucesor] = sucesor_g_coste + calcular_h_coste(estado_sucesor)
+                if (estado_sucesor not in lista_abierta):
+                    lista_abierta.append(estado_sucesor)
+\end{lstlisting}
+
+El algoritmo (véase pseudocódigo \ref{lst:PseudocodigoA*}) utiliza una lista de estados a explorar
+inicialmente compuesta por el estado inicial (ln1-2).
+Además, se crean estructuras de datos diseñadas para almacenar
+el mejor coste conocido para llegar a un estado cualquiera (ln4-5).
+De esta forma, \lstinline{g_costes[estado_a]} es el mejor coste G
+conocido hasta el momento para el \lstinline{estado_a}.
+
+El resto del algoritmo se encarga de explorar los nodos
+de la lista hasta que esté vacía o el estado actual sea el objetivo.
+Si el estado actual es el objetivo, el algoritmo retorna (ln13).
+En otro caso, calcula los sucesores del estado actual
+y los procesa individualmente (ln16).
+Si el coste G del sucesor es mejor que el mejor coste G
+conocido para llegar al estado sucesor
+se graban sus costes y se añade a la lista
+si no estaba ya en ella (ln19-24).
+
+\pagebreak
+
+\subsubsection{Componentes A*}
+
+\paragraph{Estado}~
+\index{Algoritmo A*!Estado}
+
+El estado es una estructura de datos que describe la situación
+del problema en un punto determinado.
+Estos estados deben ser comparables,
+debe ser posible dados dos estados conocer si son iguales o distintos.
+En el caso del JSP, el estado representa una planificación parcial o completa
+en la cual una serie de tareas han sido planificadas:
+
+\begin{itemize}[itemsep=0.25px]
+    \item Instante de tiempo en el que comienza cada tarea planificada.
+    \item Instante de tiempo futuro en el que cada trabajador estará libre
+    (i.e. finaliza la tarea que estaba realizando).
+\end{itemize}
+
+El resultado final del JSP será un estado donde todas las tareas han sido planificadas.
+
+\paragraph{Costes}~
+\index{Algoritmo A*!Costes}
+
+El algoritmo A* utiliza 3 costes distintos para resolver el problema de optimización:
+
+\subparagraph{Coste G}~
+\index{Algoritmo A*!Costes!Coste G}
+
+El coste G (de ahora en adelante $cost_g$) es el coste desde el estado inicial
+hasta el estado actual.
+Este coste es calculado buscando el mayor tiempo de fin de
+las tareas ya planificadas.
+
+\subparagraph{Coste H}~
+\index{Algoritmo A*!Costes!Coste H}
+
+El coste H (de ahora en adelante $cost_h$) es el coste estimado desde el estado actual
+hasta el estado final.
+Este coste es calculado utilizando una función heurística,
+que estima el coste.
+
+Idealmente esta función heurística será una cota inferior cuando el problema
+sea de minimización y una cota superior cuando sea de maximización.
+El heurístico deberá ser entonces diseñado atendiendo al tipo de problema.
+
+\subparagraph{Coste F}~
+\index{Algoritmo A*!Costes!Coste F}
+
+El coste F (de ahora en adelante $cost_f$) es el coste estimado desde el estado inicial
+hasta el estado final pasando por el estado actual.
+
+Por lo tanto, \[cost_f = cost_g + cost_h\]
+
+\pagebreak
+
+\paragraph{Generación de sucesores}~
+\index{Algoritmo A*!Generación de sucesores}
+
+El algoritmo A* debe generar un número de estados sucesores dado un estado cualquiera.
+Por lo que será necesario una función que dado un estado retorne este listado de estados.
+
+Un estado con $N$ trabajos por completar ($J_0 \dots J_N$)
+tiene $N$ tareas ($T_0 \dots T_N$) que están listas para ser ejecutadas
+(sus predecesoras han sido ya completadas).
+Este estado generará entonces $N$ estados sucesores
+donde en cada uno se planificará una de las tareas
+para el primer instante de tiempo posible.
+Este primer instante se calcula utilizando el
+máximo entre el instante de fin de la tarea predecesora y
+el instante en el que el trabajador asignado
+para la tarea a planificar $T_x$ queda libre.
+
+\begin{examplebox}
+    En el ejemplo anterior (\ref{ssec:A*Example}) con trabajos:
+    \begin{enumerate}[start=0, itemsep=0.25px]
+        \item (2, 0), (5, 1), (1, 2)
+        \item (3, 1), (3, 2), (3, 0)
+    \end{enumerate}
+    El estado:
+    \begin{itemize}[itemsep=0.25px]
+        \item Planificación:
+        \begin{enumerate}[start=0, itemsep=0.25px]
+            \item (0, 3, -1)
+            \item (0, -1, -1)
+        \end{enumerate}
+        \item Estado trabajadores: (2, 8, 0)
+    \end{itemize}
+    Tiene dos trabajos sin completar, por lo que generará dos sucesores.
+    Uno en el que se planifica la primera tarea sin planificar del trabajo 0.
+    \begin{itemize}[itemsep=0.25px]
+        \item Instante en el que se puede iniciar la tarea: $3 + 5 = 8$
+        \item Instante en el que el trabajador está libre: $0$
+    \end{itemize}
+    Por lo tanto, la tarea comenzará en $max(0, 8) = 8$.
+    Y el trabajador estará libre en $8 + 1 = 9$.
+    \begin{itemize}[itemsep=0.25px]
+        \item Planificación:
+        \begin{enumerate}[start=0, itemsep=0.25px]
+            \item (0, 3, 8)
+            \item (0, -1, -1)
+        \end{enumerate}
+        \item Estado trabajadores: (2, 8, 9)
+    \end{itemize}
+
+    Y otro en el que se planifica la primera tarea sin planificar del trabajo 1.
+    \begin{itemize}[itemsep=0.25px]
+        \item Instante en el que se puede iniciar la tarea: $0 + 3 = 3$
+        \item Instante en el que el trabajador está libre: $0$
+    \end{itemize}
+    Por lo tanto, la tarea comenzará en $max(0, 3) = 3$.
+    Y el trabajador estará libre en $3 + 3 = 6$.
+    \begin{itemize}[itemsep=0.25px]
+        \item Planificación:
+        \begin{enumerate}[start=0, itemsep=0.25px]
+            \item (0, 3, -1)
+            \item (0, 3, -1)
+        \end{enumerate}
+        \item Estado trabajadores: (2, 8, 6)
+    \end{itemize}
+ 
+\end{examplebox}
+
+\paragraph{Listas de prioridad}~
+\index{Algoritmo A*!Listas de prioridad}
+
+El algoritmo A* utiliza dos listas de estados: la lista abierta y la lista cerrada.
+La lista cerrada contiene los estados que ya han sido estudiados mientras que
+la lista abierta contiene los estados que aún están por estudiar.
+
+Cada vez que se estudia un estado de la lista abierta,
+se obtienen sus sucesores que son añadidos a la lista abierta
+(siempre y cuando no estén en la lista cerrada)
+mientras que el estado estudiado pasa a la lista cerrada.
+
+Los estados de la lista abierta están ordenados en función de su $cost_f$,
+de menor a mayor.
+De esta forma, se tiene acceso inmediato al elemento con menor $cost_f$.
+
+\pagebreak
+
+\subsection{Equipo de Estudio}
+\index{Equipo de Estudio}
+
+Este algoritmo es implementado y optimizado en diversas arquitecturas.
+Posteriormente, se realizan comparaciones entre ellas.
+
+\subsubsection{Arquitectura x86}
+\index{Equipo de Estudio!Arquitectura x86}
+
+Inicialmente, se realiza una implementación del algoritmo utilizando \Python.
+Esta versión permite comprobar rápidamente el correcto funcionamiento del mismo
+así como llevar a cabo pruebas rápidas sin necesidad de compilación y
+estudiar los posibles cuellos de botella del algoritmo.
+
+Posteriormente, se desarrolla una nueva versión del mismo algoritmo
+utilizando C++, un lenguaje compilado, imperativo y orientado a objetos
+que facilita la paralelización gracias a librerías como 
+\href{https://www.openmp.org/}{OpenMP}\@.
+
+Una vez desarrolladas ambas versiones monohilo,
+se comienza la implementación de versiones multihilo
+que serán posteriormente comparadas.
+
+\subsubsection{FPGA}
+\index{Equipo de Estudio!FPGA}
+
+Finalmente, se desarrolla una implementación del algoritmo
+diseñado para ser ejecutado en una FPGA\@.
+Esta aceleradora, se encuentra embebida en una placa SoC
+Zybo Z7 10 acompañada de un procesador ARM\@.
+
+Para realizar esta implementación,
+se utiliza el software propio de Xilinx (AMD),
+Vitis HDL\@.
+Este programa ofrece entre muchas otras herramientas
+un sintetizador capaz de transpilar código C++ a Verilog
+que puede ser entonces compilado
+para ejecutarse en la FPGA\@.
+
+\pagebreak
+\section{Método de comparativas}
+
+Las comparativas entre las diferentes implementaciones
+del algoritmo se realizan en base a varias características.
+Principalmente:
+
+\begin{enumerate}[start=0, itemsep=0.25px]
+    \item Tiempo de ejecución.
+    \item Calidad de la solución.
+\end{enumerate}
+
+Como es lógico, el algoritmo es ejecutado utilizando
+distintos datos de entrada múltiples veces.
+
+\begin{notebox}
+    La segunda ejecución de cualquier algoritmo suele tender a
+    requerir menos tiempo debido al funcionamiento de la caché.
+    
+    Para evitar este fenómeno, el algoritmo se ejecuta
+    siempre $N$ veces ignorando las métricas de la primera ejecución.
+\end{notebox}
+

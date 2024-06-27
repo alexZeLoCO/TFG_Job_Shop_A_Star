@@ -1,1 +1,42 @@
 \Chapter{Código Fuente}{}
+
+\section{Chronometer}
+
+\begin{lstlisting}[language=C++, caption=Clase Chronometer utilizada para tomar mediciones, label=lst:Chronometer]
+class Chronometer
+{
+private:
+    std::chrono::_V2::system_clock::time_point m_start_time;
+    std::map<unsigned short, bool> m_goals;
+    std::map<unsigned short, double> m_times;
+    std::string m_solver_name;
+
+public:
+    Chronometer() : Chronometer(
+        std::map<unsigned short, bool>(),
+        "Unknown Solver") {}
+    explicit Chronometer(
+        const std::map<unsigned short, bool> &goals,
+        std::string const &solver_name) : m_goals(goals),
+                                          m_solver_name(solver_name) {}
+
+    void start()
+    {
+        this->m_start_time = std::chrono::high_resolution_clock::now();
+    }
+    std::chrono::duration<double> time() const
+    {
+        return (
+            std::chrono::high_resolution_clock::now() -
+            this->m_start_time
+        );
+    }
+
+    void process_iteration(const State &state);
+    void log_timestamp(unsigned short goal, const State &state);
+    void enable_goals();
+    std::map<unsigned short, double> get_timestamps() const;
+};
+\end{lstlisting}
+
+\pagebreak
