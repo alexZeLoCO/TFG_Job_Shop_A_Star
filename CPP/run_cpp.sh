@@ -9,41 +9,53 @@ else
 fi
 
 # CSV HEADER
-echo "lang;n_threads;function;solver;percentage;n_jobs;n_tasks;n_workers;runtime;schedule;makespan"
+echo "lang;n_threads;function;solver;percentage;n_jobs;n_tasks;n_workers;runtime;schedule;makespan;min_makespan;max_makespan"
 
 filename="../datasets/abz5.csv"
-percentage="0.5"
-
-export OMP_NUM_THREADS=$n_thr
-perf stat ./main $filename $percentage RECURSIVE # | column -t -s ';'
-perf stat ./main $filename $percentage FCFS # | column -t -s ';'
-perf stat ./main $filename $percentage BATCH # | column -t -s ';'
-perf stat ./main $filename $percentage HDA # | column -t -s ';'
-export OMP_NUM_THREADS=4
-perf stat ./main $filename $percentage RECURSIVE # | column -t -s ';'
-perf stat ./main $filename $percentage FCFS # | column -t -s ';'
-perf stat ./main $filename $percentage BATCH # | column -t -s ';'
-perf stat ./main $filename $percentage HDA # | column -t -s ';'
-export OMP_NUM_THREADS=1
-perf stat ./main $filename $percentage RECURSIVE # | column -t -s ';'
-perf stat ./main $filename $percentage FCFS # | column -t -s ';'
-perf stat ./main $filename $percentage BATCH # | column -t -s ';'
-perf stat ./main $filename $percentage HDA # | column -t -s ';'
-
 percentage="0.6"
+fastNIters="100"
+optimalNIters="5"
+zeroNIters="5"
 
 export OMP_NUM_THREADS=$n_thr
-perf stat ./main $filename $percentage RECURSIVE # | column -t -s ';'
-perf stat ./main $filename $percentage FCFS # | column -t -s ';'
-perf stat ./main $filename $percentage BATCH # | column -t -s ';'
-perf stat ./main $filename $percentage HDA # | column -t -s ';'
+./mainFast $filename $percentage RECURSIVE 1 # | column -t -s ';'
+./mainFast $filename $percentage FCFS $fastNIters # | column -t -s ';'
+./mainFast $filename $percentage BATCH 1 # | column -t -s ';'
+./mainFast $filename $percentage HDA $fastNIters # | column -t -s ';'
 export OMP_NUM_THREADS=4
-perf stat ./main $filename $percentage RECURSIVE # | column -t -s ';'
-perf stat ./main $filename $percentage FCFS # | column -t -s ';'
-perf stat ./main $filename $percentage BATCH # | column -t -s ';'
-perf stat ./main $filename $percentage HDA # | column -t -s ';'
+./mainFast $filename $percentage RECURSIVE 1 # | column -t -s ';'
+./mainFast $filename $percentage FCFS $fastNIters # | column -t -s ';'
+./mainFast $filename $percentage BATCH 1 # | column -t -s ';'
+./mainFast $filename $percentage HDA $fastNIters # | column -t -s ';'
 export OMP_NUM_THREADS=1
-perf stat ./main $filename $percentage RECURSIVE # | column -t -s ';'
-perf stat ./main $filename $percentage FCFS # | column -t -s ';'
-perf stat ./main $filename $percentage BATCH # | column -t -s ';'
-perf stat ./main $filename $percentage HDA # | column -t -s ';'
+./mainFast $filename $percentage FCFS 1 # | column -t -s ';'
+
+export OMP_NUM_THREADS=$n_thr
+./mainOptimal $filename $percentage RECURSIVE 1 # | column -t -s ';'
+./mainOptimal $filename $percentage FCFS $optimalNIters # | column -t -s ';'
+./mainOptimal $filename $percentage BATCH 1 # | column -t -s ';'
+./mainOptimal $filename $percentage HDA $optimalNIters # | column -t -s ';'
+export OMP_NUM_THREADS=4
+./mainOptimal $filename $percentage RECURSIVE 1 # | column -t -s ';'
+./mainOptimal $filename $percentage FCFS $optimalNIters # | column -t -s ';'
+./mainOptimal $filename $percentage BATCH 1 # | column -t -s ';'
+./mainOptimal $filename $percentage HDA $optimalNIters # | column -t -s ';'
+export OMP_NUM_THREADS=1
+./mainOptimal $filename $percentage FCFS 1 # | column -t -s ';'
+
+export OMP_NUM_THREADS=$n_thr
+./mainZero $filename $percentage RECURSIVE 1 # | column -t -s ';'
+./mainZero $filename $percentage FCFS $zeroNIters # | column -t -s ';'
+./mainZero $filename $percentage BATCH 1 # | column -t -s ';'
+./mainZero $filename $percentage HDA $zeroNIters # | column -t -s ';'
+export OMP_NUM_THREADS=4
+./mainZero $filename $percentage RECURSIVE 1 # | column -t -s ';'
+./mainZero $filename $percentage FCFS $zeroNIters # | column -t -s ';'
+./mainZero $filename $percentage BATCH 1 # | column -t -s ';'
+./mainZero $filename $percentage HDA $zeroNIters # | column -t -s ';'
+export OMP_NUM_THREADS=1
+./mainZero $filename $percentage FCFS 1 # | column -t -s ';'
+
+# When using RANDOM the executable does not matter
+./mainZero $filename $percentage RANDOM 100 # | column -t -s ';'
+
