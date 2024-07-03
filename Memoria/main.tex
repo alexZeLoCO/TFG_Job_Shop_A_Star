@@ -152,20 +152,19 @@ headsepline, % Uncomment to get a line under the header
 		\tutorName
 	\end{flushright}
 \end{minipage}\\
- 
-\vfill
 
+\vfill
+ 
 % University requirement text
 \large\textit{\requirements}\\[0.3cm] 
 % \textit{en}\\[0.4cm]
 % \groupname\\[2cm] % Research group name and department name
  
-\vfill
+\vspace{5mm}
 
 {\large \today}\\[4cm] % Date
 %\includegraphics{Logo} % University/department logo - uncomment to place it
  
-\vfill
 \end{center}
 \end{titlepage}
 
@@ -220,12 +219,11 @@ headsepline, % Uncomment to get a line under the header
 La gran mayoría de ordenadores hoy en día poseen varios núcleos en sus procesadores,
 gracias a ellos se nos permite realizar diversas tareas de forma concurrente
 sin percatarnos de que un único procesador sólo puede hacer una tarea a la vez.
-La mayoría de programas deberían aprovechar este principio para acelerar y
-presentar resultados a sus usuarios más rápido.\\
-
-En algunos casos esto no es así, tal vez porque sus desarrolladores no se han dignado
-a explorar los beneficios del paralelismo.
-Otra posibilidad es que el simple uso de varios hilos no implica una mejora en rendimiento,
+La mayoría de desarrolladores suelen aprovechar este principio para acelerar y
+presentar resultados a sus usuarios más rápido.
+Sin embargo, no siempre se obtiene una reducción en el tiempo de ejecución,
+generalmente porque el simple
+uso de varios hilos no implica una mejora en rendimiento,
 el diseño del algoritmo y sus secciones paralelas son de crucial importancia
 para obtener beneficios tangibles.\\
 
@@ -234,13 +232,13 @@ de una CPU no es suficiente.
 En estos casos se suele utilizar hardware específico como las tarjetas
 gráficas de propósito general (GPGPU) para incrementar la velocidad.
 Mayor capacidad aún que una CPU y una GPGPU es la que ofrecería un
-circuito integrado (SoC) diseñado ad-hoc para resolver el problema en particular.
+circuito integrado (SoC) diseñado ad-hoc (ASIC) para resolver el problema en particular.
 El principal problema de este acercamiento es el alto coste y riesgo
 de la producción de este tipo de herramientas.
 Una FPGA es un dispositivo capaz de simular un SoC
 con un riesgo mucho menor ya que la FPGA es reprogramable.\\
 
-Algunos algoritmos son más propensos al paralelismo,
+Algunos algoritmos son más dados al paralelismo,
 en ellos resulta más fácil hallar zonas en las que el uso de múltiples hilos
 es sencillo de implementar y no existe mucho sobrecoste.
 Desafortunadamente esto no sucede en todos los algoritmos.
@@ -299,7 +297,8 @@ una muy detenida atención a la estrategia para que sea rentable.
 %\textbf{P} & Cantidad pagada en \textbf{P}réstamos por hipotecas de vivienda habitual comprada antes de 2013\\
 %\textbf{R} & \textbf{R}etenciones\\
 %\textbf{SP} & \textbf{S}ituación de \textbf{P}rueba\\
-\textbf{CPU} & \textbf{Central} \textbf{Processing} \textbf{Unit}\\
+\textbf{ASIC} & \textbf{A}pplication \textbf{S}pecific \textbf{I}ntegrated \textbf{C}ircuit\\
+\textbf{CPU} & \textbf{C}entral \textbf{P}rocessing \textbf{U}nit\\
 \textbf{CSV} & \textbf{C}omma \textbf{S}eparated \textbf{V}alue\\
 \textbf{FCFS} & \textbf{F}irst \textbf{C}ome \textbf{F}irst \textbf{S}erve\\
 \textbf{FPGA} & \textbf{F}ield \textbf{P}rogrammable \textbf{G}ate \textbf{A}rray\\

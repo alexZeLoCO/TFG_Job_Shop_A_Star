@@ -1,1 +1,78 @@
 \Chapter{Conclusiones}{Observaciones y Trabajos futuros}
+
+\section{El algoritmo A*}
+
+El algoritmo A* es de gran utilidad en un gran abanico de ámbitos.
+Realmente, se trata de un algoritmo apto para cualquier problema
+que esté formado por un grupo de nodos relacionables entre ellos
+dodne se quiera buscar una ruta entre ellos desde un inicio hasta
+un fin.
+
+Desde el punto de vista más abstracto sólo existen tres funciones
+dependientes del problema en particular mientras que el resto
+del algoritmo sirve para cualquier problema:
+
+\begin{itemize}[itemsep=0.25px]
+    \item Dado un nodo conocer si es el objetivo o no.
+    \item Dado un nodo conocer sus vecinos.
+    \item Dado un nodo conocer sus costes G y H.
+\end{itemize}
+
+\section{Principal cuello de botella}
+
+Existen tres principales operaciones necesarias para
+ejecutar el algoritmo A*:
+
+\begin{itemize}[itemsep=0.25px]
+    \item Obtención del siguiente nodo a explorar del \lstinline{open_set}.
+    \item Obtención de vecinos de un nodo.
+    \item Inserción de vecinos en el \lstinline{open_set}.
+\end{itemize}
+
+La obtención de vecinos de un nodo es un algoritmo dependiente del problema a resolver.
+Con el diseño de estructuras de datos e implementación correctos es fácil
+minimizar el coste de esta operación.
+
+La obtención del siguiente nodo a explorar del \lstinline{open_set}
+puede ser resuelta en O(1) por cualquier desarrollador con un conocimiento
+básico sobre estructuras de datos como listas enlazadas.
+
+La inserción de vecinos en el \lstinline{open_set} es más complicada
+ya que está estrechamente relacionada con la obtención del siguiente nodo
+a explorar.
+Generalmente el \lstinline{open_set} se implementará como una lista ordenada
+de forma que el primer elemento sea el siguiente nodo a explorar.
+Esto implica que los vecinos se deben insertar en orden,
+insertando elementos en medio de la lista.
+La operación de insertar elementos en medio de una lista suele ser
+costosa.
+En esta investigación se ha conseguido hacer en O(n) utilizando
+una lista doblemente enlazada y un iterador que compara e inserta
+en el mismo barrido.
+
+Es posible reducir el coste computacional de insertar vecinos en el \lstinline{open_set},
+pero esto implica un aumento en el coste de obtener el siguiente nodo a explorar.
+Sería necesario diseñar una estructura de datos distinta para
+reducir el coste computacional de una operación sin incrementar el de la otra.
+Seguramente esta estructura de datos sea también más dependiente de la memoria
+y como ya se ha visto en HDA*, el diseño de esta estructura debería
+facilitar el uso de varios hilos.
+
+El principal problema del \lstinline{open_set} es que la complejidad de sus operaciones
+incrementa a medida que se añaden más nodos.
+Es posible que otra forma de optimizar esta estructura se encuentre en hallar cómo
+almacenar menos nodos en ella.
+
+\section{Heurísticos}
+
+Como ya se discutió en la sección comparativa con Dijkstra (\ref{sec:ComparativaDijkstra}),
+el diseño de la función heurística es crucial para determinar si la implementación
+del A* será admisible\footnote{Si retornará siempre el resultado óptimo.}
+y el tiempo que requerirá para resolver el problema.
+
+Ignorando el paralelismo, la decisión del diseño de la función heurística
+es la principal clave que definirá el rendimiento y calidad de las soluciones
+propuestas por el algoritmo.
+Comprender las diferencias entre funciones optimistas y pesimistas
+y ser capaz de hallar la función que retorne resultados óptimos en
+el menor tiempo posible es el principal desafío de la implementación de este algoritmo.

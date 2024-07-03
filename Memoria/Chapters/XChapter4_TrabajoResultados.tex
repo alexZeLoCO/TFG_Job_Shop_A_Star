@@ -149,6 +149,29 @@ unsigned int State::calculate_h_cost() const
 La función calcula el tiempo necesario para completar cada trabajo
 y retorna el tiempo mayor.
 
+\begin{examplebox}
+    El conjunto de datos:
+    \begin{enumerate}[itemsep=0.25px]
+        \item (2, 0), (4, 1), (5, 2)
+        \item (5, 3), (2, 4), (1, 5)
+    \end{enumerate}
+    La planificación:
+    \begin{enumerate}[itemsep=0.25px]
+        \item (0, 2, -1)
+        \item (0, -1, -1)
+    \end{enumerate}
+
+    Primero se calcula la suma de la duración de las tareas no planificadas de cada trabajo:
+
+    \begin{enumerate}[itemsep=0.25px]
+        \item (0, 2, -1): 5
+        \item (0, -1, -1): 3
+    \end{enumerate}
+
+    Segundo se obtiene el máximo:
+    $$cost_h = max(5, 3) = 5$$
+\end{examplebox}
+
 \pagebreak
 
 \paragraph{Heurístico para tiempo}~
@@ -173,6 +196,29 @@ unsigned int State::calculate_h_cost() const
 La función calcula el tiempo necesario para completar
 las tareas restantes si se ejecutasen una a una
 y retorna esta suma.
+
+\begin{examplebox}
+    El conjunto de datos:
+    \begin{enumerate}[itemsep=0.25px]
+        \item (2, 0), (4, 1), (5, 2)
+        \item (5, 3), (2, 4), (1, 5)
+    \end{enumerate}
+    La planificación:
+    \begin{enumerate}[itemsep=0.25px]
+        \item (0, 2, -1)
+        \item (0, -1, -1)
+    \end{enumerate}
+
+    Se suman todas las duraciones de las tareas no planificadas:
+    $$
+    cost_h = \sum_{j=0}^{J}{
+        \sum_{t=0}^{T}{
+            D_{j,t}
+        }
+    }
+    = 5 + 2 + 1 = 8
+    $$ 
+\end{examplebox}
 
 \begin{notebox}
     A pesar de que ambas implementaciones tienen la misma complejidad ($O(n^2)$),
@@ -635,13 +681,15 @@ del algoritmo.
 
 Para ejecutar las pruebas se han utilizado porciones de conjuntos
 de datos obtenidos de \href{http://jobshop.jjvh.nl/}{(HTTP) Jobshop Instances}.
-En particular se ha utilizado el $50\percentsign$ del conjunto
-`abz5' (5x5) o el $100\percentsign$ de `ft06' (6x6).
+En particular se ha utilizado el $40\percentsign$, $50\percentsign$, $60\percentsign$ del conjunto
+`abz5' (4x4x10, 5x5x10, 6x6x10), o el $100\percentsign$ de `ft06' (6x6x6).
+El algoritmo utilizado para importar y cortar
+los conjuntos de datos se puede encontar en el Anexo \ref{sec:ReadAndCut}.
 
 \begin{notebox}
     \index{Tamaño del problema}
-    Un conjunto de datos tiene un tamaño de $A$x$B$ cuando
-    está compuesto por $A$ trabajos y $B$ tareas.
+    Un conjunto de datos tiene un tamaño de $A$x$B$x$C$ cuando
+    está compuesto por $A$ trabajos, $B$ tareas en cada uno y $C$ trabajadores.
 \end{notebox}
 
 \pagebreak
@@ -653,9 +701,6 @@ En particular se ha utilizado el $50\percentsign$ del conjunto
 \index{Equipos de Prueba!Arquitectura x86}
 
 Se han utilizado 3 equipos diferentes para tomar y contrastar las mediciones.
-
-\subsubsection{OS}
-\index{Equipos de Prueba!Arquitectura x86!OS}
 
 \begin{center}
     \begin{table}[h]
@@ -673,9 +718,6 @@ Se han utilizado 3 equipos diferentes para tomar y contrastar las mediciones.
     \end{table}
 \end{center}
 
-\subsubsection{CPU}
-\index{Equipos de Prueba!Arquitectura x86!CPU}
-
 \begin{center}
     \begin{table}[h]
         \centering
@@ -691,9 +733,6 @@ Se han utilizado 3 equipos diferentes para tomar y contrastar las mediciones.
         \caption{Equipos de prueba, arquitectura x86: CPU}
     \end{table}
 \end{center}
-
-\subsubsection{RAM}
-\index{Equipos de Prueba!Arquitectura x86!RAM}
 
 \begin{center}
     \begin{table}[h]
@@ -804,12 +843,58 @@ $A$ es mejor que $B$ \footnote{
     son lo suficientemente similares.
 }.
 
+Para calcular el \italic{makespan},
+el programa simplemente utiliza el instante
+más tardío cuando un trabajador queda libre.
+\begin{examplebox}
+    Sea la siguiente planificación:
+    \begin{itemize}[itemsep=0.25px]
+        \item Planificación:
+        \begin{enumerate}[itemsep=0.25px]
+            \item (0, 3, 5)
+            \item (0, 3, 3)
+        \end{enumerate}
+        \item Estado trabajadores: (2, 8, 3)
+    \end{itemize}
+
+    El \italic{makespan} es $max([2, 8, 3]) = 8$.
+\end{examplebox}
+
 \section{Resultados y Análisis}
 \index{Resultados}
 
 \subsection{Complejidad del problema}
 \index{Resultados!Complejidad del problema}
 
+\begin{notebox}
+    Como se ha visto, el algoritmo A* es bastante modular,
+    existen diversas partes intercambiables que resulta en un gran
+    número de posibilidades a probar.
+    Las ejecuciones realizadas a continuación se basan en probar
+    distintas combinaciones que resultan de interés.
+    Para simplificar la lectura de los resultados mostrados
+    en las gráficas, a continuación se muestra un resumen de
+    las variables utilizadas en las mismas:
+
+    \begin{itemize}[itemsep=0.25px]
+        \item Número de hilos: 1T, 4T, 8T\dots
+        \item Solucionador: `FCFS Solver', `HDA* Solver', `Recursive Solver'\dots
+        \item Heurísticos: `Fast', `Slow'\dots\footnote{La falta de una etiqueta para el heurístico implica el óptimo (también llamado slow)}
+        \item Problema: 60\percentsign abz5.csv (6x6x10), 40\percentsign abz5.csv (4x4x10)\dots
+    \end{itemize}
+
+    Si todas las mediciones de la gráfica coinciden en una de las
+    variables, ésta se anotará en el subtítulo de la gráfica.
+
+    \begin{examplebox}
+        \begin{itemize}[itemsep=0.25px]
+            \item `4 FCFS Solver Fast': FCFS con 4 hilos y el heurístico rápido.
+            \item `2 HDA* Solver': FCFS con 2 hilos y el heurístico lento (óptimo).
+        \end{itemize}
+    \end{examplebox}
+\end{notebox}
+
+\pagebreak
 
 En la siguiente gráfica (figura \ref{fig:Runtime_One_Problem_Linear}),
 se puede ver el tiempo de ejecución
@@ -840,7 +925,7 @@ Estas observaciones verifican que la complejidad del problema
 a resolver es cuadrática, como era de esperar.
 
 \begin{notebox}
-    Esta sección contiene diversas gráficas de las métricas obtenidas,
+    Este capítulo contiene diversas gráficas de las métricas obtenidas,
     obsérvese con detalle la escala utilizada en el eje de ordenadas de cada una
     ya que en algunos casos será logarítmica.
 \end{notebox}
@@ -864,35 +949,52 @@ reducen el tiempo de ejecución en varias magnitudes.
 \begin{figure}[h]
     \begin{subfigure}{.5\textwidth}
         \begin{center}
-            \includegraphics[width=\textwidth]{Media/Ch2/Makespan_Slow_HDA.png}
-            \subcaption{\italic{Makespan} del heurístico lento.}
+            \includegraphics[width=\textwidth]{Media/Ch2/Makespan_8_Heuristics.png}
+            \subcaption{\italic{Makespan} con 8 hilos.}
         \end{center}
     \end{subfigure}
     \begin{subfigure}{.5\textwidth}
         \begin{center}
-            \includegraphics[width=\textwidth]{Media/Ch2/Runtime_Slow_HDA.png}
-            \subcaption{Tiempo de ejecución del heurístico lento.}
+            \includegraphics[width=\textwidth]{Media/Ch2/Runtime_8_Heuristics.png}
+            \subcaption{Tiempo de ejecución con 8 hilos.}
         \end{center}
     \end{subfigure}
-    \caption{Métricas heurístico lento.}
-    \label{fig:HeuristicoLento}
+    \caption{Métricas de heurísticos con 8 hilos.}
+    \label{fig:Heuristico8}
 \end{figure}
 
 \begin{figure}[h]
     \begin{subfigure}{.5\textwidth}
         \begin{center}
-            \includegraphics[width=\textwidth]{Media/Ch2/Makespan_Fast_HDA.png}
-            \subcaption{\italic{Makespan} del heurístico rápido.}
+            \includegraphics[width=\textwidth]{Media/Ch2/Makespan_4_Heuristics.png}
+            \subcaption{\italic{Makespan} con 4 hilos.}
         \end{center}
     \end{subfigure}
     \begin{subfigure}{.5\textwidth}
         \begin{center}
-            \includegraphics[width=\textwidth]{Media/Ch2/Runtime_Fast_HDA.png}
-            \subcaption{Tiempo de ejecución del heurístico rápido.}
+            \includegraphics[width=\textwidth]{Media/Ch2/Runtime_4_Heuristics.png}
+            \subcaption{Tiempo de ejecución con 4 hilos.}
         \end{center}
     \end{subfigure}
-    \caption{Métricas heurístico rápido.}
-    \label{fig:HeuristicoRapido}
+    \caption{Métricas de heurísticos con 4 hilos.}
+    \label{fig:Heuristico4}
+\end{figure}
+
+\begin{figure}[h]
+    \begin{subfigure}{.5\textwidth}
+        \begin{center}
+            \includegraphics[width=\textwidth]{Media/Ch2/Makespan_1_Heuristics.png}
+            \subcaption{\italic{Makespan} con 1 hilo.}
+        \end{center}
+    \end{subfigure}
+    \begin{subfigure}{.5\textwidth}
+        \begin{center}
+            \includegraphics[width=\textwidth]{Media/Ch2/Runtime_1_Heuristics.png}
+            \subcaption{Tiempo de ejecución con 1 hilo.}
+        \end{center}
+    \end{subfigure}
+    \caption{Métricas de heurísticos con 1 hilo.}
+    \label{fig:Heuristico1}
 \end{figure}
 
 Analizandolas por separado, las ejecuciones que utilizan el heurístico lento
@@ -901,13 +1003,16 @@ beneficiadas por el uso de varios hilos.
 Por otro lado, las ejecuciones que utilizan el heurístico rápido
 sólo retornaron 452 o 472 en algunas instancias y no se vieron
 beneficiadas por el uso de varios hilos
-(Véase figuras \ref{fig:HeuristicoLento} y \ref{fig:HeuristicoRapido}).
+(Véase figuras \ref{fig:Heuristico8}, \ref{fig:Heuristico4} y \ref{fig:Heuristico1}).
 
 Sería razonable suponer que el heurístico rápido
 sí se vería beneficiado por el paralelismo si el tamaño del
 problema fuese lo suficientemente grande.
 Para comprobar esta hipótesis, se ha creado un conjunto
-con un tamaño mucho mayor (70x10) y se ha obtenido el \italic{speedup}.
+con un tamaño mucho mayor (70x10x10) y se ha obtenido el \italic{speedup}.
+
+Además, se puede observar una clara tendencia en los resultados que utilizan
+el heurístico rápido. A menor número de hilos, mejor \italic{makespan} retornan.
 
 \begin{figure}[h]
     \centering
@@ -921,11 +1026,54 @@ la versión monohilo es más rápida que las multihilo.
 Esta investigación no ha podido encontrar un conjunto de datos
 en el que utilizando el heurístico rápido valga la pena el paralelismo.
 No obstante, se ha observado que a medida que el tamaño
-del problema incrementa, el \italic{speedup} también se ve incrementando
+del problema incrementa, el \italic{speedup} también se ve incrementado
 por lo que si se supone que la tendencia del \italic{speedup}
 se mantiene, sería razonable suponer que existe un tamaño de
 problema donde sí vale la pena utilizar varios hilos y 
 el heurístico rápido.
+
+Se deja también constancia de que las pruebas ejecutadas indican que
+el error cometido por el heurístico rápido incrementa proporcionalmente
+con el tamaño del problema.
+En las pruebas que utilizaron conjuntos de datos de 6x6x10,
+el error se encontraba entre 20 y 50, mientras que en
+conjuntos de datos de 70x10x10, el error se podría encontrar
+en los miles.
+Por ello, el heurístico rápido se podría considerar únicamente para
+resolver problemas de menor tamaño e incluso en esos casos
+se debería tener en cuenta su falta de precisión.
+
+\subsubsection{Comparativa con Random Solver}
+
+El heurístico rápido obtiene resultados cuya calidad es razonable
+únicamente cuando se tiene en cuenta la velocidad con la que
+los obtiene.
+Se ha implementado un algoritmo (no A*) que resuelve
+el problema del JSP de forma aleatoria (Anexo \ref{sec:RandomSolver}),
+esto es, selecciona una tarea cualquiera y la introduce en el plan.
+Como el nombre del \italic{solver} indica, la planificación
+que retorna este algoritmo es aleatoria.
+Utilizamos estos resultados para criticar el \italic{makespan}
+del heurístico rápido.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\textwidth]{Media/Ch2/Makespan_Random_Solver.png}
+    \caption{\italic{Makespan} de diferentes heurísticos}
+    \label{fig:MakespanRandomSolver}
+\end{figure}
+
+La figura \ref{fig:MakespanRandomSolver} muestra el \italic{makespan}
+del heurístico óptimo (el lento), el rápido y el obtenido
+por el Random Solver.
+Adicionalmente, se muestran también los \italic{makespan}
+máximo y mínimo obtenidos por cada uno de ellos.
+
+Como se puede ver en el diagrama, el heurístico rápido obtiene mejores
+resultados que el Random Solver y más importantemente tiene un
+margen de error mucho menor.
+Entonces, aunque los resultados del heurístico rápido no
+sean óptimos, son mejores que crear una planificación aleatoria.
 
 \subsection{Cuellos de botella en secciones críticas}
 \index{Resultados!Cuellos de botella}
@@ -943,7 +1091,7 @@ tengan mejor rendimiento que versiones paralelas.
 Nótese que el \italic{speedup} del algoritmo FCFS
 cuando se utilizan varios hilos (respecto a un hilo solo)
 es inferior a $1$.
-(Véase figura \ref{fig:ParalelismoFCFS}).
+(Véase figura \ref{fig:SpeedupFCFS}).
 
 \begin{figure}[h]
     \begin{subfigure}{.5\textwidth}
@@ -956,6 +1104,7 @@ es inferior a $1$.
         \begin{center}
             \includegraphics[width=\textwidth]{Media/Ch2/Speedup_FCFS.png}
             \subcaption{\italic{Speedup} de FCFS.}
+            \label{fig:SpeedupFCFS}
         \end{center}
     \end{subfigure}
     \caption{Métricas de paralelismo en FCFS.}
@@ -976,7 +1125,7 @@ incrementando notablemente el \italic{speedup}
     \label{fig:ParalelismoHDA}
 \end{figure}
 
-Nótese que al inicio del problema (aproximadamente hasta completar el $30\percentsign$)
+Nótese que al inicio del problema (aproximadamente hasta completar el $20\percentsign$)
 la versión monohilo de los algoritmos es más rápida que cualquier multihilo.
 Esto se debe a que para tamaños de problema muy pequeños
 el coste de crear $N$ hilos es superior al de resolver el problema
@@ -1060,6 +1209,133 @@ La principal conclusión de estas observaciones es que
 el paralelismo es sólo rentable si se implementa el HDA*.
 En el resto de casos, el paralelismo sólo sirve para
 gastar núcleos y ciclos de CPU a cambio de nada.
+
+\begin{notebox}
+    En la inmensa mayoría de observaciones realizadas,
+    el algoritmo Batch Solver
+    ha sido capaz de resolver el $30\percentsign$ del problema
+    en menos tiempo que cualquier otro algoritmo.
+    Esta reducción de tiempo se debe a que este algoritmo ejecuta el A*
+    tantas veces como hilos haya disponibles de forma simultánea,
+    facilitando la obtención de planificaciones profundas más rápido. 
+    En otras palabras, el algoritmo es más veloz al iniciar el problema
+    pero es más lento al final.
+\end{notebox}
+
+\subsection{Comparativa con Dijkstra}
+\index{Resultados!Comparativa con Dijkstra}
+\label{sec:ComparativaDijkstra}
+
+Como se indicó brevemente al inicio de este documento (Subsección \ref{ssec:AlgoritmoA*}),
+el algoritmo A* es una evolución del de Dijkstra
+donde la principal diferencia es la inclusión de una función
+heurística utilizada para seleccionar el siguiente nodo a explorar.
+Entonces, se podría decir que el algoritmo de Dijkstra es una
+versión particular del algoritmo A* donde la función heurística
+retorna siempre 0.
+
+La principal conclusión obtenida de las siguientes observaciones 
+(Figura \ref{fig:Speedup_Dijkstra}) es que el \italic{speedup}
+del algoritmo A* frente a Dijkstra
+es tan grande que incluso resulta complicado realizar pruebas.
+Esto se debe a que los conjuntos de datos que se pueden
+resolver utilizando Dijkstra en un tiempo razonable son resueltos
+en microsegundos por A* y los que son resueltos en un tiempo
+razonable por A* requerirían meses de ejecución para resolverlos
+utilizando Dijkstra
+\footnote{
+    Es recomendable evitar extraer conclusiones de observaciones cuyo tiempo de ejecución es muy reducido.
+    Existe un gran número de variables (cambios de contexto, fallos de caché, interrupciones del OS)
+    que pueden afectar al tiempo de ejecución de un algoritmo,
+    desvirtuando la medición.
+}.
+
+\begin{figure}[h]
+    \centering
+    %\includesvg{./Media/Ch2/Speedup_Dijkstra.svg}
+    \includegraphics[width=\linewidth]{Media/Ch2/Speedup_Dijkstra.png}
+    \caption{\italic{Speedup} de A* frente a Dijkstra}
+    \label{fig:Speedup_Dijkstra}
+\end{figure}
+
+Como era de esperar, el rendimiento de las implementaciones A*
+es notablemente superior al de Dijkstra en lo que corresponde
+a tiempo de ejecución.
+El gráfico anterior muestra que como poco el algoritmo A*
+tiene un \italic{speedup} de 8000 frente a Dijkstra
+en el conjunto de datos estudiado.
+
+No obstante, las ejecuciones de Dijkstra han sido capaces
+de obtener un \italic{makespan} mejor que las de A*.
+El algoritmo de Dijkstra explorará todos los
+nodos posibles hasta obtener una solución óptima
+mientras que el A* simplemente explorará nodos
+hasta que se cumpla la condición de salida
+\footnote{En este caso que todas las tareas estén planificadas}.
+
+El algoritmo A* es completo, retornará una solución al problema
+siempre y cuando exista al menos una.
+Por otro lado, el algoritmo A* no tiene por qué retornar la
+solución óptima al problema.
+Esta característica depende de la función heurística
+encargada de calcular el coste H.
+Si la función heurística subestima el coste H real
+(es cota inferior del coste H real)
+entonces A* retornará la solución óptima.
+En otro caso, A* retornará una solución que puede
+ser la óptima.
+
+De cualquier forma, las funciones heurísticas no son
+categorizables en una u otra clase,
+más bien se trata de un espectro.
+Las funciones heurísticas que subestimen
+el coste H real se denominan `optimistas'
+mientras que las que lo igualan o sobreestiman
+se denominan `pesimistas'.
+Las funciones optimistas retornarán los resultados óptimos
+pero requerirán un mayor tiempo de ejecución ya que
+se verán obligadas a explorar un mayor número de nodos
+mientras que las pesimistas no tienen por qué retornar un
+resultado óptimo y tendrán una mayor velocidad porque
+no explorarán tantas posibilidades.
+
+Al extremo de las funciones optimistas
+se encuentra el algoritmo de Dijkstra
+cuyo heurístico retorna siempre 0
+(no hay coste más bajo) y
+al extremo de las funciones pesimistas se podría encontrar la siguiente
+función (\ref{eq:HeuristicoPesimista})
+donde $J$ es el número total de trabajos, $T$ el de tareas y $D_{i,j}$
+la duración de la tarea $j$ del trabajo $i$.
+
+\begin{figure}[h]
+    $$
+    cost_h = \sum_{j=0}^{J}{
+        \sum_{t=0}^{T}{
+            D_{j,t}
+        }
+    }
+    $$
+    \caption{Función heurística pesimista}
+    \label{eq:HeuristicoPesimista}
+\end{figure}
+
+Una función que calcula el sumatorio de todas las duraciones
+de las tareas restantes por planificar.
+Este heurístico sería lo equivalente a planificar
+que cada tarea se ejecute una a una de forma
+que sólo un trabajador se encuentra activo mientras
+el resto esperan (aunque puedan hacer tareas de forma paralela).
+
+En algún punto intermedio entre estos dos extremos
+se encontraría el heurístico óptimo utilizado
+en la mayoría de las pruebas de esta investigación,
+pero es difícil de saber si se acerca más
+a los algoritmos optimistas o pesimistas.
+La principal dificultad de implementar el algoritmo A*
+es entonces decidir una función heurística
+que sea lo suficientemente pesimista para retornar resultados óptimos
+pero no tan pesimista que explore demasiadas alternativas.
 
 \pagebreak
 

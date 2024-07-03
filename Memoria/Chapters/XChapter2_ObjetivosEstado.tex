@@ -7,7 +7,7 @@
 \index{Objetivos y estado actual!Estado del arte}
 
 Este proyecto abarca diversos tópicos, cuyas bibliografías
-(incluso en individual) tienen una gran extensión.
+(incluso tomadas de una en una) tienen una gran extensión.
 A pesar de ello, resulta complicado hallar estudios previos sobre implementaciones
 paralelas del algoritmo A* enfocadas a la resolución del Job Shop Scheduling Problem
 utilizando FPGAs.
@@ -39,9 +39,9 @@ uso de una función heurística en el A* que `guía' al algoritmo
 en la dirección de la solución.
 \cite{HNR68}, \cite{MSV13}, \cite{Kon14}.
 
-El algoritmo A* no es propenso a la paralelización,
+El algoritmo A* no es dado a la paralelización,
 no existe una implementación simple que aproveche el funcionamiento de
-varios procesadores de forma simultanea.
+varios procesadores de forma simultánea.
 En su lugar existen varias alternativas que paralelizan el algoritmo,
 cada una de ellas con sus fortalezas y debilidades.
 Estas diferentes versiones serán estudiadas, implementadas y
@@ -51,10 +51,16 @@ probadas en esta investigación.
 El tópico sobre el que menor cantidad de documentación existe
 y que supone una mayor curva de aprendizaje es sin lugar a duda
 la implementación del algoritmo A* en una FPGA.
-A diferencia de este proyecto, la principal fuente de bibliografía
-sobre este tópico desarrolla una implementación personalizada del algoritmo
-que reporta una aceleración de casi el $400\percentsign$.
-\cite{ZJW20}.
+La principal conclusión de la literatura en este área es
+que el uso del hardware incrementa el rendimiento del
+algoritmo y reduce su coste energético al mismo tiempo.
+En función de las herramientas utilizadas para implementar
+el algoritmo las ganancias son distintas,
+estudios en los que se utilizaron sintetizadores (HLS)
+para generar el código de la FPGA obtuvieron resultados
+menos interesantes que aquellos que diseñaron en hardware
+directamente.
+\cite{ZJW20}, \cite{NSG17}.
 
 \pagebreak
 
@@ -121,6 +127,7 @@ Un trabajo está compuesto por un listado de tareas.
 $(A, B), (C, D)$ es un trabajo compuesto por dos tareas:
 $(A, B)$ es una tarea que dura $A$ instantes de tiempo y debe ser ejecutada por $B$ y
 $(C, D)$ es una tarea que dura $C$ instantes de tiempo y debe ser ejecutada por $D$.
+Así mismo, la duración de la tarea $2$ del trabajo $0$ sería $D_{0,2}$
 
 \subsubsection{Conjunto de datos}
 

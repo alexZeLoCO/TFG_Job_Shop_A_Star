@@ -39,4 +39,180 @@ public:
 };
 \end{lstlisting}
 
+\section{Random Solver}
+\label{sec:RandomSolver}
+
+\begin{lstlisting}[language=C++, caption=Clase RandomSolver utilizada para resolver un problema aleatoriamente]
+class RandomSolver : public AStarSolver
+{
+private:
+    State get_random_next_state(const State &, std::mt19937 &) const;
+
+public:
+    RandomSolver() = default;
+    ~RandomSolver() override = default;
+
+    State solve(
+        std::vector<std::vector<Task>>,
+        std::size_t,
+        Chronometer &) const override;
+
+    std::string get_name() const override { return "RANDOM Solver"; };
+};
+
+State RandomSolver::solve(
+    std::vector<std::vector<Task>> jobs,
+    std::size_t n_workers,
+    Chronometer &c) const
+{
+    const std::size_t nJobs = jobs.size();
+    if (nJobs == 0)
+        return State();
+    const std::size_t nTasks = jobs[0].size();
+    if (nTasks == 0)
+        return State();
+    if (n_workers == 0)
+        n_workers = nTasks;
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+
+    const auto startingSchedule = std::vector<std::vector<int>>(nJobs, std::vector<int>(nTasks, -1));
+    const auto startingWorkersStatus = std::vector<int>(n_workers, 0);
+    auto currentState = State(jobs, startingSchedule, startingWorkersStatus);
+
+    while (!currentState.is_goal_state())
+    {
+        currentState = this->get_random_next_state(currentState, gen);
+        c.process_iteration(currentState);
+    }
+
+    return currentState;
+}
+
+State RandomSolver::get_random_next_state(const State &currentState, std::mt19937 &gen) const
+{
+    std::vector<State> neighbors = currentState.get_neighbors_of();
+    std::uniform_int_distribution<> dis(0, (int)neighbors.size() - 1);
+    return neighbors[dis(gen)];
+}
+\end{lstlisting}
+
+\section{Read and Cut}
+\label{sec:ReadAndCut}
+
+\begin{lstlisting}[
+    language=C++,
+    caption=Funciones utilizadas para leer y cortar conjuntos de datos
+]
+struct ReadTaskStruct
+{
+    unsigned int duration;
+    std::vector<unsigned int> qualified_workers;
+};
+
+std::vector<std::vector<Task>> get_jobs_from_file(
+    const std::string &filename
+) {
+    std::ifstream file(filename);
+    std::string my_string;
+    std::string my_number;
+    std::vector<std::vector<ReadTaskStruct>> data;
+    std::vector<std::vector<Task>> out;
+    if (!file.is_open())
+    {
+        std::cerr << "Could not read file" << std::endl;
+        file.close();
+        return out;
+    }
+    while (std::getline(file, my_string))
+    {
+        std::stringstream line(my_string);
+        data.emplace_back();
+        bool is_worker = true;
+        unsigned int qualified_worker = 0;
+        while (std::getline(line, my_number, ';'))
+        {
+            if (is_worker)
+            {
+                qualified_worker = stoi(my_number);
+                is_worker = false;
+            }
+            else
+            {
+                data[data.size() - 1].emplace_back();
+                data[data.size() - 1][
+                    data[data.size() - 1].size() - 1
+                ].duration = stoi(my_number);
+                data[data.size() - 1][
+                    data[data.size() - 1].size() - 1
+                ].qualified_workers = std::vector<unsigned int>(
+                    1,
+                    qualified_worker
+                );
+                is_worker = true;
+            }
+        }
+    }
+    for (std::size_t job_idx = 0; job_idx < data.size(); job_idx++)
+    {
+        out.emplace_back();
+        const std::vector<struct ReadTaskStruct> currentJob = data[
+            job_idx
+        ];
+        for (
+            std::size_t task_idx = 0;
+            task_idx < currentJob.size();
+            task_idx++
+        ) {
+            const struct ReadTaskStruct currentTask = currentJob[
+                task_idx
+            ];
+            unsigned int h_cost = 0;
+            for (
+                std::size_t unscheduled_task_idx = task_idx;
+                unscheduled_task_idx < currentJob.size();
+                unscheduled_task_idx++
+            )
+                h_cost += currentJob[unscheduled_task_idx].duration;
+            out[job_idx].emplace_back(
+                currentTask.duration,
+                h_cost,
+                currentTask.qualified_workers
+            );
+        }
+    }
+    file.close();
+    return out;
+}
+
+std::vector<std::vector<Task>> cut(
+    std::vector<std::vector<Task>> jobs,
+    float percentage
+) {
+    percentage = percentage < 0 ? 0 : percentage;
+    percentage = percentage > 1 ? 1 : percentage;
+    const unsigned int jobs_to_keep = int(
+        float(jobs.size()) * percentage
+    );
+    const unsigned int tasks_to_keep = int(
+        float(jobs[0].size()) * percentage
+    );
+    std::vector<std::vector<Task>> new_jobs;
+
+    for (unsigned int job_idx = 0; job_idx < jobs_to_keep; job_idx++)
+    {
+        new_jobs.emplace_back();
+        for (
+            unsigned int task_idx = 0;
+            task_idx < tasks_to_keep;
+            task_idx++
+        )
+            new_jobs[job_idx].push_back(jobs[job_idx][task_idx]);
+    }
+
+    return new_jobs;
+}
+\end{lstlisting}
+
 \pagebreak
