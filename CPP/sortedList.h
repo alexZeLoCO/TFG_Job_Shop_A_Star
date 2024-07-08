@@ -28,7 +28,7 @@ public:
 
     void append(T);
     T pop();
-    size_t size() const;
+    std::size_t size() const;
     bool contains(const T &) const;
     bool empty() const;
 };

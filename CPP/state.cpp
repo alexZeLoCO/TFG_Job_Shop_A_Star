@@ -26,9 +26,8 @@ float State::calculate_completion_percentage() const
 unsigned int State::calculate_h_cost() const
 {
     // return 0;
-    /*
     std::vector<int> h_costs;
-    for (size_t job_idx = 0; job_idx < this->m_jobs.size(); job_idx++)
+    for (std::size_t job_idx = 0; job_idx < this->m_jobs.size(); job_idx++)
     {
         h_costs.emplace_back(
             this->first_unscheduled_task_idxs[job_idx] == -1
@@ -37,13 +36,14 @@ unsigned int State::calculate_h_cost() const
     }
     auto max_element = std::max_element(h_costs.begin(), h_costs.end());
     return max_element == h_costs.end() ? 0 : *max_element;
-    */
-    unsigned int unscheduled_tasks_count = 0;
-    for (std::size_t job_idx = 0; job_idx < this->m_jobs.size(); job_idx++)
-        for (std::size_t task_idx = 0; task_idx < this->m_jobs[job_idx].size(); task_idx++)
-            if (this->m_schedule[job_idx][task_idx] == -1)
-                unscheduled_tasks_count += this->m_jobs[job_idx][task_idx].get_duration();
-    return unscheduled_tasks_count;
+    /*
+     unsigned int unscheduled_tasks_count = 0;
+     for (std::size_t job_idx = 0; job_idx < this->m_jobs.size(); job_idx++)
+         for (std::size_t task_idx = 0; task_idx < this->m_jobs[job_idx].size(); task_idx++)
+             if (this->m_schedule[job_idx][task_idx] == -1)
+                 unscheduled_tasks_count += this->m_jobs[job_idx][task_idx].get_duration();
+     return unscheduled_tasks_count;
+     */
 }
 
 bool State::is_goal_state() const
