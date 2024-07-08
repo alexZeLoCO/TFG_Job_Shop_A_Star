@@ -62,7 +62,7 @@ std::vector<int> State::calculate_first_unscheduled_task_idxs() const
     std::vector<int> out;
     for (const std::vector<int> &job : this->get_schedule())
     {
-        size_t current_task_idx = 0;
+        std::size_t current_task_idx = 0;
         while (
             current_task_idx < job.size() &&
             job[current_task_idx] >= 0)
@@ -78,7 +78,7 @@ std::vector<int> State::calculate_first_unscheduled_task_idxs() const
 std::vector<int> State::calculate_first_unscheduled_task_start_times() const
 {
     std::vector<int> first_unscheduled_task_start_times;
-    for (size_t job_idx = 0; job_idx < this->m_jobs.size(); job_idx++)
+    for (std::size_t job_idx = 0; job_idx < this->m_jobs.size(); job_idx++)
     {
         int currently_unscheduled_task_idx = this->first_unscheduled_task_idxs[job_idx];
         if (currently_unscheduled_task_idx != -1)
@@ -103,7 +103,7 @@ std::vector<State> State::get_neighbors_of() const
     std::vector<int> first_unscheduled_task_start_times = this->calculate_first_unscheduled_task_start_times(); // O(n)
 
     // O(n) if there is only one qualified_worker per task, else O(n^2)
-    for (size_t job_idx = 0; job_idx < this->get_schedule().size(); job_idx++)
+    for (std::size_t job_idx = 0; job_idx < this->get_schedule().size(); job_idx++)
     {
         int task_start_time = first_unscheduled_task_start_times[job_idx];
         if (task_start_time != -1)
