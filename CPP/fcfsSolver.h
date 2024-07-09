@@ -17,6 +17,14 @@ private:
         std::unordered_map<State, unsigned int, StateHash, StateEqual> &,
         std::unordered_map<State, unsigned int, StateHash, StateEqual> &,
         SortedList<State> &) const;
+    static unsigned int getWorstMakespan(const std::vector<std::vector<Task>> &jobs)
+    {
+        unsigned int out = 0;
+        for (const std::vector<Task> &job : jobs)
+            for (const Task &task : job)
+                out += task.get_duration();
+        return out;
+    }
 
 public:
     FcfsSolver() = default;

@@ -9,9 +9,6 @@
 \label{ssec:AlgoritmoA*}
 
 Existen numerosos algoritmos capaces de resolver el problema del JSP\@.
-Estrategias más simples como listas ordenadas en función de la duración
-de los trabajos, algoritmos genéticos, técnicas gráficas,
-algoritmos \italic{Branch and Bound} y heurísticos.
 En este estudio se utilizará un algoritmo heurístico, A* (\italic{A star})~\cite{HNR68}
 para resolver el problema JSP\@.
 
@@ -96,10 +93,14 @@ sigue los caminos con menor coste (Véase figura \ref{fig:DijkstraA*Comparison})
 \label{fig:DijkstraA*Comparison}
 \end{figure}
 
+\begin{keynotebox}
+    El algoritmo A* sirve para realizar búsquedas en grafos,
+    el problema JSP consiste en una búsqueda en un grafo
+    por lo que se puede utilizar el A* para resolverlo.
+\end{keynotebox}
+
 El algoritmo A* utiliza varios componentes para resolver problemas
 de optimización. A continuación se describe cada uno de ellos.
-
-\pagebreak
 
 \subsubsection{Pseudocódigo}
 \index{Algoritmo A*!Pseudocódigo}
@@ -158,19 +159,14 @@ Estos estados deben ser comparables,
 debe ser posible dados dos estados conocer si son iguales o distintos.
 En el caso del JSP, el estado representa una planificación parcial o completa
 en la cual una serie de tareas han sido planificadas:
-
 \begin{itemize}[itemsep=0.25px]
     \item Instante de tiempo en el que comienza cada tarea planificada.
     \item Instante de tiempo futuro en el que cada trabajador estará libre
     (i.e. finaliza la tarea que estaba realizando).
 \end{itemize}
 
-El resultado final del JSP será un estado donde todas las tareas han sido planificadas.
-
 \paragraph{Costes}~
 \index{Algoritmo A*!Costes}
-
-El algoritmo A* utiliza 3 costes distintos para resolver el problema de optimización:
 
 \subparagraph{Coste G}~
 \index{Algoritmo A*!Costes!Coste G}
@@ -192,6 +188,11 @@ Idealmente esta función heurística será una cota inferior cuando el problema
 sea de minimización y una cota superior cuando sea de maximización.
 El heurístico deberá ser entonces diseñado atendiendo al tipo de problema.
 
+\begin{keynotebox}
+    El coste H es una estimación de la respuesta a la pregunta:
+    `¿Cuánto queda hasta el nodo objetivo?'
+\end{keynotebox}
+
 \subparagraph{Coste F}~
 \index{Algoritmo A*!Costes!Coste F}
 
@@ -204,9 +205,6 @@ Por lo tanto, \[cost_f = cost_g + cost_h\]
 
 \paragraph{Generación de sucesores}~
 \index{Algoritmo A*!Generación de sucesores}
-
-El algoritmo A* debe generar un número de estados sucesores dado un estado cualquiera.
-Por lo que será necesario una función que dado un estado retorne este listado de estados.
 
 Un estado con $N$ trabajos por completar ($J_0 \dots J_N$)
 tiene $N$ tareas ($T_0 \dots T_N$) que están listas para ser ejecutadas
@@ -266,7 +264,6 @@ para la tarea a planificar $T_x$ queda libre.
         \end{enumerate}
         \item Estado trabajadores: (2, 8, 6)
     \end{itemize}
- 
 \end{examplebox}
 
 \paragraph{Listas de prioridad}~
@@ -274,7 +271,7 @@ para la tarea a planificar $T_x$ queda libre.
 
 El algoritmo A* utiliza dos listas de estados: la lista abierta y la lista cerrada.
 La lista cerrada contiene los estados que ya han sido estudiados mientras que
-la lista abierta contiene los estados que aún están por estudiar.
+la lista abierta contiene los estados que aún están por explorar.
 
 Cada vez que se estudia un estado de la lista abierta,
 se obtienen sus sucesores que son añadidos a la lista abierta
@@ -284,6 +281,29 @@ mientras que el estado estudiado pasa a la lista cerrada.
 Los estados de la lista abierta están ordenados en función de su $cost_f$,
 de menor a mayor.
 De esta forma, se tiene acceso inmediato al elemento con menor $cost_f$.
+
+Nótese que el coste temporal de insertar un elemento en una posición intermedia
+de una lista suele tener un coste lineal en relación con el tamaño de la lista
+(es necesario desplazar el resto de elementos una posición hacia la derecha).
+Este coste puede ser mitigado utilizando estructuras de datos específicas
+como las listas doblemente enlazadas que faciliten este tipo de inserción.
+De cualquier forma, incluso con este tipo de listas es necesario
+iterar elemento a elemento utilizando un comparador para localizar
+la posición indicada para el elemento a insertar.
+
+\begin{keynotebox}
+    El coste temporal de utilizar la lista de prioridad
+    incrementa con el número de elementos que haya en la misma.
+    Por ello es de interés que se inserten el menor número de elementos posibles.
+
+    Estas operaciones en la lista de prioridad serán posteriormente
+    el principal cuello de botella del algoritmo.\\
+
+    En todos los casos, el número de nodos explorados 
+    (insertados en la lista)
+    es directamente proporcional
+    con el tiempo de ejecución.
+\end{keynotebox}
 
 \pagebreak
 

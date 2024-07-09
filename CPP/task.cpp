@@ -3,7 +3,7 @@
 Task &Task::operator=(const Task &other)
 {
     this->m_duration = other.get_duration();
-    this->m_qualified_workers = other.get_qualified_workers();
+    this->m_qualified_worker = other.get_qualified_worker();
     return *this;
 }
 

@@ -85,13 +85,13 @@ headsepline, % Uncomment to get a line under the header
 % TODO: Your thesis title, print it with \ttitle
 \thesistitle{Optimización de Algoritmos de Búsqueda en Grafos:\\Implementación y Comparación de Rendimiento en FPGA}
 % TODO: Your tutor name, print it with \tutor
-\tutor{Juan José Palacios Alonso} 
+\tutor{D. Palacios Alonso, Juan José} 
 % TODO: Your other tutor name, print it with \tutorBis
 \tutorBis{} 
 % TODO: Your degree name, print it with \degreename
 \degree{Grado de Ingeniería Informática en Tecnologías de la Información} 
 % TODO: Your name, print it with \authorname
-\author{\href{https://www.linkedin.com/in/alex02}{Alejandro Rodríguez López}} 
+\author{\href{https://www.linkedin.com/in/alex02}{D. Rodríguez López, Alejandro}} 
 % TODO: Your peer name, print it with \authornameBis
 \authorBis{} 
 % TODO: Your address, print it with \addressname
@@ -131,39 +131,43 @@ headsepline, % Uncomment to get a line under the header
 \begin{titlepage}
 \begin{center}
 
-\vspace*{.06\textheight}
-{\scshape\LARGE \univname\\\facname\par}\vspace{1.5cm} % University name
-\textsc{\Large \subjectname}\\[0.5cm] % Thesis type
+\begin{figure}
+	\begin{center}
+	\includegraphics[width=200px]{Media/1-universidad-de-oviedo-22.png} % University/department logo - uncomment to place it
+	\end{center}
+\end{figure}
+\vspace{8em}
+{\scshape\LARGE\facname\par} % University name
 
+\vspace{2em}
+\textsc{\Large \degreename{}}\\[0.5cm] % Thesis type
+% \textsc{\Large \subjectname}\\[0.5cm] % Thesis type
+
+\vspace{1em}
+\textsc{\Large ÁREA DE\\\groupname{}}\\[0.5cm] % Thesis type
+
+\vspace{2em}
 \HRule \\[0.4cm] % Horizontal line
 {\huge \bfseries \ttitle\par}\vspace{0.4cm} % Thesis title
 \HRule \\[1.5cm] % Horizontal line
  
-\begin{minipage}[t]{\textwidth}
-	\begin{flushleft} \large
-		\emph{Autor:}\\
-		\authorname\\
-    \vspace{2em}
-	\end{flushleft}
-\end{minipage}
-\begin{minipage}[t]{0.8\textwidth}
-	\begin{flushright} \large
-		\emph{Tutor:} \\
-		\tutorName
-	\end{flushright}
-\end{minipage}\\
+\begin{center}
+	\large
+	\emph{Autor:}\\
+	\authorname\\
+	\vspace{1em}
+	\emph{Tutor:} \\
+	\tutorName
+\end{center}
 
 \vfill
  
 % University requirement text
-\large\textit{\requirements}\\[0.3cm] 
+% \large\textit{\requirements}\\[0.3cm] 
 % \textit{en}\\[0.4cm]
 % \groupname\\[2cm] % Research group name and department name
  
-\vspace{5mm}
-
 {\large \today}\\[4cm] % Date
-%\includegraphics{Logo} % University/department logo - uncomment to place it
  
 \end{center}
 \end{titlepage}
@@ -390,6 +394,7 @@ una muy detenida atención a la estrategia para que sea rentable.
 %\include{Appendices/AppendixA}
 \include{Appendices/AppendixA_Code}
 \include{Appendices/AppendixB_Data}
+\include{Appendices/AppendixC_Diagrams}
 
 %----------------------------------------------------------------------------------------
 %	BIBLIOGRAPHY

@@ -22,7 +22,7 @@
 %%% COLORS
 %%%%%%%%%%%%%%%%%%%%%%%%%
 
-\usepackage{xcolor}
+\usepackage[dvipsnames]{xcolor}
 
 \colorlet{punct}{red!60!black}
 \colorlet{numb}{magenta!60!black}
@@ -169,6 +169,17 @@
   ->,
   >=stealth
 ]
+\tikzstyle{dorrow} = [
+  thick,
+  dotted,
+  ->,
+  >=stealth
+]
+\tikzstyle{darrow} = [
+  thick,
+  <->,
+  >=stealth
+]
 
 \newcommand\uml[2]{
   \begin{figure}[h]
@@ -191,6 +202,15 @@
   arc=4pt,
   fonttitle=\bfseries,
   title=NOTA
+}
+
+\newtcolorbox{keynotebox}{
+  colback=white,
+  colframe=ForestGreen,
+  boxrule=1pt,
+  arc=4pt,
+  fonttitle=\bfseries,
+  title=FUNDAMENTAL
 }
 
 \newtcolorbox{examplebox}{

@@ -122,33 +122,25 @@ no serán óptimos.
 Dependiendo del problema a resolver será conveniente implementar
 una función heurística de un tipo u otro.
 
+\begin{keynotebox}
+    Las funciones heurísticas son una estimación del
+    tiempo restante hasta completar todas las tareas.
+    Esta estimación puede ser una cota inferior o superior.
+    Las cotas inferiores retornarán soluciones óptimas a costa de explorar más nodos.
+    Las cotas superiores retornarán soluciones de peor calidad a coste de explorar menos nodos.
+\end{keynotebox}
+
 \paragraph{Heurístico para optimalidad}~
 \index{Optimización A*!Monohilo!Heurísticos!Resultado Óptimo}
 
 La siguiente implementación de la función heurística
 dirigirá al algoritmo hacia nodos solución que sean óptimos
 o se encuentren relativamente cerca del óptimo.
-
-\begin{lstlisting}[language=C++]
-unsigned int State::calculate_h_cost() const
-{
-    std::vector<int> h_costs;
-    for (size_t job_idx = 0; job_idx < this->m_jobs.size(); job_idx++)
-    {
-        h_costs.emplace_back(0);
-        std::vector<Task> job = this->m_jobs[job_idx];
-        for (size_t task_idx = 0; task_idx < job.size(); task_idx++)
-            if (this->get_schedule()[job_idx][task_idx] == -1)
-                h_costs[job_idx] += job[task_idx].get_duration();
-    }
-    auto max_element = std::max_element(h_costs.begin(), h_costs.end());
-    return max_element == h_costs.end() ? 0 : *max_element;
-}
-\end{lstlisting}
-
-La función calcula el tiempo necesario para completar cada trabajo
-y retorna el tiempo mayor.
-
+$$
+    cost_h = max_{0 \leq j \le J}\left(
+        \sum_{t=k}^{T}{D_{j,t}}
+    \right)
+$$
 \begin{examplebox}
     El conjunto de datos:
     \begin{enumerate}[itemsep=0.25px]
@@ -160,16 +152,12 @@ y retorna el tiempo mayor.
         \item (0, 2, -1)
         \item (0, -1, -1)
     \end{enumerate}
-
-    Primero se calcula la suma de la duración de las tareas no planificadas de cada trabajo:
-
+    Se calcula la suma de la duración de las tareas no planificadas de cada trabajo:
     \begin{enumerate}[itemsep=0.25px]
         \item (0, 2, -1): 5
         \item (0, -1, -1): 3
     \end{enumerate}
-
-    Segundo se obtiene el máximo:
-    $$cost_h = max(5, 3) = 5$$
+    Se obtiene el máximo: $cost_h = max(5, 3) = 5$
 \end{examplebox}
 
 \pagebreak
@@ -180,19 +168,9 @@ y retorna el tiempo mayor.
 La siguiente implementación de la función heurística
 dirigirá al algoritmo hacia cualquier nodo solución
 independientemente de si es óptimo o no.
-
-\begin{lstlisting}[language=C++]
-unsigned int State::calculate_h_cost() const
-{
-    unsigned int unscheduled_tasks_count = 0;
-    for (std::size_t job_idx = 0; job_idx < this->m_jobs.size(); job_idx++)
-        for (std::size_t task_idx = 0; task_idx < this->m_jobs[job_idx].size(); task_idx++)
-            if (this->m_schedule[job_idx][task_idx] == -1)
-                unscheduled_tasks_count += this->m_jobs[job_idx][task_idx].get_duration();
-    return unscheduled_tasks_count; 
-}
-\end{lstlisting}
-
+$$
+    cost_h = \sum_{j=0}^{J}{\sum_{t=k}^{T}{D_{j,t}}}
+$$
 La función calcula el tiempo necesario para completar
 las tareas restantes si se ejecutasen una a una
 y retorna esta suma.
@@ -212,7 +190,7 @@ y retorna esta suma.
     Se suman todas las duraciones de las tareas no planificadas:
     $$
     cost_h = \sum_{j=0}^{J}{
-        \sum_{t=0}^{T}{
+        \sum_{t=k}^{T}{
             D_{j,t}
         }
     }
@@ -256,85 +234,17 @@ que puedan alterar el curso del algoritmo.
     primero.
 \end{examplebox}
 
-%\begin{figure}
-%\begin{center}
-%\begin{tikzpicture}[node distance=2cm]
-    %\node (A) [startstop] {Inicio};
-
-    %\node (B) [process, right of=A, xshift=2cm] {
-        %Inicializar \lstinline{g_costs}, \lstinline{f_costs} y \lstinline{open_set}
-    %};
-
-    %\node (C) [decision, below of=B, yshift=-2cm] {
-        %¿Se ha encontrado el objetivo?
-    %};
-
-    %\node (D) [startstop, right of=C, xshift=3.5cm] {
-        %Retornar
-    %};
-
-    %\node (E) [process, left of=C, xshift=-3.5cm] {
-        %Asignar el primer elemento de \lstinline{open_set}
-        %al nodo actual
-    %};
-
-    %\node (F) [process, below of=E, yshift=-1cm] {
-        %Calcular nodos vecinos del nodo actual
-    %};
-
-    %\node (G) [decision, below of=F, yshift=-2cm] {
-        %¿Hay vecinos? 
-    %};
-    
-    %\node (H) [process, below of=G, yshift=-2cm] {
-        %Calcular el coste G del vecino actual
-    %};
-
-    %\node (I) [decision, right of=H, xshift=3.5cm] {
-        %¿Es el mejor coste G que se conoce para este estado?
-    %};
-
-    %\node (J) [process, right of=I, xshift=3.5cm] {
-        %Guardar coste G y nodo en \lstinline{g_costs} y \lstinline{f_costs}
-    %};
-
-    % \node (K) [decision, above of=J, yshift=2cm] {
-        % ¿Existe el nodo en el \lstinline{open_set}?
-    % };
-
-    % \node (L) [process, left of=K, xshift=-3.5cm] {
-        % Insertar en \lstinline{open_set}
-    % };
-
-    % \draw [arrow] (A) -- (B);
-    % \draw [arrow] (B) -- (C);
-    % \draw [arrow] (C) -- node [anchor=north] {Sí} (D);
-    % \draw [arrow] (C) -- node [anchor=north] {No} (E);
-    % \draw [arrow] (E) -- (F);
-    % \draw [arrow] (F) -- (G);
-    % \draw [arrow] (G) -- node [anchor=north west] {No} (C);
-    % \draw [arrow] (G) -- node [anchor=east] {Sí} (H);
-    % \draw [arrow] (H) -- (I);
-    % \draw [arrow] (I) -- node [anchor=north east] {No} (G);
-    % \draw [arrow] (I) -- node [anchor=north] {Sí} (J);
-    % \draw [arrow] (J) -- (K);
-    % \draw [arrow] (K) -- node [anchor=north east] {No} (C);
-    % \draw [arrow] (K) -- node [anchor=north] {Sí} (L);
-    % \draw [arrow] (L) -- (G);
-% \end{tikzpicture}
-% \end{center}
-% \caption{Representación del algoritmo A*}
-% \label{fig:AlgoritmoA*}
-% \end{figure}
 
 \subsubsection{First Come First Serve (FCFS) Solver}
 \index{Optimización A*!Multihilo!First Come First Serve (FCFS) Solver}
 
 Sería posible desarrollar una implementación que paralelice el procesamiento de los nodos,
 asignando uno a cada hilo de forma que para $N$ hilos se procesen $N$ nodos
-de forma simultánea.
-Esta estrategia permite que los hilos procesen los nodos a medida que entran en 
-el \lstinline{open_set} (Véase Figura \ref{fig:RepresentacionFCFS}).
+de forma simultánea (Véase Figura \ref{fig:RepresentacionFCFS}).
+\begin{keynotebox}
+La estrategia FCFS permite que los hilos procesen los nodos a medida que entran en 
+el \lstinline{open_set} .
+\end{keynotebox}
 
 \begin{figure}[h]
     \begin{center}
@@ -550,6 +460,16 @@ vector. Véase figura \ref{fig:RepresentacionBatch}.
     \label{fig:RepresentacionBatch}
 \end{figure}
 
+\begin{keynotebox}
+    La estrategia Batch Solver
+    explora el máximo número posible de nodos de forma simultánea,
+    haciendo que los hilos esperen al resto cuando finalizan de
+    explorar su nodo.
+
+    El máximo número de nodos está limitado por el mínimo entre el
+    número de nodos del \lstinline{open_set} y el número de hilos.
+\end{keynotebox}
+
 \paragraph{Secciones críticas}~
 
 A diferencia de la estrategia FCFS,
@@ -606,6 +526,12 @@ Para resolver este problema, sería necesario que
 los hilos compartiesen alguna estructura de datos
 para que sean conscientes de lo que está calculando cada uno.
 
+\begin{keynotebox}
+    El Recursive Solver es equivalente a ejecutar el algoritmo A*
+    $N$ veces de de forma individual siendo $N$ el número
+    de vecinos del nodo inicial.
+\end{keynotebox}
+
 \pagebreak
 
 \subsubsection{Hash Distributed A* (HDA*) Solver}
@@ -659,12 +585,247 @@ el tiempo de inserción es menor porque tienen un menor tamaño.
             \draw [arrow] (05.north) to node [anchor=east] {\lstinline{insert()}} (00);
             \draw [arrow] (07.north) to node [anchor=east] {\lstinline{insert()}} (02);
             \draw [arrow] (08.north) to node [anchor=east] {\lstinline{insert()}} (03);
-
        \end{tikzpicture}
     \end{center}
     \caption{Representación de la estrategia HDA*}
     \label{fig:RepresentacionHDA}
 \end{figure}
+
+\begin{keynotebox}
+    El Hash Distributed A* Solver es la única estrategia que utiliza
+    un \lstinline{open_set} para cada hilo, reduciendo el tamaño de cada uno
+    y aliviando el principal cuello de botella del algoritmo.
+\end{keynotebox}
+
+\section{FPGA}
+
+Como se indicó en el resumen, una FPGA es un dispositivo capaz de emular
+el comportamiento de un circuito integrado diseñado para resolver un problema
+en particular (ASIC).
+El principal beneficio de una FPGA es que es reprogramable
+mientras que un circuito impreso no se puede modificar una vez producido.
+
+El funcionamiento de una FPGA no se debe confundir con el de un procesador convencional.
+Las CPUs comúnmente encontradas en ordenadores utilizan la arquitectura de Von Neumann
+(Véase Figura \ref{fig:VonNeumann}) para realizar calculos.
+Por otro lado, las FPGAs no utilizan esta arquitectura.
+La principal diferencia se encuentra en la carga de instrucciones:
+Una CPU tiene las instrucciones almacenadas en la memoria RAM
+y se van cargando en la caché para poder ser leídas por la ALU
+a medida se van necesitando.
+Una FPGA no tiene las instrucciones almacenadas en ningún sitio,
+las `instrucciones' están formadas principalmente por  puertas lógicas, registros y
+\italic{Look-up Tables (LUTs)} que están `impresas' en el circuito
+\footnote{
+    A lo largo del documento, se hablará de la FPGA como si fuese un circuito impreso
+    reprogramable.
+    En realidad el dispositivo no tiene impresa ninguna puerta lógica,
+    pero esta forma de verlo facilita mucho el entendimiento del hardware.
+}.
+Por la FPGA sólo `viajan' datos, nunca instrucciones.
+
+\begin{figure}[h]
+    \begin{subfigure}{.5\textwidth}
+        \begin{center}
+            \begin{tikzpicture}[node distance=2cm]
+                \node (00) [process] {Memoria};
+                \node (01) [process, above of=00] {Caché};
+                \node (02) [process, above of=01] {Control};
+                \node (03) [process, right of=02, xshift=2cm] {Registros};
+                \node (04) [process, above of=03] {ALU};
+
+                \draw [darrow] (00) -- (01);
+                \draw [darrow] (01) -- node [anchor=east] {Instrucciones} (02);
+                \draw [darrow] (01.east) to [bend right] node [anchor=north west] {Datos} (03.south);
+                \draw [darrow] (03) -- node [anchor=west] {Datos} (04);
+                \draw [darrow] (02.north) to [bend left] node [anchor=east] {Instrucciones} (04.west);
+            \end{tikzpicture}
+        \end{center}
+        \subcaption{Arquitectura Von Neumann}
+        \label{fig:VonNeumann}
+    \end{subfigure}
+    \begin{subfigure}{.5\textwidth}
+        \begin{center}
+            \begin{tikzpicture}[node distance=2cm]
+                \node (00) [process] {Memoria};
+                \node (01) [process, above of=00] {+};
+                \node (02) [process, left of=01, xshift=-2cm] {+};
+                \node (03) [process, above of=01] {+};
+
+                \draw [arrow] (00) -- (01);
+                \draw [arrow] (00.west) to [bend left] (02);
+                \draw [arrow] (01) -- (03);
+                \draw [arrow] (02) to [bend left] (03);
+                \draw [arrow] (03.east) to [bend left] (00.east);
+            \end{tikzpicture}
+        \end{center}
+        \subcaption{Arquitectura FPGA}
+        \label{fig:FPGA}
+    \end{subfigure}
+\end{figure}
+
+Entonces, los lenguajes en los que se suelen programar las FPGAs (VHDL, Verilog
+\footnote{De ahora en adelante, se mencionará sólo VHDL,
+nótese que VHDL y Verilog son lenguajes que sirven para lo mismo,
+son intercambiables.})
+permiten el uso de puertas lógicas, operaciones matemáticas
+y movimiento de datos entre registros.
+Este acercamiento es de muy bajo nivel, no admite programación orientada a objetos
+ni facilita la abstracción.
+Un programa escrito en estos lenguajes genera un \italic{bitstream}
+que es la información escrita posteriormente en la FPGA.
+Finalmente, las funciones del \italic{bitstream} que están escritas en
+la FPGA pueden ser llamadas desde C/C++.
+
+Alternativamente, se puede escribir código en C/C++ y utilizar una herramienta denominada
+\italic{High Level Synthesizer (HLS)} (Sintetizador de Alto Nivel) que
+transpila código C/C++ a VHDL.
+Una vez generado el código VHDL se puede proceder por los cauces
+correspondientes como si se hubiese escrito el código a mano en VHDL.
+
+Como es de esperar, una solución escrita directamente en VHDL
+tiene la oportunidad de estar mucho más optimizada que una solución transpilada utilizando HLS.
+No obstante, en la mayoría de casos el código generado por HLS
+suele ser lo suficientemente adecuado para cumplir las necesidades del programa.
+En algunos casos de la literatura de este proyecto se ha utilizado
+VHDL (\cite{ZJW20}) y en otros se ha optado por C/C++ y HLS (\cite{NSG17}).
+
+Las operaciones en una FPGA siguen el mismo esquema: Un dato en un registro
+se usa como operando en una operación y el resultado se almacena en otro registro.
+El valor resultante puede ser leído como salida o puede utilizarse como
+factor de otra operación.
+Al conjunto de operaciones se le denomina \italic{pipeline},
+la duración del mismo se mide en ciclos (e.g. número de puertas lógicas)
+y la frecuencia con la que se pueden introducir nuevos datos de entrada
+se denomina intervalo de iniciación.
+Como los valores intermedios se almacenan en registros
+es posible ejecutar la misma operación para varios datos
+de forma casi paralela,
+no es necesario que el dato de entrada permanezca en la entrada hasta finalizar
+la operación.
+
+\begin{figure}[h]
+    \begin{center}
+        \begin{tikzpicture}[node distance=1.5cm]
+            \node (00) [process, fill=red!60] {+ (1)};
+            \node (01) [process, below of=00, right of=00, xshift=2cm, fill=red!60] {+ (2)};
+            \node (11) [process, below of=01, fill=yellow!60] {+ (1)};
+            \node (02) [process, below of=01, right of=01, xshift=2cm, fill=red!60] {+ (3)};
+            \node (12) [process, below of=02, fill=yellow!60] {+ (2)};
+            \node (22) [process, below of=12, right of=12, xshift=2cm, fill=yellow!60] {+ (3)};
+        \end{tikzpicture}
+    \end{center}
+    \caption{Dos operaciones ejecutadas en el mismo \italic{pipeline}.}
+    \label{fig:Pipeline}
+\end{figure}
+
+La figura \ref{fig:Pipeline} muestra una simulación de un \italic{pipeline}
+que realiza tres sumas a los datos de entrada.
+La duración es de tres ciclos, pero es posible ejecutar dos veces la operación
+utilizando tan sólo cuatro ciclos porque el intervalo es sólo de uno.
+Adicionalmente, es posible replicar la impresión de las puertas lógicas
+en distintas áreas de la FPGA, paralelizando el cálculo e incrementando la productividad.
+
+Desde un punto de vista de bajo nivel, el principal desafío de programar una FPGA
+se encuentra en minimizar el intervalo.
+HLS siempre retornará la implementación con el mínimo intervalo posible a menos que se le indique lo contrario.
+No obstante, HLS no modificará el código ni la secuencia de operaciones.
+
+El hecho de que HLS no modifique el código ni la secuencia de operaciones es de vital importancia
+para el desarrollo.
+Esto implica que el programa se debe de escribir de forma que la implementación
+resultante de HLS minimice el intervalo.
+
+\begin{examplebox}
+    El siguiente algoritmo en C:
+    \begin{lstlisting}[language=C]
+for (unsigned int i = 1 ; i < N - 1 ; i++)
+{
+    out[i] = in[i-1] + in[i] + in[i+1];
+}
+    \end{lstlisting}
+    Sería un error transpilar este código en HLS
+    porque en lugar de leer un valor y ejecutar una operación
+    se estan leyendo tres valores y ejecutando una operación.
+    Esto resultaría en un intervalo de tres en lugar de uno,
+    dividiendo en tres la productividad del algoritmo en FPGA.
+
+    En su lugar:
+    \begin{lstlisting}[language=C]
+int pprevious = in[0];
+int previous = in[1];
+for (unsigned int i = 1 ; i < N - 1 ; i++)
+{
+    const int current = in[i + 1];
+    out[i] = pprevious + previous + current;
+    pprevious = previous;
+    previous = current;
+}
+    \end{lstlisting}
+    Esta implementación sólo lee un valor en cada iteración
+    y sustituye los que ya tiene en los registros convenientes.
+    Al transpilar esta solución, se obtendría un algoritmo
+    con un intervalo de un ciclo.
+\end{examplebox}
+
+Como se puede ver, una FPGA puede ser de gran utilidad para
+implementar algunas funciones de un programa que posteriormente
+sean llamadas desde un programa principal.
+De esta forma, es posible centrar la atención de los desarrolladores
+en optimizar las funciones utilizadas en la FPGA para reducir sus
+intervalos.
+Tambień es posible transpilar un programa completo a VHDL
+para que sea ejecutado en una FPGA,
+que sea más rentable una opción o la otra
+es una cuestión dependiente en gran medida
+del programa a implementar y del uso que se tenga pensado darle.
+Es importante tener en cuenta que generalmente una FPGA cuenta con una
+cantidad limitada de memoria, y que si bien existen FPGAs con mayor capacidad,
+éstas suelen tener un coste notablemente más elevado.
+
+\subsection{Síntesis}
+
+Se ha llevado a cabo una síntesis de parte del código C++
+a VHDL con el objetivo de observar principalmente los
+beneficios de utilizar este hardware.
+Adicionalmente este procedimiento también ha resultado
+de utilidad para reconocer que a pesar de la existencia
+de herramientas como HLS,
+la migración de código existente en C++ al entorno de
+la FPGA no es un procedimiento sin inconvenientes. 
+
+La herramienta HLS nos permite seleccionar una única función
+a acelerar en la FPGA.
+Además, esta función no puede estar compuesta por
+estructuras de datos (ni punteros a ellas)
+que contengan punteros,
+limitando nuestro abanico de datos de entrada a
+prácticamente tipos de datos primitivos.
+Si se introduce código C++ (como en el caso de esta
+investigación), debe ser de la versión C++11 o inferior
+ya que muchas características de versiones
+posteriores no están soportadas.
+Finalmente, la función a acelerar no puede ser un método
+de una clase, descalificando la fácil migración
+de cualquier programa que se base en programación orientada
+a objetos.
+
+Lógicamente estas restricciones dificultan la síntesis
+de una función completa encargada de ejecutar el algoritmo A*
+\footnote{Además, debido a la poca capacidad de memoria RAM
+de la FPGA, una implementación de esta función sería capaz
+de procesar problemas de tamaño 5x5x10 aproximadamente
+como máximo.}.
+Alternativamente, se puede sintetizar una función utilizada
+durante la ejecución del algoritmo de forma que sólo esa función
+esté acelerada en la FPGA.
+De las posibles opciones, una mayoría de ellas quedan descartadas
+por no tener el coste computacional suficiente,
+mientras que otras quedan decartadas por cachearse
+tras ser procesadas por primera vez (i.e. funciones hash).
+Por último, queda la posibilidad de acelerar la función encargada
+con insertar elementos en el \lstinline{open_set},
+el principal cuello de botella del programa.
 
 \section{Conjuntos de datos}
 \index{Conjuntos de datos}
@@ -825,17 +986,20 @@ $$ S_{A0,A1} = 1 \rightarrow T_1 = T_0 $$
 $$ S_{A0,A1} > 1 \rightarrow T_1 > T_0 $$ 
 $$ S_{A0,A1} < 1 \rightarrow T_1 < T_0 $$
 
+\begin{keynotebox}
+    Un \italic{speedup} inferior a 1 implica una reducción en el rendimiento.\\
+    Un \italic{speedup} superior a 1 implica un incremento en el rendimiento. 
+\end{keynotebox}
+
 \subsection{\italic{Makespan}}
 \index{Makespan}
 
 El \italic{makespan} es el tiempo necesario para completar
 todos los trabajos de un conjunto de datos,
 es el `resultado' que genera el algoritmo.
-
-Lógicamente, existe un \italic{makespan} óptimo para cada
-conjunto de datos, el mínimo.
-No obstante, el algoritmo desarrollado en este proyecto
-no tiene la certeza de obtener ese resultado siempre.
+Lógicamente, el \italic{makespan} óptimo es el mínimo.
+El algoritmo desarrollado en este proyecto
+no tiene la certeza de obtener el resultado óptimo.
 Por ello, si una implementación $A$ retorna
 resultados con un \italic{makespan} que otra $B$,
 $A$ es mejor que $B$ \footnote{
@@ -843,9 +1007,6 @@ $A$ es mejor que $B$ \footnote{
     son lo suficientemente similares.
 }.
 
-Para calcular el \italic{makespan},
-el programa simplemente utiliza el instante
-más tardío cuando un trabajador queda libre.
 \begin{examplebox}
     Sea la siguiente planificación:
     \begin{itemize}[itemsep=0.25px]
@@ -1292,12 +1453,14 @@ Las funciones heurísticas que subestimen
 el coste H real se denominan `optimistas'
 mientras que las que lo igualan o sobreestiman
 se denominan `pesimistas'.
+\begin{keynotebox}
 Las funciones optimistas retornarán los resultados óptimos
 pero requerirán un mayor tiempo de ejecución ya que
 se verán obligadas a explorar un mayor número de nodos
 mientras que las pesimistas no tienen por qué retornar un
 resultado óptimo y tendrán una mayor velocidad porque
 no explorarán tantas posibilidades.
+\end{keynotebox}
 
 Al extremo de las funciones optimistas
 se encuentra el algoritmo de Dijkstra

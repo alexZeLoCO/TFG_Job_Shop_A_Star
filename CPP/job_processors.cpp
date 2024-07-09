@@ -3,7 +3,7 @@
 struct ReadTaskStruct
 {
     unsigned int duration;
-    std::vector<unsigned int> qualified_workers;
+    unsigned int qualified_worker;
 };
 
 std::vector<std::vector<Task>> get_jobs_from_file(const std::string &filename)
@@ -36,7 +36,7 @@ std::vector<std::vector<Task>> get_jobs_from_file(const std::string &filename)
             {
                 data[data.size() - 1].emplace_back();
                 data[data.size() - 1][data[data.size() - 1].size() - 1].duration = stoi(my_number);
-                data[data.size() - 1][data[data.size() - 1].size() - 1].qualified_workers = std::vector<unsigned int>(1, qualified_worker);
+                data[data.size() - 1][data[data.size() - 1].size() - 1].qualified_worker = qualified_worker;
                 is_worker = true;
             }
         }
@@ -51,7 +51,7 @@ std::vector<std::vector<Task>> get_jobs_from_file(const std::string &filename)
             unsigned int h_cost = 0;
             for (std::size_t unscheduled_task_idx = task_idx; unscheduled_task_idx < currentJob.size(); unscheduled_task_idx++)
                 h_cost += currentJob[unscheduled_task_idx].duration;
-            out[job_idx].emplace_back(currentTask.duration, h_cost, currentTask.qualified_workers);
+            out[job_idx].emplace_back(currentTask.duration, h_cost, currentTask.qualified_worker);
         }
     }
     file.close();
@@ -116,8 +116,7 @@ unsigned int calculate_n_workers(
     unsigned int n_workers = 0;
     for (const std::vector<Task> &job : jobs)
         for (const Task &task : job)
-            for (const unsigned int worker : task.get_qualified_workers())
-                if (worker > n_workers)
-                    n_workers = worker;
+            if (task.get_qualified_worker() > n_workers)
+                n_workers = task.get_qualified_worker();
     return n_workers + 1;
 }

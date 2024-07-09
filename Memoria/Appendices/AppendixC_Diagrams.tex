@@ -1,0 +1,138 @@
+\chapter{Diagramas}{}
+
+\section{Diagrama Pert}
+\label{sec:Pert}
+
+\begin{figure}[h]
+    \begin{center}
+        \begin{tikzpicture}[node distance=4cm]
+            % \node (08) [dot, right of=06, xshift=4cm] {\lstinline{n_2}};
+            % \draw [arrow] (01.south) to node [anchor=west] {\lstinline{pop()}} (04);
+            % \draw [arrow] (04.south) to node [anchor=west] {\lstinline{process()}} (06);
+            % \draw [arrow] (06.west) to [bend left] node [anchor=north] {\lstinline{neighbor_0}} (05);
+
+            \node (A) [dot] {0, 0};
+
+            \node (B) [dot, right of=A, above of=A] {2, 3};
+            \node (C) [dot, right of=A, below of=A] {3, 3};
+
+            \node (D) [dot, right of=B] {7, 8};
+            \node (E) [dot, right of=C] {6, 6};
+
+            \node (F) [dot, right of=D, below of=D] {9, 9};
+
+            \draw [arrow] (A.east) to node [anchor=south east] {T00(2)} (B);
+            \draw [arrow] (A.east) to node [anchor=north east] {T10(3)} (C);
+
+            \draw [arrow] (B.east) to node [anchor=south] {T01(5)} (D);
+            \draw [arrow] (C.east) to node [anchor=north] {T11(3)} (E);
+
+            \draw [arrow] (D.east) to node [anchor=south west] {T02(1)} (F);
+            \draw [arrow] (E.east) to node [anchor=north west] {T12(3)} (F);
+        \end{tikzpicture}
+    \end{center}
+    \caption{Diagrama Pert ejemplo.}
+    \label{fig:ExamplePert}
+\end{figure}
+
+\pagebreak
+\section{Diagrama Gantt}
+\label{sec:Gantt}
+
+\begin{figure}[h]
+    \begin{center}
+        \begin{tikzpicture}[node distance=4cm]
+            \node (T00) [dot] at (0, 12) {T00};
+            \node (T01) [dot] at (0, 10) {T01};
+            \node (T02) [dot] at (0, 8) {T02};
+
+            \node (T10) [dot] at (0, 4) {T10};
+            \node (T11) [dot] at (0, 2) {T11};
+            \node (T12) [dot] at (0, 0) {T12};
+
+            \node (00) [process, fill=yellow!60] at(4, 12) {0 - T00(2) - 2};
+            \node (10) [process, fill=green!60] at(4, 4) {0 - T10(3) - 3};
+
+            \node (01) [process, fill=green!60] at(8, 10) {3 - T01(5) - 8};
+            \node (11) [process, fill=red!60] at(8, 2) {3 - T11(3) - 6};
+
+            \node (02) [process, fill=red!60] at(12, 8) {8 - T02(1) - 9};
+            \node (12) [process, fill=yellow!60] at(12, 0) {6 - T12(3) - 9};
+        \end{tikzpicture}
+    \end{center}
+    \caption{Diagrama Gantt ejemplo.}
+\end{figure}
+
+\pagebreak
+\section{Algoritmo A*}
+
+\begin{figure}[h]
+\begin{center}
+\begin{tikzpicture}[node distance=2cm]
+    \node (A) [startstop] {Inicio};
+
+    \node (B) [process, right of=A, xshift=2cm] {
+        Inicializar \lstinline{g_costs}, \lstinline{f_costs} y \lstinline{open_set}
+    };
+
+    \node (C) [decision, below of=B, yshift=-2cm] {
+        ¿Se ha encontrado el objetivo?
+    };
+
+    \node (D) [startstop, right of=C, xshift=3.5cm] {
+        Retornar
+    };
+
+    \node (E) [process, left of=C, xshift=-3.5cm] {
+        Asignar el primer elemento de \lstinline{open_set}
+        al nodo actual
+    };
+
+    \node (F) [process, below of=E, yshift=-0.5cm] {
+        Calcular nodos vecinos del nodo actual
+    };
+
+    \node (G) [decision, below of=F, yshift=-1.5cm] {
+        ¿Hay vecinos? 
+    };
+    
+    \node (H) [process, below of=G, yshift=-2cm] {
+        Calcular el coste G del vecino actual
+    };
+
+    \node (I) [decision, right of=H, xshift=3.5cm] {
+        ¿Es el mejor coste G que se conoce para este estado?
+    };
+
+    \node (J) [process, right of=I, xshift=3.5cm] {
+        Guardar coste G y nodo en \lstinline{g_costs} y \lstinline{f_costs}
+    };
+
+    \node (K) [decision, above of=J, yshift=2cm] {
+        ¿Existe el nodo en el \lstinline{open_set}?
+    };
+
+    \node (L) [process, left of=K, xshift=-3.5cm] {
+        Insertar en \lstinline{open_set}
+    };
+
+    \draw [arrow] (A) -- (B);
+    \draw [arrow] (B) -- (C);
+    \draw [arrow] (C) -- node [anchor=north] {Sí} (D);
+    \draw [arrow] (C) -- node [anchor=north] {No} (E);
+    \draw [arrow] (E) -- (F);
+    \draw [arrow] (F) -- (G);
+    \draw [arrow] (G) -- node [anchor=north west] {No} (C);
+    \draw [arrow] (G) -- node [anchor=east] {Sí} (H);
+    \draw [arrow] (H) -- (I);
+    \draw [arrow] (I) -- node [anchor=north east] {No} (G);
+    \draw [arrow] (I) -- node [anchor=north] {Sí} (J);
+    \draw [arrow] (J) -- (K);
+    \draw [arrow] (K) -- node [anchor=north east] {No} (C);
+    \draw [arrow] (K) -- node [anchor=north] {Sí} (L);
+    \draw [arrow] (L) -- (G);
+\end{tikzpicture}
+\end{center}
+\caption{Representación del algoritmo A*}
+\label{fig:AlgoritmoA*}
+\end{figure}

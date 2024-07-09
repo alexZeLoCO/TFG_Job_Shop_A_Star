@@ -110,26 +110,19 @@ std::vector<State> State::get_neighbors_of() const
         {
             int unscheduled_task_idx = first_unscheduled_task_idxs[job_idx];
             Task currentTask = this->m_jobs[job_idx][unscheduled_task_idx];
-            std::vector<unsigned int> qualified_workers = currentTask.get_qualified_workers();
-            if (qualified_workers.empty())
-                // This loop does not run on actual datasets, I don't count it for complexity
-                for (std::size_t i = 0; i < this->get_workers_status().size(); i++)
-                    qualified_workers.push_back(int(i));
-            for (const unsigned int worker_id : qualified_workers) // A task only has one qualified worker
-            {
-                int worker_start_time = this->get_workers_status()[worker_id] > task_start_time
-                                            ? this->get_workers_status()[worker_id]
-                                            : task_start_time;
+            unsigned int qualified_worker = currentTask.get_qualified_worker();
+            int worker_start_time = this->get_workers_status()[qualified_worker] > task_start_time
+                                        ? this->get_workers_status()[qualified_worker]
+                                        : task_start_time;
 
-                std::vector<std::vector<int>> new_schedule = this->get_schedule();
-                new_schedule[job_idx][unscheduled_task_idx] = worker_start_time;
+            std::vector<std::vector<int>> new_schedule = this->get_schedule();
+            new_schedule[job_idx][unscheduled_task_idx] = worker_start_time;
 
-                std::vector<int> new_workers_status = this->get_workers_status();
-                new_workers_status[worker_id] = (worker_start_time +
-                                                 currentTask.get_duration());
+            std::vector<int> new_workers_status = this->get_workers_status();
+            new_workers_status[qualified_worker] = (worker_start_time +
+                                                    currentTask.get_duration());
 
-                neighbors.emplace_back(this->m_jobs, new_schedule, new_workers_status);
-            }
+            neighbors.emplace_back(this->m_jobs, new_schedule, new_workers_status);
         }
     }
     return neighbors;
@@ -210,8 +203,7 @@ std::size_t FullHash::operator()(State key) const
         for (const Task &task : job)
         {
             hashValue ^= std::hash<unsigned int>()(task.get_duration()) + 0x9e3779b9 + (hashValue << 6) + (hashValue >> 2);
-            for (const unsigned int qualifiedWorker : task.get_qualified_workers())
-                hashValue ^= std::hash<unsigned int>()(qualifiedWorker) + 0x9e3779b9 + (hashValue << 6) + (hashValue >> 2);
+            hashValue ^= std::hash<unsigned int>()(task.get_qualified_worker()) + 0x9e3779b9 + (hashValue << 6) + (hashValue >> 2);
         }
 
     key.set_full_hash(hashValue);
