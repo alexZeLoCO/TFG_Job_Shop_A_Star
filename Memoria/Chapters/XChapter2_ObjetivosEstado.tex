@@ -4,8 +4,9 @@
 \index{Objetivos y estado actual!Objetivos}
 
 Este proyecto tiene como objetivos principales el estudio y análisis
-del algoritmo A* enfocado a solucionar el Job Shop Scheduling Problem,
-la implementación y optimización del mismo junto con el desarrollo y
+del algoritmo A* enfocado a solucionar el Job Shop Scheduling Problem.
+Se llevará a cabo la implementación y
+optimización del mismo junto con el desarrollo y
 comparación de distintas soluciones paralelas.
 Adicionalmente, se analiza el funcionamiento de una FPGA y
 las posibilidades que tiene este dispositivo de incrementar
@@ -154,15 +155,15 @@ y $W_{i,j}$ es el trabajador que la debe ejecutar.
 El conjunto de datos es el inicio del problema a resolver,
 contiene los datos de entrada necesarios para ejecutar cualquier
 algoritmo.
-
 En particular, está compuesto por un listado de trabajos
 formado por sus tareas, duraciones y trabajadores:
 \begin{enumerate}[start=0, itemsep=0.25px]
     \item (2, A), (5, B), (1, C)
     \item (3, B), (3, C), (3, A)
 \end{enumerate}
-El conjunto está formado por dos trabajos ($J_0, J_1$)
-con tres tareas cada uno ($T_{0,0} \dots T_{1,2}$).
+En este ejemplo, el conjunto de datos estaría formado por dos trabajos
+($J_0, J_1$)
+con tres tareas cada uno ($T_{i,0} \dots T_{i,2}$).
 Las tareas serán ejecutadas por tres trabajadores diferentes (A, B y C).
 
 La tarea $T_{0,0}$ tiene una duración de dos instantes y
@@ -176,7 +177,7 @@ mismo trabajador.
 
 La planificación es un dato propio del estado.
 Indica el instante de tiempo en el que se inicia cada tarea
-de forma que el elemento en posición $i$ del vector se
+de forma que el elemento en la posición $i$ del vector se
 corresponde con el instante de inicio de la tarea $i$:
 $(0, 3, -1)$ indica que la tarea 0 se inicia en el instante 0,
 la 1 en el 3 y la 2 aún está sin planificar.
@@ -187,7 +188,7 @@ utilizando un listado:
     \item $(0, 3, -1)$
     \item $(0, -1, -1)$
 \end{enumerate}
-La T00 se inicia en el instante 0 mientras que la T11 está aún sin planificar.
+La $T_{0,0}$ se inicia en el instante 0 mientras que la $T_{1,1}$ está aún sin planificar.
 
 \subsubsection{Estado trabajadores}
 
@@ -210,13 +211,25 @@ y el 2 a partir del 0
 Aunque esta información no es parte de la salida del programa,
 es necesaria para el cómputo de la solución.
 
-\subsubsection{Función objetivo}
+\subsubsection{Función objetivo, \italic{Makespan}}
+\index{Makespan}
 
 Existen varios objetivos que se pueden buscar con este problema
 de optimización.
 En este caso se selecciona la minimización del \italic{makespan}.
-Esto es, minimizar el tiempo necesario para completar
-todos los trabajos de un conjunto de datos.
+
+El \italic{makespan} es el tiempo necesario para completar
+todos los trabajos de un conjunto de datos,
+es el `resultado' que genera el algoritmo.
+Lógicamente, el \italic{makespan} óptimo es el mínimo.
+Algunas versiones del algoritmo desarrolladas en este proyecto
+no tienen la certeza de obtener el resultado óptimo.
+Por ello, si una implementación $A$ retorna
+un \italic{makespan} menor que otra $B$,
+$A$ es mejor que $B$. \footnote{
+    Suponiendo que el resto de métricas entre $A$ y $B$
+    son lo suficientemente similares.
+}
 
 Dado un estado final (con todas sus tareas planificadas)
 el \italic{makespan} se define como el $cost_g$ de ese estado.
@@ -226,11 +239,25 @@ $$
     \max_{0 < i < W}(w_i)
 $$
 
+\begin{examplebox}
+    Sea la siguiente planificación:
+    \begin{itemize}[itemsep=0.25px]
+        \item Planificación:
+        \begin{enumerate}[itemsep=0.25px]
+            \item (0, 3, 5)
+            \item (0, 3, 3)
+        \end{enumerate}
+        \item Estado trabajadores: (2, 8, 3)
+    \end{itemize}
+
+    El \italic{makespan} es $max([2, 8, 3]) = 8$.
+\end{examplebox}
+
 \pagebreak
 \subsection{Ejemplo}
 \label{ssec:A*Example}
 
-A continuación se muestra un ejemplo de menor tamaño resuelto manualmente
+A continuación se muestra una posible solución para un ejemplo de pequeño tamaño
 donde cada línea corresponde a un trabajo y cada tupla al par (duración, trabajador).
 \begin{enumerate}[start=0, itemsep=0.25px]
     \item (2, A), (5, B), (1, C)
@@ -242,7 +269,12 @@ representan los trabajos y planificación respectivamente.
 En el primero cada nodo representa una tarea,
 los arcos continuos el orden
 y los discontinuos el plan de cada trabajador.
-El segundo diagrama muestra la planificación de cada trabajo.
+El tiempo de inicio
+de cada tarea viene dado por la longitud del camino más largo
+desde $i$ hasta el nodo de esa tarea,
+mientras que el makespan sería el camino más largo entre $i$ y $f$.
+El segundo diagrama se conoce como diagrama de Gantt y
+muestra el instante de inicio, fin y duración de cada trabajo.
 \footnote{
     Otros diagramas: Pert (\ref{sec:Pert}) y Gantt (\ref{sec:Gantt}).
 }

@@ -115,7 +115,7 @@ de optimización. A continuación se describe cada uno de ellos.
     while (not lista_abierta.empty()):
         estado_actual = lista_abierta.pop()
 
-        if (estado_actual == estado_final):
+        if (estado_actual.is_estado_final()):
             return estado_actual
 
         estados_sucesores = calcular_sucesores(estado_actual)
@@ -138,13 +138,26 @@ conocido hasta el momento para el \lstinline{estado_a}.
 
 El resto del algoritmo se encarga de explorar los nodos
 de la lista hasta que esté vacía o el estado actual sea el objetivo.
-Si el estado actual es el objetivo, el algoritmo retorna (ln13).
+Si el estado actual cumple las condiciones necesarias
+para considerarse como final, el algoritmo retorna (ln10-11).
 En otro caso, calcula los sucesores del estado actual
-y los procesa individualmente (ln16).
+y los procesa individualmente (ln13-21).
 Si el coste G del sucesor es mejor que el mejor coste G
 conocido para llegar al estado sucesor
 se graban sus costes y se añade a la lista
-si no estaba ya en ella (ln19-24).
+si no estaba ya en ella (ln17-21).
+
+El método \lstinline{estado.is_estado_final()}
+consiste en una función que dado un estado retorna
+\lstinline{true} si es el estado final y \lstinline{falso}
+si no lo es.
+Lógicamente, esta función tendrá una implementación
+diferente dependiendo del problema que se trate de resolver.
+En este caso se ha implementado de forma que retorne \lstinline{true}
+cuando todas las tareas del estado hayan sido planificadas
+y \lstinline{false} en cualquier otro caso.
+\footnote{Existen otras implementaciones equivalentes como que la longitud de
+\lstinline{calcular_sucesores(estado)} sea \lstinline{0}.}
 
 \pagebreak
 
@@ -155,10 +168,11 @@ si no estaba ya en ella (ln19-24).
 
 El estado es una estructura de datos que describe la situación
 del problema en un punto determinado.
-Estos estados deben ser comparables,
-debe ser posible dados dos estados conocer si son iguales o distintos.
+Estos estados deben ser comparables.
+Es decir, dados dos estados debe ser posible conocer si son iguales o distintos.
 En el caso del JSP, el estado representa una planificación parcial o completa
-en la cual una serie de tareas han sido planificadas:
+en la cual una serie de tareas han sido planificadas.
+En concreto, el estado está compuesto por:
 \begin{itemize}[itemsep=0.25px]
     \item Instante de tiempo en el que comienza cada tarea planificada.
     \item Instante de tiempo futuro en el que cada trabajador estará libre
@@ -181,8 +195,7 @@ las tareas ya planificadas.
 
 El coste H (de ahora en adelante $cost_h$) es el coste estimado desde el estado actual
 hasta el estado final.
-Este coste es calculado utilizando una función heurística,
-que estima el coste.
+Para obtenerlo, se utiliza una función heurística.
 
 Idealmente esta función heurística será una cota inferior cuando el problema
 sea de minimización y una cota superior cuando sea de maximización.
@@ -223,9 +236,9 @@ para la tarea a planificar $T_x$ queda libre.
         \item (2, 0), (5, 1), (1, 2)
         \item (3, 1), (3, 2), (3, 0)
     \end{enumerate}
-    El estado:
+    Donde el estado:
     \begin{itemize}[itemsep=0.25px]
-        \item Planificación:
+        \item Planificación parcial:
         \begin{enumerate}[start=0, itemsep=0.25px]
             \item (0, 3, -1)
             \item (0, -1, -1)
@@ -233,10 +246,10 @@ para la tarea a planificar $T_x$ queda libre.
         \item Estado trabajadores: (2, 8, 0)
     \end{itemize}
     Tiene dos trabajos sin completar, por lo que generará dos sucesores.
-    Uno en el que se planifica la primera tarea sin planificar del trabajo 0.
+    Uno en el que se planifica la primera tarea sin planificar del trabajo $J_0$, $T_{0,2}$.
     \begin{itemize}[itemsep=0.25px]
-        \item Instante en el que se puede iniciar la tarea: $3 + 5 = 8$
-        \item Instante en el que el trabajador está libre: $0$
+        \item Instante en el que finaliza su tarea predecesora ($T_{0,1}$): $3 + 5 = 8$
+        \item Instante en el que el trabajador $2$ está libre: $0$
     \end{itemize}
     Por lo tanto, la tarea comenzará en $max(0, 8) = 8$.
     Y el trabajador estará libre en $8 + 1 = 9$.
@@ -249,10 +262,10 @@ para la tarea a planificar $T_x$ queda libre.
         \item Estado trabajadores: (2, 8, 9)
     \end{itemize}
 
-    Y otro en el que se planifica la primera tarea sin planificar del trabajo 1.
+    Y otro en el que se planifica la primera tarea sin planificar del trabajo $J_1$, $T_{1,1}$.
     \begin{itemize}[itemsep=0.25px]
-        \item Instante en el que se puede iniciar la tarea: $0 + 3 = 3$
-        \item Instante en el que el trabajador está libre: $0$
+        \item Instante en el que finaliza su tarea predecesora ($T_{1,0}$): $0 + 3 = 3$
+        \item Instante en el que el trabajador $2$ está libre: $0$
     \end{itemize}
     Por lo tanto, la tarea comenzará en $max(0, 3) = 3$.
     Y el trabajador estará libre en $3 + 3 = 6$.
@@ -316,7 +329,7 @@ Posteriormente, se realizan comparaciones entre ellas.
 \subsubsection{Arquitectura x86}
 \index{Equipo de Estudio!Arquitectura x86}
 
-Inicialmente, se realiza una implementación del algoritmo utilizando \Python.
+Inicialmente, se realiza una implementación del algoritmo utilizando \Python{}.
 Esta versión permite comprobar rápidamente el correcto funcionamiento del mismo
 así como llevar a cabo pruebas rápidas sin necesidad de compilación y
 estudiar los posibles cuellos de botella del algoritmo.

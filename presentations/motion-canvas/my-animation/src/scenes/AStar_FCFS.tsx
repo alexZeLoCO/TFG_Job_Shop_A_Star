@@ -1,6 +1,8 @@
 import { Reference, all, beginSlide, createRef } from "@motion-canvas/core";
 import { Layout, Line, makeScene2D } from "@motion-canvas/2d";
-import { State } from "./example";
+import { colors } from "../colors";
+import { State } from "../components/diagrams";
+import { Title } from "../components/title";
 
 export type Coordinates = { x: number; y: number };
 
@@ -19,9 +21,9 @@ export default makeScene2D(function* (view) {
       universe[i].push(createRef<State>());
     }
     horLayouts.push(createRef<Layout>());
-    paths[0].push({ x: i, y: i });
-    if (i != 0) lines[0].push(createRef<Line>());
   }
+
+  view.add(<Title text="FCFS SIMULATION" />);
 
   view.add(
     <Layout layout direction="column">
@@ -47,8 +49,8 @@ export default makeScene2D(function* (view) {
     </Layout>
   );
 
-  universe[0][0]().stroke("#32a852");
-  universe[nRows - 1][nRows - 1]().stroke("#fcba03");
+  universe[0][0]().stroke(colors.green);
+  universe[nRows - 1][nRows - 1]().stroke(colors.orange);
 
   paths.push([
     { x: 0, y: 0 },
@@ -58,6 +60,11 @@ export default makeScene2D(function* (view) {
   paths.push([
     { x: 0, y: 0 },
     { x: 0, y: 1 },
+  ]);
+
+  paths.push([
+    { x: 0, y: 0 },
+    { x: 1, y: 1 },
   ]);
 
   paths.push([
@@ -71,8 +78,28 @@ export default makeScene2D(function* (view) {
   ]);
 
   paths.push([
+    { x: 1, y: 1 },
     { x: 2, y: 2 },
-    { x: 3, y: 2 },
+  ]);
+
+  paths.push([
+    { x: 1, y: 2 },
+    { x: 2, y: 3 },
+  ]);
+
+  paths.push([
+    { x: 1, y: 2 },
+    { x: 1, y: 3 },
+  ]);
+
+  paths.push([
+    { x: 2, y: 3 },
+    { x: 3, y: 3 },
+  ]);
+
+  paths.push([
+    { x: 2, y: 2 },
+    { x: 3, y: 3 },
   ]);
 
   paths.push([
@@ -81,13 +108,28 @@ export default makeScene2D(function* (view) {
   ]);
 
   paths.push([
-    { x: 3, y: 3 },
-    { x: 4, y: 3 },
+    { x: 2, y: 2 },
+    { x: 3, y: 2 },
   ]);
 
   paths.push([
-    { x: 3, y: 3 },
+    { x: 2, y: 3 },
+    { x: 1, y: 4 },
+  ]);
+
+  paths.push([
+    { x: 2, y: 3 },
+    { x: 2, y: 4 },
+  ]);
+
+  paths.push([
+    { x: 2, y: 3 },
     { x: 3, y: 4 },
+  ]);
+
+  paths.push([
+    { x: 3, y: 4 },
+    { x: 4, y: 4 },
   ]);
 
   paths.slice(1).forEach((pathGroup: Coordinates[], i: number) => {
@@ -101,8 +143,8 @@ export default makeScene2D(function* (view) {
         <Line
           key={`Line_${lineGroupIdx * 100 + lineIdx}`}
           ref={line}
-          stroke="#fcba03"
           lineWidth={0}
+          stroke={colors.orange}
         />
       ))
     )
@@ -125,25 +167,110 @@ export default makeScene2D(function* (view) {
     })
   );
 
-  yield* beginSlide("CALCULATE PATH");
+  yield* beginSlide("CALCULATE FIRST ITERATON");
   yield* all(
-    ...lines.flatMap((lineGroup: Reference<Line>[], lineGroupIdx: number) =>
-      lineGroup.map((line: Reference<Line>) =>
-        line().lineWidth(
-          5,
-          1 + (lineGroupIdx % 2 === 0 ? lineGroupIdx : lineGroupIdx + 1)
+    ...lines
+      .slice(0, 4)
+      .flatMap((lineGroup: Reference<Line>[], lineGroupIdx: number) =>
+        lineGroup.map((line: Reference<Line>) =>
+          line().lineWidth(
+            5,
+            1 +
+              (lineGroupIdx % 2 === 0 ? lineGroupIdx / 8 : lineGroupIdx / 8 + 1)
+          )
+        )
+      ),
+    ...paths
+      .slice(0, 4)
+      .flatMap((pathGroup: Coordinates[], pathGroupIdx: number) =>
+        pathGroup.map(({ x, y }: Coordinates) =>
+          universe[y][x]().stroke(
+            x === y && y === 0 ? colors.green : colors.cyan,
+            1 +
+              (pathGroupIdx % 2 === 0 ? pathGroupIdx / 8 : pathGroupIdx / 8 + 1)
+          )
+        )
+      ),
+    universe[nRows - 1][nRows - 1]().stroke(colors.orange, 1)
+  );
+  yield* beginSlide("CALCULATE SECOND ITERATION");
+  yield* all(
+    ...lines
+      .slice(4, 7)
+      .flatMap((lineGroup: Reference<Line>[], lineGroupIdx: number) =>
+        lineGroup.map((line: Reference<Line>) =>
+          line().lineWidth(
+            5,
+            1 +
+              (lineGroupIdx % 2 === 0 ? lineGroupIdx / 8 : lineGroupIdx / 8 + 1)
+          )
+        )
+      ),
+    ...paths
+      .slice(4, 7)
+      .flatMap((pathGroup: Coordinates[], pathGroupIdx: number) =>
+        pathGroup.map(({ x, y }: Coordinates) =>
+          universe[y][x]().stroke(
+            x === y && y === 0 ? colors.green : colors.cyan,
+            1 +
+              (pathGroupIdx % 2 === 0 ? pathGroupIdx / 8 : pathGroupIdx / 8 + 1)
+          )
         )
       )
-    ),
-    ...paths.flatMap((pathGroup: Coordinates[], pathGroupIdx: number) =>
-      pathGroup.map(({ x, y }: Coordinates) =>
-        universe[x][y]().stroke(
-          x === y && y === 0 ? "#32a852" : "#03fcf4",
-          1 + (pathGroupIdx % 2 === 0 ? pathGroupIdx : pathGroupIdx + 1)
+  );
+  yield* beginSlide("CALCULATE THIRD ITERATION");
+  yield* all(
+    ...lines
+      .slice(7, 9)
+      .flatMap((lineGroup: Reference<Line>[], lineGroupIdx: number) =>
+        lineGroup.map((line: Reference<Line>) =>
+          line().lineWidth(
+            5,
+            1 +
+              (lineGroupIdx % 2 === 0 ? lineGroupIdx / 8 : lineGroupIdx / 8 + 1)
+          )
+        )
+      ),
+    ...paths
+      .slice(7, 9)
+      .flatMap((pathGroup: Coordinates[], pathGroupIdx: number) =>
+        pathGroup.map(({ x, y }: Coordinates) =>
+          universe[y][x]().stroke(
+            x === y && y === 0 ? colors.green : colors.cyan,
+            1 +
+              (pathGroupIdx % 2 === 0 ? pathGroupIdx / 8 : pathGroupIdx / 8 + 1)
+          )
         )
       )
-    ),
-    universe[nRows - 1][nRows - 1]().stroke("#fcba03", 1)
+  );
+  yield* beginSlide("CALCULATE SOLUTION");
+  yield* all(
+    ...lines
+      .slice(9)
+      .flatMap((lineGroup: Reference<Line>[], lineGroupIdx: number) =>
+        lineGroup.map((line: Reference<Line>) =>
+          line().lineWidth(
+            5,
+            1 +
+              (lineGroupIdx % 2 === 0 ? lineGroupIdx / 8 : lineGroupIdx / 8 + 1)
+          )
+        )
+      ),
+    ...paths
+      .slice(9)
+      .flatMap((pathGroup: Coordinates[], pathGroupIdx: number) =>
+        pathGroup
+          .filter(({ x, y }: Coordinates) => x !== 4 || y !== 4)
+          .map(({ x, y }: Coordinates) =>
+            universe[y][x]().stroke(
+              x === y && y === 0 ? colors.green : colors.cyan,
+              1 +
+                (pathGroupIdx % 2 === 0
+                  ? pathGroupIdx / 8
+                  : pathGroupIdx / 8 + 1)
+            )
+          )
+      )
   );
   yield* beginSlide("END SLIDE");
 });

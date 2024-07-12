@@ -10,39 +10,41 @@ pero a diferencia de lo que muchos se podrían esperar,
 obtener un algoritmo que no se pueda resolver en un tiempo razonable
 es más simple de lo que parece.
 
-La complejidad de un algoritmo se refiere a la diferencia
-en su tiempo de ejecución en función del tamaño de su entrada.
+La complejidad de un algoritmo se refiere a la tasa de variación
+del tiempo de ejecución en función del tamaño de la entrada.
 Entonces, la complejidad es la primera derivada del tiempo
 de ejecución.
 
-Los algoritmos se pueden clasificar en dos categorias, P y NP.
-Aquellos pertenecientes a la primera categoria se pueden resolver
-en un tiempo polinomial,
-mientras que para los problemas NP no se conoce una solución
-con complejidad polinomial.
+La complejidad de un problema viene determininada por la complejidad
+del algoritmo más eficiente que lo resuelve.
+Los problemas son frecuentemente categorizados en P y NP.
+Aquellos pertenecientes a la categoría P son aquellos
+para los cuáles se conoce un algoritmo capaz de resolverlos en tiempo polinomial.
+Los problemas NP son aquellos para los que no se conoce ningún algoritmo
+de complejidad polinomial que los resuelva, pero que dada una posible solución,
+se puede validar en tiempo polinomial.
+Además de estas categorías, podemos destacar los problemas NP-hard.
+Un problema A es NP-hard si todo problema NP B se puede reducir a él polinómicamente.
+Es decir, son al menos tan difíciles como los problemas NP.
 
-Frecuentemente estos problemas son resueltos utilizando
+Frecuentemente los problemas NP-Hard son resueltos utilizando
 tamaños de entrada muy pequeños o algoritmos
 que den un resultado aproximado que es posteriormente
-comparado con el tiempo necesario para obtenerlo.
-Adicionalmente, estos algoritmos se pueden aprovechar del
-paralelismo utilizando varios núcleos de una CPU
-o de hardware específico como GPGPUs.
-
-Resolver este tipo de problemas es de interés en ámbitos
-industriales donde las soluciones podrían ser utilizadas
-para optimizar sus procesos o la creación de nuevos productos.
+contrastado con el tiempo necesario para obtenerlo.
+Este tipo de problemas aparecen frecuentemente en ámbitos industriales.
+En estos casos, su resolución permite optimizar sus procesos o
+crear productos más innovadores.
 En estos entornos industriales es común el uso de
 hardware específico como las FPGA u otros ASIC.
 
-El presente proyecto tiene como objetivo principal 
+Este proyecto tiene como objetivo principal 
 explorar los límites del A*, uno de los algoritmos más
-conocidos con aplicaciones en estos ámbitos industriales
+conocidos con aplicaciones en ámbitos industriales
 y descubrir los beneficios del paralelismo aplicables
 a este algoritmo.
 Adicionalmente, se observará el rendimiento de una implementación
 de la misma solución en una FPGA,
-prestando particular atención a los límites
+atendiendo a los límites
 de este hardware en términos de qué tamaños de problema
 se pueden resolver en un tiempo razonable.
 
@@ -51,18 +53,8 @@ se pueden resolver en un tiempo razonable.
 \section{Alcance}
 \index{Hipótesis de Partida y Alcance!Alcance}
 
-El presente documento describe el problema a resolver en detalle,
-los diferentes algoritmos implementados,
-observaciones sobre los mismos,
-casos de prueba utilizados para obtener métricas de rendimiento
-y observaciones sobre las mismas.
-
-Entre las observaciones tanto de los algoritmos como de las métricas
-obtenidas, se encontrarán razonamientos sobre los resultados así
-como explicaciones de las razones por las cuales un algoritmo
-presenta un rendimiento distinto a otro.
-
-El Job Shop Scheduling Problem es un problema de optimización
+En este proyecto, nos centramos en la resolución del Job Shop Scheduling Problem (JSP).
+El JSP es un problema de optimización
 sobre la planificación de horarios.
 Este es un problema np-hard mundialmente conocido
 por la comunidad científica,
@@ -74,3 +66,20 @@ un algoritmo capaz de recibir como entrada las descripciones de una plantilla
 de trabajadores, un listado de trabajos y tareas a realizar. Puede ser
 aplicable en ámbitos industriales donde la automatización de la creación
 de planificaciones sea de interés.
+
+Para resolver este problema, nos centramos en el algoritmo A*.
+Propondremos varios heurísticos y estrategias de paralelismo
+distintas.
+Finalmente, compararemos los resultados utilizando
+la arquitectura x86 tradicional y FPGAs.
+
+El presente documento describe el problema a resolver en detalle,
+los diferentes algoritmos implementados,
+observaciones sobre los mismos,
+casos de prueba utilizados para obtener métricas de rendimiento
+y observaciones sobre las mismas.
+
+Entre las observaciones tanto de los algoritmos como de las métricas
+obtenidas, se encontrarán razonamientos sobre los resultados así
+como explicaciones de las razones por las cuales un algoritmo
+presenta un rendimiento distinto a otro.

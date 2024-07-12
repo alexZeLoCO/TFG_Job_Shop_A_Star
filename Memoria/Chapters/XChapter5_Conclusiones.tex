@@ -1,6 +1,8 @@
 \Chapter{Conclusiones}{Observaciones y Trabajos futuros}
 
-\section{El algoritmo A*}
+\section{Conclusiones}
+
+\subsection{El algoritmo A*}
 
 El algoritmo A* es de gran utilidad en un gran abanico de ámbitos.
 Realmente, se trata de un algoritmo apto para cualquier problema
@@ -18,7 +20,7 @@ del algoritmo sirve para cualquier problema:
     \item Dado un nodo conocer sus costes G y H.
 \end{itemize}
 
-\section{Principal cuello de botella}
+\subsection{Principal cuello de botella}
 
 Existen tres principales operaciones necesarias para
 ejecutar el algoritmo A*:
@@ -60,10 +62,10 @@ facilitar el uso de varios hilos.
 
 El principal problema del \lstinline{open_set} es que la complejidad de sus operaciones
 incrementa a medida que se añaden más nodos.
-Es posible que otra forma de optimizar esta estructura se encuentre en hallar cómo
-almacenar menos nodos en ella.
+Es posible que otra forma de reducir el tiempo consumido por el \lstinline{open_set}
+sea determinar cómo almacenar menos nodos en ella.
 
-\section{Heurísticos}
+\subsection{Heurísticos}
 
 Como ya se discutió en la sección comparativa con Dijkstra (\ref{sec:ComparativaDijkstra}),
 el diseño de la función heurística es crucial para determinar si la implementación
@@ -76,3 +78,162 @@ propuestas por el algoritmo.
 Comprender las diferencias entre funciones optimistas y pesimistas
 y ser capaz de hallar la función que retorne resultados óptimos en
 el menor tiempo posible es el principal desafío de la implementación de este algoritmo.
+
+\pagebreak
+\subsection{FPGA}
+
+Es indudable que la particular arquitectura de una FPGA
+da la oportunidad de acelerar la ejecución de algunos algoritmos.
+Como se ha observado en el caso de algoritmo A*,
+la implementación producida por HLS no ha sido capaz de
+superar el rendimiento de las implementaciones
+paralelas en CPU cuidadosamente diseñadas a mano.
+
+No obstante, lo más probable es que un diseño de un programa VHDL
+implementado con el mismo cuidado con el que se han diseñado
+los algoritmos paralelos de este documento sea capaz de
+superar el rendimiento del algoritmo en CPU.
+
+\subsection{Paralelismo}
+
+Puede parecer que el problema JSP requiere una gran capacidad de cálculo
+para ser resuelto.
+En realidad, la mayoría de datos relevantes para resolver el problema
+se pueden precalcular antes de la ejecución del problema
+(funciones hash, costes H, costes G),
+reduciendo notablemente la complejidad de obtener los vecinos
+de un nodo.
+El principal efecto de este `atajo' es que la complejidad del algoritmo
+deja de encontrarse en el cálculo y se relocaliza en simples movimientos
+de estados entre el \lstinline{open_set} y estructuras de costes.
+Esto no sucedería si se utilizase un acercamiento funcional
+donde todos los calculos sería de tipo \italic{lazy}
+y no sería posible cachear ningún valor.
+
+El paralelismo, tanto en CPU, como GPGPU y FPGA es de particular
+utilidad cuando es necesario resolver problemas cuyos datos
+son procesados por algún tipo de operación matemática
+Como ya se indicó en el apartado \ref{sec:FPGA},
+el uso de la FPGA requiere tres pasos:
+\begin{enumerate}[itemsep=0.25px]
+    \item Leer un valor de un registro.
+    \item Ejecutar una operación sobre el valor.
+    \item Almacenar el resultado en otro registro.
+\end{enumerate}
+Al aplicar los `atajos' descritos en el párrafo anterior,
+la mayoría de operaciones matemáticas son irrelevantes porque sus resultados
+ya han sido obtenidos.
+Esto elimina el segundo paso,
+reduciendo notablemente los beneficios de cualquier
+herramienta que paralelice el algoritmo.
+
+\pagebreak
+\section{Trabajos futuros}
+
+Este proyecto ha presentado el sistema modular que forma el algoritmo A* y
+para cada módulo se han implementado diferentes alternativas.
+Comprobar empíricamente el funcionamiento de todas las combinaciones posibles
+es una tarea tediosa, sólo la ejecución de las pruebas puede llevar fácilmente una
+semana de espera.
+Describir todas las combinaciones en un documento con una longitud razonable
+es simplemente imposible.
+
+Una de las conclusiones de esta investigación es la importancia del diseño
+de la función heurística, que supera la del paralelismo.
+Primero, sería adecuado realizar un estudio sobre una cantidad de funciones heurísticas
+distintas para distinguir una implementación óptima.
+
+Segundo, sería interesante desarrollar una solución del algoritmo A*
+para un problema que tenga un mayor peso en el cálculo,
+que requiera un mayor número de operaciones para explorar un nodo.
+Esto se puede conseguir de diferentes formas:
+\begin{itemize}[itemsep=0.25px]
+    \item Eliminando el precálculo de datos.
+    \item Desarrollando una implementación con un acercamiento funcional.
+    \item Cambiando el problema JSP por otro.
+\end{itemize}
+
+Tercero, el Recursive Solver no obtiene resultados muy interesantes
+en esta investigación, donde el algoritmo ejecuta varias veces el A*
+monohilo.
+Es posible que si en lugar de ejecutar el A* monohilo se utiliza
+uno de los algoritmos más rápidos sin sincronización (como el HDA*),
+el Recursive Solver sea capaz de obtener resultados en menos tiempo
+y con mejor calidad que si se ejecutase el HDA* sólo una vez.
+De cualquier forma, este estudio requeriría un sistema con un mayor número
+de núcleos, como mínimo 16 para ejecutar el HDA* con 4 hilos de forma
+simultánea 4 veces
+\footnote{Preferiblemente 24 para ejecutar HDA* con 4 hilos 6 veces o 32 para ejecutarlo 8 veces}.
+
+Finalmente, esta investigación ha dado prioridad al rendimiento del programa
+medido en función de su tiempo de ejecución,
+ignorando por completo los efectos en consumo de memoria RAM.
+Sería de interés desarrollar un estudio sobre diferentes implementaciones
+del algoritmo A* atendiendo al consumo de memoria.
+Este estudio estaría relacionado con el segundo ya que para reducir el consumo
+de memoria será necesario eliminar el precálculo o implementar una versión funcional.
+
+\pagebreak
+\section{Crítica retrospectiva}
+
+A lo largo de esta investigación se han tomado decisiones que han facilitado profundamente
+el desarrollo del trabajo.
+Asimismo, otras decisiones han implicado barreras que dificultaron la investigación.
+
+Ha sido un acierto comenzar un prototipo en \Python{},
+ya que aunque esta versión no ha sido observada en los resultados
+debido a su bajo rendimiento,
+ha supuesto una base sobre la que implementar rápidamente
+el algoritmo el A*.
+
+La mayoría del tiempo de desarrollo de este proyecto se ha invertido
+en C++, un lenguaje orientado a objetos similar a Java pero con mucho mayor rendimiento
+y la posibilidad de micro-optimización que ofrecería C.
+Esta decisión ha facilitado notablemente el desarrollo del algoritmo
+en un entorno que permita el paralelismo con 
+\href{https://www.openmp.org/}{OpenMP}\@.
+
+La principal dificultad propuesta por C++ ha sido la síntesis del código
+a VHDL, que no admitía varias clases básicas para la ejecución del algoritmo.
+Tal vez hubiese sido adecuado continuar desarrollando una versión del A*
+en C que se abandonó poco después de iniciar el proyecto
+debido a la falta de una librería estandar que facilite
+estructuras de datos básicas.
+Incluso usando C++, se podría haber dependido
+en mayor medida de punteros y estructuras que de objetos.
+
+Finalmente, las métricas han tenido en cuenta principalmente el \italic{makespan}
+y el tiempo de ejecución.
+Una vez conocido el principal cuello de botella que supone el \lstinline{open_set},
+habría sido de utilidad medir su tamaño ya que esta métrica está
+estrechamente relacionada con el tiempo de ejecución.
+La bibliografía de este documento tiene en cuenta otros datos como el consumo energético,
+que hubiese sido de interés para esta investigación.
+
+\pagebreak
+\section{Tecnologías utilizadas}
+
+\begin{enumerate}[itemsep=0.25px]
+    \item Visual Studio Code: Editor principal: Programas, memoria y presentación.
+    \item Vim: Editor principal: Programas, memoria y presentación.
+    \item Xilinx Vitis HLS (Unified): Transpilador para FPGA.
+    \item Xilinx Vivado: Editor para FPGA.
+    \item TypeScript: Lenguaje de presentación.
+    \item ReactJS: Componentes de presentación.
+    \item Motion Canvas: Librería de presentación.
+    \item Python: Lenguaje de prototipado.
+    \item C++: Lenguaje del programa principal y FPGA.
+    \item C: Lenguaje del programa FPGA (Versión descartada).
+    \item OpenMP: Librería paralelismo CPU.
+    \item LaTeX: Lenguaje de marcas de la memoria\footnote{
+        No se listan el gran número de librerías TeX utilizadas en este proyecto.
+    }.
+    \item BASH: Lenguaje scripting para ejecución de pruebas.
+    \item SSH: Acceso remoto a servidor para ejecución de pruebas.
+    \item GIT: Control de versiones.
+    \item GDB: Depurador C/C++.
+    \item GPROF: Profiler C/C++.
+    \item Address Sanitizer (ASAN): Depurador de fugas de memoria y violaciones de segmento.
+    \item Valgrind: Depurador de fugas de memoria y violaciones de segmento.
+    \item Libreoffice Calc: Hoja de cálculo y gráficas.
+\end{enumerate}

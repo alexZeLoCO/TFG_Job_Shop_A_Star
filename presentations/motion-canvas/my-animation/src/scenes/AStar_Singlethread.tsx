@@ -1,13 +1,17 @@
 import { Reference, all, beginSlide, createRef } from "@motion-canvas/core";
-import { Layout, Line, makeScene2D } from "@motion-canvas/2d";
-import { State } from "./example";
+import { Layout, Line, makeScene2D, Txt } from "@motion-canvas/2d";
+import { Title } from "../components/title";
+import { State } from "../components/diagrams";
+import { colors } from "../colors";
 
 export default makeScene2D(function* (view) {
-  var universe: Reference<State>[][] = [];
-  var horLayouts: Reference<Layout>[] = [];
-  var path: Reference<State>[] = [];
-  var lines: Reference<Line>[] = [];
+  let universe: Reference<State>[][] = [];
+  let horLayouts: Reference<Layout>[] = [];
+  let path: Reference<State>[] = [];
+  let lines: Reference<Line>[] = [];
   const nRows: number = 5;
+
+  view.add(<Title text="A* SINGLETHREAD SIMULATION" />);
 
   for (let i = 0; i < nRows; i++) {
     universe.push([]);
@@ -21,17 +25,27 @@ export default makeScene2D(function* (view) {
 
   view.add(
     lines.map((line: Reference<Line>, i: number) => (
-      <Line ref={line} stroke="#fcba03" lineWidth={0} />
+      <Line key={`line_${i}`} ref={line} stroke={colors.orange} lineWidth={0} />
     ))
   );
 
   view.add(
     <Layout layout direction="column">
-      {universe.map((row: Reference<State>[], idx: number) => {
+      {universe.map((row: Reference<State>[], layoutIdx: number) => {
         return (
-          <Layout ref={horLayouts[idx]} layout direction="row">
-            {row.map((state: Reference<State>) => (
-              <State ref={state} layout margin={40} />
+          <Layout
+            key={`layout_${layoutIdx}`}
+            ref={horLayouts[layoutIdx]}
+            layout
+            direction="row"
+          >
+            {row.map((state: Reference<State>, stateIdx: number) => (
+              <State
+                key={`State_${layoutIdx}_${stateIdx}`}
+                ref={state}
+                layout
+                margin={40}
+              />
             ))}
           </Layout>
         );
@@ -46,19 +60,20 @@ export default makeScene2D(function* (view) {
     ])
   );
 
-  universe[0][0]().stroke("#32a852");
-  universe[nRows - 1][nRows - 1]().stroke("#fcba03");
+  universe[0][0]().stroke(colors.green);
+  universe[nRows - 1][nRows - 1]().stroke(colors.orange);
 
   yield* beginSlide("CALCULATE PATH");
-  yield* all(
-    ...lines.map((line: Reference<Line>, idx: number) =>
-      line().lineWidth(5, 1 + idx)
-    ),
-    ...path
-      .filter((_, idx: number) => idx !== 0 && idx !== nRows - 1)
-      .map((state: Reference<State>, idx: number) =>
-        state().stroke("#03fcf4", 1 + idx)
-      )
-  );
+  yield *
+    all(
+      ...lines.map((line: Reference<Line>, idx: number) =>
+        line().lineWidth(5, idx / 2)
+      ),
+      ...path
+        .filter((_, idx: number) => idx !== 0 && idx !== nRows - 1)
+        .map((state: Reference<State>, idx: number) =>
+          state().stroke(colors.cyan, idx / 2)
+        )
+    );
   yield* beginSlide("END SLIDE");
 });

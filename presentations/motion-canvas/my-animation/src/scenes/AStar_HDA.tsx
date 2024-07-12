@@ -1,7 +1,8 @@
 import { Reference, all, beginSlide, createRef } from "@motion-canvas/core";
-import { Code, Layout, Line, makeScene2D, Rect } from "@motion-canvas/2d";
-import { OpenSet, State } from "./example";
+import { Layout, Line, makeScene2D } from "@motion-canvas/2d";
 import { colors } from "../colors";
+import { State, OpenSet, NeighborsFunction } from "../components/diagrams";
+import { Title } from "../components/title";
 
 export type Coordinates = { x: number; y: number };
 
@@ -10,7 +11,7 @@ export default makeScene2D(function* (view) {
   const getNeighborsBoxXPos: number = openSetsXPos + 1000;
   const lineEndLimit: number = getNeighborsBoxXPos + 450;
   const lineStartLimit: number = -1100;
-  const openSetsYPos: number[] = [-600, -200, 200, 600];
+  const openSetsYPos: number[] = [-400, -200, 200, 400];
   const openSetsColors: string[] = [
     colors.orange,
     colors.green,
@@ -29,10 +30,11 @@ export default makeScene2D(function* (view) {
     [createRef<State>(), createRef<State>()],
   ];
 
+  view.add(<Title text="HDA* SIMULATION" />);
+
   view.add(
     <Layout>
       {openSetsYPos.map((openSetYPos: number, idx: number) => {
-        const offset: number = 0;
         return (
           <>
             <Line
@@ -49,18 +51,6 @@ export default makeScene2D(function* (view) {
               x={openSetsXPos}
               y={openSetYPos}
             />
-            <Rect
-              x={getNeighborsBoxXPos}
-              y={openSetYPos}
-              radius={25}
-              fill="#202020"
-              stroke={openSetsColors[idx]}
-              lineWidth={5}
-              width={500}
-              height={150}
-            >
-              <Code fontSize={28} code={"node->getNeighbors()"} />
-            </Rect>
           </>
         );
       })}
@@ -108,55 +98,57 @@ export default makeScene2D(function* (view) {
   view.add(
     openSetsYPos.map((openSetYPos: number, idx: number) => {
       return (
-        <Rect
+        <NeighborsFunction
           key={`GetNeighborsRect_${idx + 1}`}
           x={getNeighborsBoxXPos}
           y={openSetYPos}
-          radius={25}
-          fill="#202020"
           stroke={openSetsColors[idx]}
-          lineWidth={5}
-          width={500}
-          height={150}
-        >
-          <Code fontSize={28} code={"node->getNeighbors()"} />
-        </Rect>
+        />
       );
     })
   );
 
-  yield* beginSlide("START SLIDE");
-  yield* startingState().position.x(getNeighborsBoxXPos, 1);
-  yield* all(
-    ...nextStates[0].map((nextStateRef: Reference<State>) =>
-      nextStateRef().position.x(lineEndLimit, 1)
-    )
-  );
+  yield * beginSlide("START SLIDE");
+  yield * startingState().position.x(getNeighborsBoxXPos, 1);
+  yield *
+    all(
+      ...nextStates[0].map((nextStateRef: Reference<State>) =>
+        nextStateRef().position.x(lineEndLimit, 1)
+      )
+    );
 
-  // TODO: Fix the timing on these bastards
+  yield* beginSlide("ADD NEIGHBORS TO OPEN SET");
 
-  yield* all(
-    nextStates[0][0]().position.y(-400, 1),
-    nextStates[0][1]().position.y(-400, 1),
-    nextStates[0][2]().position.y(0, 1),
-    nextStates[0][3]().position.y(-400, 1)
-  );
+  yield* nextStates[0][0]().position.y(0, 1);
+
   yield* all(
     nextStates[0][0]().position.x(lineStartLimit, 1),
-    nextStates[0][1]().position.x(lineStartLimit, 1),
-    nextStates[0][2]().position.x(lineStartLimit, 1),
-    nextStates[0][3]().position.x(lineStartLimit, 1)
+    nextStates[0][1]().position.y(0, 1)
   );
+
   yield* all(
     nextStates[0][0]().position.y(openSetsYPos[0], 1),
-    nextStates[0][1]().position.y(openSetsYPos[1], 1),
-    nextStates[0][2]().position.y(openSetsYPos[2], 1),
-    nextStates[0][3]().position.y(openSetsYPos[0], 1)
+    nextStates[0][1]().position.x(lineStartLimit, 1),
+    nextStates[0][2]().position.y(0, 1)
   );
+
   yield* all(
     nextStates[0][0]().position.x(openSetsXPos + 400, 1),
-    nextStates[0][1]().position.x(openSetsXPos + 400, 1),
-    nextStates[0][2]().position.x(openSetsXPos + 400, 1),
-    nextStates[0][3]().position.x(openSetsXPos + 200, 1)
+    nextStates[0][1]().position.y(openSetsYPos[1], 1),
+    nextStates[0][2]().position.x(lineStartLimit, 1),
+    nextStates[0][3]().position.y(0, 1)
   );
+
+  yield* all(
+    nextStates[0][1]().position.x(openSetsXPos + 400, 1),
+    nextStates[0][2]().position.y(openSetsYPos[2], 1),
+    nextStates[0][3]().position.x(lineStartLimit, 1)
+  );
+
+  yield* all(
+    nextStates[0][2]().position.x(openSetsXPos + 400, 1),
+    nextStates[0][3]().position.y(openSetsYPos[0], 1)
+  );
+
+  yield* nextStates[0][3]().position.x(openSetsXPos + 200, 1);
 });

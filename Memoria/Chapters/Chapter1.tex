@@ -483,7 +483,7 @@ Posteriormente, se realizan comparaciones entre ellas.
 \subsubsection{Arquitectura x86}
 \index{Equipo de Estudio!Arquitectura x86}
 
-Inicialmente, se realiza una implementación del algoritmo utilizando \Python.
+Inicialmente, se realiza una implementación del algoritmo utilizando \Python{}.
 Esta versión permite comprobar rápidamente el correcto funcionamiento del mismo
 así como llevar a cabo pruebas rápidas sin necesidad de compilación y
 estudiar los posibles cuellos de botella del algoritmo.
@@ -761,7 +761,7 @@ la literatura.
     %};
     
     %\node (H) [process, below of=G, yshift=-2cm] {
-        %Calcular el coste G del vecino actual
+        %Calcular el coste G del sucesor actual
     %};
 
     %\node (I) [decision, right of=H, xshift=3.5cm] {
@@ -1044,8 +1044,8 @@ La estrategia propuesta en \cite{Zag17} se basa en la ejecución
 simultánea de varias instancias del algoritmo A* en el mismo problema.
 \begin{enumerate}[start=0, itemsep=0.25px]
     \item Calcular vecinos del estado inicial.
-    \item Asignar un hilo a cada vecino.
-    \item Para cada vecino, resolver el problema como si fuese el estado inicial.
+    \item Asignar un hilo a cada sucesor.
+    \item Para cada sucesor, resolver el problema como si fuese el estado inicial.
     \item Recoger resultados obtenidos.
     \item Obtener resultado con menor coste.
     \item Retornar.

@@ -134,11 +134,15 @@ una función heurística de un tipo u otro.
 \index{Optimización A*!Monohilo!Heurísticos!Resultado Óptimo}
 
 La siguiente implementación de la función heurística
-dirigirá al algoritmo hacia nodos solución que sean óptimos
-o se encuentren relativamente cerca del óptimo.
+retorna una cota inferior del coste restante,
+por lo que dirigirá al algoritmo a resultados óptimos
+o que se encuentren relativamente cerca del óptimo.
+
+Sea $J_{j,k}$ el índice de la primera tarea sin planificar
+del trabajo $J_j$:
 $$
     cost_h = max_{0 \leq j \le J}\left(
-        \sum_{t=k}^{T}{D_{j,t}}
+        \sum_{t=J_{j,k}}^{T}{D_{j,t}}
     \right)
 $$
 \begin{examplebox}
@@ -147,12 +151,7 @@ $$
         \item (2, 0), (4, 1), (5, 2)
         \item (5, 3), (2, 4), (1, 5)
     \end{enumerate}
-    La planificación:
-    \begin{enumerate}[itemsep=0.25px]
-        \item (0, 2, -1)
-        \item (0, -1, -1)
-    \end{enumerate}
-    Se calcula la suma de la duración de las tareas no planificadas de cada trabajo:
+    La planificación y suma de la duración de las tareas no planificadas de cada trabajo:
     \begin{enumerate}[itemsep=0.25px]
         \item (0, 2, -1): 5
         \item (0, -1, -1): 3
@@ -166,10 +165,14 @@ $$
 \index{Optimización A*!Monohilo!Heurísticos!Rápido}
 
 La siguiente implementación de la función heurística
-dirigirá al algoritmo hacia cualquier nodo solución
+retorna una cota superior del coste restante,
+por lo que dirigirá al algoritmo hacia cualquier nodo solución
 independientemente de si es óptimo o no.
+
+Sea $J_{j,k}$ el índice de la primera tarea sin planificar
+del trabajo $J_j$:
 $$
-    cost_h = \sum_{j=0}^{J}{\sum_{t=k}^{T}{D_{j,t}}}
+    cost_h = \sum_{j=0}^{J}{\sum_{t=J_{j,k}}^{T}{D_{j,t}}}
 $$
 La función calcula el tiempo necesario para completar
 las tareas restantes si se ejecutasen una a una
@@ -189,11 +192,7 @@ y retorna esta suma.
 
     Se suman todas las duraciones de las tareas no planificadas:
     $$
-    cost_h = \sum_{j=0}^{J}{
-        \sum_{t=k}^{T}{
-            D_{j,t}
-        }
-    }
+    cost_h = \sum_{j=0}^{J}{\sum_{t=J_{j,k}}^{T}{D_{j,t}}}
     = 5 + 2 + 1 = 8
     $$ 
 \end{examplebox}
@@ -203,6 +202,16 @@ y retorna esta suma.
     un algoritmo A* utilizando de ellas tardará varias magnitudes de tiempo más que
     si utilizase la otra aunque retornará resultados notablemente mejores en algunos casos.
 \end{notebox}
+
+\paragraph{Heurístico Dijkstra}~
+\index{Optimización A*!Monohilo!Heurísticos!Dijkstra}
+
+El algoritmo de Dijkstra se puede entender como un caso
+particular del algoritmo A* donde
+el heurístico utilizado siempre retorna cero.
+Esta implementación del heurístico retorna lógicamente
+una cota inferior del coste restante
+por lo que siempre retornará el resultado óptimo.
 
 \pagebreak
 
@@ -236,6 +245,7 @@ que puedan alterar el curso del algoritmo.
 
 
 \subsubsection{First Come First Serve (FCFS) Solver}
+\label{ssec:FCFS}
 \index{Optimización A*!Multihilo!First Come First Serve (FCFS) Solver}
 
 Sería posible desarrollar una implementación que paralelice el procesamiento de los nodos,
@@ -470,6 +480,7 @@ vector. Véase figura \ref{fig:RepresentacionBatch}.
     número de nodos del \lstinline{open_set} y el número de hilos.
 \end{keynotebox}
 
+\pagebreak
 \paragraph{Secciones críticas}~
 
 A diferencia de la estrategia FCFS,
@@ -483,15 +494,16 @@ ahora son ejecutadas por un hilo:
 una al registrar los nodos a explorar y
 otra al retirar los vecinos e insertarlos en el \lstinline{open_set}.
 
+\pagebreak
 \subsubsection{Recursive Solver}
 \index{Optimización A*!Multihilo!Recursive Solver}
 
 La estrategia propuesta en \cite{Zag17} se basa en la ejecución
 simultánea de varias instancias del algoritmo A* en el mismo problema.
-\begin{enumerate}[start=0, itemsep=0.25px]
-    \item Calcular vecinos del estado inicial.
-    \item Asignar un hilo a cada vecino.
-    \item Para cada vecino, resolver el problema como si fuese el estado inicial.
+\begin{enumerate}[itemsep=0.25px]
+    \item Calcular sucesores del estado inicial.
+    \item Asignar un hilo a cada sucesor.
+    \item Para cada sucesor, resolver el problema como si fuese el estado inicial.
     \item Recoger resultados obtenidos.
     \item Obtener resultado con menor coste.
     \item Retornar.
@@ -529,7 +541,7 @@ para que sean conscientes de lo que está calculando cada uno.
 \begin{keynotebox}
     El Recursive Solver es equivalente a ejecutar el algoritmo A*
     $N$ veces de de forma individual siendo $N$ el número
-    de vecinos del nodo inicial.
+    de sucesores del nodo inicial.
 \end{keynotebox}
 
 \pagebreak
@@ -545,7 +557,7 @@ Cada hilo es `propietario' de uno de los \lstinline{open_set}
 y por consecuente, de los nodos que estén contenidos
 dentro del mismo.
 Cada hilo está encargado de explorar los nodos de su
-\lstinline{open_set} y de añadir sus vecinos
+\lstinline{open_set} y de añadir sus sucesores
 al \lstinline{open_set} correspondiente.
 
 El rendimiento de este acercamiento depende en gran medida de la
@@ -591,6 +603,14 @@ el tiempo de inserción es menor porque tienen un menor tamaño.
     \label{fig:RepresentacionHDA}
 \end{figure}
 
+\begin{notebox}
+    Al igual que la implementación FCFS (\ref{ssec:FCFS}),
+    el HDA* no tiene sincronización entre hilos por lo que
+    dos ejecuciones distintas pueden retornar resultados
+    diferentes y por tanto tampoco garantiza retornar
+    el resultado óptimo.
+\end{notebox}
+
 \begin{keynotebox}
     El Hash Distributed A* Solver es la única estrategia que utiliza
     un \lstinline{open_set} para cada hilo, reduciendo el tamaño de cada uno
@@ -598,6 +618,7 @@ el tiempo de inserción es menor porque tienen un menor tamaño.
 \end{keynotebox}
 
 \section{FPGA}
+\label{sec:FPGA}
 
 Como se indicó en el resumen, una FPGA es un dispositivo capaz de emular
 el comportamiento de un circuito integrado diseñado para resolver un problema
@@ -607,7 +628,7 @@ mientras que un circuito impreso no se puede modificar una vez producido.
 
 El funcionamiento de una FPGA no se debe confundir con el de un procesador convencional.
 Las CPUs comúnmente encontradas en ordenadores utilizan la arquitectura de Von Neumann
-(Véase Figura \ref{fig:VonNeumann}) para realizar calculos.
+(Véase Figura \ref{fig:VonNeumann}) para realizar cálculos.
 Por otro lado, las FPGAs no utilizan esta arquitectura.
 La principal diferencia se encuentra en la carga de instrucciones:
 Una CPU tiene las instrucciones almacenadas en la memoria RAM
@@ -652,11 +673,11 @@ Por la FPGA sólo `viajan' datos, nunca instrucciones.
                 \node (02) [process, left of=01, xshift=-2cm] {+};
                 \node (03) [process, above of=01] {+};
 
-                \draw [arrow] (00) -- (01);
-                \draw [arrow] (00.west) to [bend left] (02);
-                \draw [arrow] (01) -- (03);
-                \draw [arrow] (02) to [bend left] (03);
-                \draw [arrow] (03.east) to [bend left] (00.east);
+                \draw [arrow] (00) -- node [anchor=east] {Datos} (01);
+                \draw [arrow] (00.west) to [bend left] node [anchor=east] {Datos} (02);
+                \draw [arrow] (01) -- node [anchor=east] {Datos} (03);
+                \draw [arrow] (02) to [bend left] node [anchor=south east] {Datos} (03);
+                \draw [arrow] (03.east) to [bend left] node [anchor=west] {Datos} (00.east);
             \end{tikzpicture}
         \end{center}
         \subcaption{Arquitectura FPGA}
@@ -788,7 +809,7 @@ cantidad limitada de memoria, y que si bien existen FPGAs con mayor capacidad,
 Se ha llevado a cabo una síntesis de parte del código C++
 a VHDL con el objetivo de observar principalmente los
 beneficios de utilizar este hardware.
-Adicionalmente este procedimiento también ha resultado
+Adicionalmente este procedimiento ha resultado
 de utilidad para reconocer que a pesar de la existencia
 de herramientas como HLS,
 la migración de código existente en C++ al entorno de
@@ -826,6 +847,37 @@ tras ser procesadas por primera vez (i.e. funciones hash).
 Por último, queda la posibilidad de acelerar la función encargada
 con insertar elementos en el \lstinline{open_set},
 el principal cuello de botella del programa.
+
+\pagebreak
+\subsection{Kernel}
+
+Se ha decidido escribir una versión del algoritmo A*
+monohilo en una función tradicional de forma que sea
+sintetizable.
+Entre las principales diferencias se encuentran los parámetros
+ya que no se pueden utilizar las estructuras de datos vistas
+hasta ahora.
+
+\begin{lstlisting}[language=C++,caption=Prototipo del kernel a sintetizar.]
+    void kernel_astar_foo(
+        unsigned int* in_jobDurations,
+        unsigned int* in_jobQualifiedWorkers,
+        unsigned int* in_size,
+        unsigned int* in_nQualifiedWorkers,
+        unsigned int* out_makespan
+    );
+\end{lstlisting}
+
+Como se puede ver, la función a sintetizar (denominada kernel)
+recibe únicamente parámetros de tipo \lstinline{unsigned int*}.
+La mayoría de ellos están precedidos de \lstinline{in_}
+ya que son datos de entrada,
+pero también se pasa la dirección a un \lstinline{out_makespan}
+que es el resultado del algoritmo.
+Al igual que una GPGPU, la FPGA no tiene acceso a la memoria RAM
+de la CPU directamente, por lo que hay que utilizar punteros
+\footnote{En una GPGPU el proceso es algo más tedioso, teniendo que copiar
+manualmente de la memoria de la CPU a la de la GPGPU.}.
 
 \section{Conjuntos de datos}
 \index{Conjuntos de datos}
@@ -912,23 +964,31 @@ Se han utilizado 3 equipos diferentes para tomar y contrastar las mediciones.
 \end{center}
 
 \pagebreak
+\subsection{FPGA}
+
+Se ha utilizado una FPGA Zynq-7000 (C7Z010-1CLG400C)
+en una placa Digilent Inc. ZYBO Z7 10 para realizar las mediciones
+en este proyecto.
+Este hardware en específico cuenta con un gigabyte the memoria RAM,
+y un procesador ARM Cortex A9 de dos núcleos
+que no se utiliza en esta investigación.
+Una descripción más detallada del dispositivo en cuestión
+puede encontrarse en la
+\href{
+    https://digilent.com/reference/programmable-logic/zybo-z7/start?redirect=1
+}{
+    (HTTPS) referencia de Digilent Inc.
+}
+
 
 \section{Método de medición}
 
-Todas las versiones imprimen por salida estándar datos que posteriormente son
-procesados en formato CSV:
-
-\begin{itemize}[itemsep=0.25px]
-    \item Lenguaje
-    \item Número de hilos
-    \item Porcentaje del trabajo resuelto
-    \item Trabajos
-    \item Tareas
-    \item Trabajadores
-    \item Tiempo de ejecución
-    \item Planificación
-    \item \italic{Makespan}
-\end{itemize}
+Todas las versiones del programa imprimen por salida estándar datos que posteriormente
+son procesados en formato CSV.
+Para evitar valores atípicos, cada algoritmo se ejecuta varias veces.
+En el caso de versiones lentas se han tomado cinco mediciones por cada versión
+mientras que en el caso de las más veloces se han tomado cien mediciones por cada versión.
+La recolección de todos estos datos puede llevar aproximadamente 72 horas (tres días).
 
 La alta complejidad del JSP implica que un mínimo aumento en el tamaño del problema
 puede implicar que el algoritmo no finalice su ejecución en un tiempo polinomial.
@@ -946,7 +1006,8 @@ De esta forma, de una única ejecución se podría obtener:
     \item Tiempo necesario para resolver el $100\percentsign$ del problema.
 \end{itemize}
 
-\section{Métricas}
+\pagebreak
+\subsection{Métricas}
 
 A continuación se listan las diferentes métricas observadas a la hora
 de estudiar y criticar las implementaciones del algoritmo:
@@ -962,9 +1023,9 @@ de estudiar y criticar las implementaciones del algoritmo:
     }.
 \end{itemize}
 
-\subsection{\italic{Speedup}}
 \index{Speedup}
-
+El \italic{speedup} es una métrica utilizada para medir
+la aceleración de un algoritmo frente a otro.
 Sean $T_1$ y $T_0$ dos métricas del tiempo de ejecución
 de dos algoritmos distintos ($A0$ y $A1$),
 el \italic{speedup} del algoritmo $A0$ respecto al $A1$ ($S_{A0,A1}$) es:
@@ -990,36 +1051,6 @@ $$ S_{A0,A1} < 1 \rightarrow T_1 < T_0 $$
     Un \italic{speedup} inferior a 1 implica una reducción en el rendimiento.\\
     Un \italic{speedup} superior a 1 implica un incremento en el rendimiento. 
 \end{keynotebox}
-
-\subsection{\italic{Makespan}}
-\index{Makespan}
-
-El \italic{makespan} es el tiempo necesario para completar
-todos los trabajos de un conjunto de datos,
-es el `resultado' que genera el algoritmo.
-Lógicamente, el \italic{makespan} óptimo es el mínimo.
-El algoritmo desarrollado en este proyecto
-no tiene la certeza de obtener el resultado óptimo.
-Por ello, si una implementación $A$ retorna
-resultados con un \italic{makespan} que otra $B$,
-$A$ es mejor que $B$ \footnote{
-    Suponiendo que el resto de métricas entre $A$ y $B$
-    son lo suficientemente similares.
-}.
-
-\begin{examplebox}
-    Sea la siguiente planificación:
-    \begin{itemize}[itemsep=0.25px]
-        \item Planificación:
-        \begin{enumerate}[itemsep=0.25px]
-            \item (0, 3, 5)
-            \item (0, 3, 3)
-        \end{enumerate}
-        \item Estado trabajadores: (2, 8, 3)
-    \end{itemize}
-
-    El \italic{makespan} es $max([2, 8, 3]) = 8$.
-\end{examplebox}
 
 \section{Resultados y Análisis}
 \index{Resultados}
@@ -1069,10 +1100,12 @@ algoritmos.
     \label{fig:Runtime_One_Problem_Linear}
 \end{figure}
 
-Como se puede ver, el diagrama es de poca utilidad debido a la
-complejidad del problema.
+Como se puede ver, el diagrama es de poca utilidad
+para comparar algoritmos
+debido a la complejidad del problema.
 Para poder observar con mejor los resultados,
-se utiliza un eje vertical con una escala logarítmica
+en las siguientes secciones se utilizan frencuentemente
+gráficas con ejes verticales en escala logarítica
 (figura \ref{fig:Runtime_One_Problem_Log}).
 
 \begin{figure}[h]
@@ -1083,7 +1116,7 @@ se utiliza un eje vertical con una escala logarítmica
 \end{figure}
 
 Estas observaciones verifican que la complejidad del problema
-a resolver es cuadrática, como era de esperar.
+a resolver es factorial, como era de esperar.
 
 \begin{notebox}
     Este capítulo contiene diversas gráficas de las métricas obtenidas,
@@ -1094,68 +1127,87 @@ a resolver es cuadrática, como era de esperar.
 \subsection{Comparativa de heurísticos}
 \index{Resultados!Heurísticos}
 
+\subsubsection{Cotas Inferior v. Superior}
+
 Como ya se discutió en la sección sobre optimización (\ref{ssec:Heuristicos}),
 existen varias implementaciones de la función heurística que da al algoritmo
 A* su particular comportamiento de ir `dirigido' hacia la solución.
 En esta investigación se han implementado dos heurísticos:
-uno de ellos busca una solución que se acerque a la óptima lo máximo posible
-mientras que el otro busca la solución priorizando la velocidad del algoritmo.
-A continuación se comparan los heurísticos utilizando la implementación paralela HDA*.
+uno de ellos es una cota inferior del coste restante mientras que
+el otro es una cota superior.
+El heurístico de cota inferior busca una solución que se acerque a la óptima lo máximo posible
+mientras que el de cota superior busca la solución priorizando la velocidad del algoritmo.
+A continuación se comparan los heurísticos utilizando el
+$50\percentsign$ del conjunto \lstinline{abz5.csv} (5x5x10).
 
 En primer lugar se observa que existe un limitado número de soluciones
 propuestas, las más comunes siendo también las más bajas: 452 y 472.
 Respecto al tiempo de ejecución, las pruebas que utilizan el heurístico rápido
 reducen el tiempo de ejecución en varias magnitudes.
 
-\begin{figure}[h]
-    \begin{subfigure}{.5\textwidth}
-        \begin{center}
-            \includegraphics[width=\textwidth]{Media/Ch2/Makespan_8_Heuristics.png}
-            \subcaption{\italic{Makespan} con 8 hilos.}
-        \end{center}
-    \end{subfigure}
-    \begin{subfigure}{.5\textwidth}
-        \begin{center}
-            \includegraphics[width=\textwidth]{Media/Ch2/Runtime_8_Heuristics.png}
-            \subcaption{Tiempo de ejecución con 8 hilos.}
-        \end{center}
-    \end{subfigure}
-    \caption{Métricas de heurísticos con 8 hilos.}
-    \label{fig:Heuristico8}
-\end{figure}
+Aquellas implementaciones con sincronización (que retornan siempre el mismo resultado)
+muestran una mayor precisión que aquellas que no (FCFS y HDA*).
+Los algoritmos sin sincronización no se deberían utilizar junto
+al heurístico rápido ya que la pérdida en precisión no
+compensa el \italic{speedup}.
+En los algoritmos con sincronización sin embargo sí existen
+argumentos para sopesar el uso del heurístico rápido ya que
+la pérdida en precisión podría compensar con creces
+el \italic{speedup}.
 
-\begin{figure}[h]
-    \begin{subfigure}{.5\textwidth}
-        \begin{center}
-            \includegraphics[width=\textwidth]{Media/Ch2/Makespan_4_Heuristics.png}
-            \subcaption{\italic{Makespan} con 4 hilos.}
-        \end{center}
-    \end{subfigure}
-    \begin{subfigure}{.5\textwidth}
-        \begin{center}
-            \includegraphics[width=\textwidth]{Media/Ch2/Runtime_4_Heuristics.png}
-            \subcaption{Tiempo de ejecución con 4 hilos.}
-        \end{center}
-    \end{subfigure}
-    \caption{Métricas de heurísticos con 4 hilos.}
-    \label{fig:Heuristico4}
-\end{figure}
+\begin{keynotebox}
+    La principal conclusión de las siguientes observaciones es que
+    el heurístico rápido puede ser considerado sólo cuando
+    se utilizan algoritmos monohilo o
+    con sincronización.
+    Y siempre haciendo observaciones previas
+    para comprobar que el tamaño del problema no es demasiado grande
+    ya que a mayor el tamaño del problema, peores los resultados.
+\end{keynotebox}
 
-\begin{figure}[h]
+\begin{figure}[H]
     \begin{subfigure}{.5\textwidth}
         \begin{center}
-            \includegraphics[width=\textwidth]{Media/Ch2/Makespan_1_Heuristics.png}
-            \subcaption{\italic{Makespan} con 1 hilo.}
+            \includegraphics[width=\textwidth]{Media/Ch2/XMakespan_1_Heuristics.png}        
         \end{center}
+        \subcaption{\italic{Makespan} heurísticos 1 hilo.}
+        \label{fig:Heuristico1}
     \end{subfigure}
     \begin{subfigure}{.5\textwidth}
         \begin{center}
-            \includegraphics[width=\textwidth]{Media/Ch2/Runtime_1_Heuristics.png}
-            \subcaption{Tiempo de ejecución con 1 hilo.}
+            \includegraphics[width=\textwidth]{Media/Ch2/XRuntime_1_Heuristics.png}        
         \end{center}
+        \subcaption{Tiempo de ejecución heurísticos 1 hilo.}
     \end{subfigure}
-    \caption{Métricas de heurísticos con 1 hilo.}
-    \label{fig:Heuristico1}
+    \vskip\baselineskip
+    \begin{subfigure}{.5\textwidth}
+        \begin{center}
+            \includegraphics[width=\textwidth]{Media/Ch2/XMakespan_4_Heuristics.png}        
+        \end{center}
+        \subcaption{\italic{Makespan} heurísticos 4 hilos.}
+        \label{fig:Heuristico4}
+    \end{subfigure}
+    \begin{subfigure}{.5\textwidth}
+        \begin{center}
+            \includegraphics[width=\textwidth]{Media/Ch2/XRuntime_4_Heuristics.png}        
+        \end{center}
+        \subcaption{Tiempo de ejecución heurísticos 4 hilos.}
+    \end{subfigure}
+    \vskip\baselineskip
+    \begin{subfigure}{.5\textwidth}
+        \begin{center}
+            \includegraphics[width=\textwidth]{Media/Ch2/XMakespan_8_Heuristics.png}        
+        \end{center}
+        \subcaption{\italic{Makespan} heurísticos 8 hilos.}
+        \label{fig:Heuristico8}
+    \end{subfigure}
+    \begin{subfigure}{.5\textwidth}
+        \begin{center}
+            \includegraphics[width=\textwidth]{Media/Ch2/XRuntime_8_Heuristics.png}        
+        \end{center}
+        \subcaption{Tiempo de ejecución heurísticos 8 hilos.}
+    \end{subfigure}
+    \caption{Métricas de heurísticos.}
 \end{figure}
 
 Analizandolas por separado, las ejecuciones que utilizan el heurístico lento
@@ -1204,7 +1256,13 @@ Por ello, el heurístico rápido se podría considerar únicamente para
 resolver problemas de menor tamaño e incluso en esos casos
 se debería tener en cuenta su falta de precisión.
 
-\subsubsection{Comparativa con Random Solver}
+\begin{notebox}
+    A menos que se indique lo contrario,
+    las pruebas ejecutadas en esta investigación utilizan el heurístico de
+    cota inferior ya que es el que retorna resultados óptimos.
+\end{notebox}
+
+\subsubsection{Random Solver}
 
 El heurístico rápido obtiene resultados cuya calidad es razonable
 únicamente cuando se tiene en cuenta la velocidad con la que
@@ -1215,7 +1273,8 @@ esto es, selecciona una tarea cualquiera y la introduce en el plan.
 Como el nombre del \italic{solver} indica, la planificación
 que retorna este algoritmo es aleatoria.
 Utilizamos estos resultados para criticar el \italic{makespan}
-del heurístico rápido.
+de una de las peores lecutras,
+la del heurístico rápido en el algoritmo HDA* con cuatro hilos.
 
 \begin{figure}[h]
     \centering
@@ -1236,155 +1295,9 @@ margen de error mucho menor.
 Entonces, aunque los resultados del heurístico rápido no
 sean óptimos, son mejores que crear una planificación aleatoria.
 
-\subsection{Cuellos de botella en secciones críticas}
-\index{Resultados!Cuellos de botella}
-
-Los algoritmos que utilizan estructuras de datos compartidas
-para almacenar los nodos y sus costes se ven gravemente
-afectadas cuando el tamaño de estas estructuras incrementa.
-Como esta información es compartida por todos los hilos,
-es necesario acceder a ella de forma serializada,
-reduciendo notablemente el \italic{speedup}.
-
-En algunos casos extremos es posible incluso
-que versiones monohilo del mismo algoritmo
-tengan mejor rendimiento que versiones paralelas.
-Nótese que el \italic{speedup} del algoritmo FCFS
-cuando se utilizan varios hilos (respecto a un hilo solo)
-es inferior a $1$.
-(Véase figura \ref{fig:SpeedupFCFS}).
-
-\begin{figure}[h]
-    \begin{subfigure}{.5\textwidth}
-        \begin{center}
-            \includegraphics[width=\textwidth]{Media/Ch2/Runtime_FCFS_Log.png}
-            \subcaption{Tiempo de ejecución de FCFS.}
-        \end{center}
-    \end{subfigure}
-    \begin{subfigure}{.5\textwidth}
-        \begin{center}
-            \includegraphics[width=\textwidth]{Media/Ch2/Speedup_FCFS.png}
-            \subcaption{\italic{Speedup} de FCFS.}
-            \label{fig:SpeedupFCFS}
-        \end{center}
-    \end{subfigure}
-    \caption{Métricas de paralelismo en FCFS.}
-    \label{fig:ParalelismoFCFS}
-\end{figure}
-
-Por otro lado, algoritmos como el HDA*
-que utilizan una estructura de datos privada para cada hilo
-no ven sus tareas serializadas,
-incrementando notablemente el \italic{speedup}
-(Véase figura \ref{fig:ParalelismoHDA}).
-
-\begin{figure}[h]
-    \begin{center}
-        \includegraphics[width=\textwidth]{Media/Ch2/Speedup_One_Problem.png}
-    \end{center}
-    \caption{\italic{Speedup} de HDA*.}
-    \label{fig:ParalelismoHDA}
-\end{figure}
-
-Nótese que al inicio del problema (aproximadamente hasta completar el $20\percentsign$)
-la versión monohilo de los algoritmos es más rápida que cualquier multihilo.
-Esto se debe a que para tamaños de problema muy pequeños
-el coste de crear $N$ hilos es superior al de resolver el problema
-utilizando uno sólo.
-
-Si se observa el \italic{speedup} al final del problema,
-la versión con cuatro hilos tiene un \italic{speedup}
-de $3.5$ mientras que la de ocho tiene $5.5$.
-Esto implica que al utilizar cuatro hilos,
-el algoritmo ha sido capaz de aprovecharlos casi al máximo
-ya que el tiempo de ejecución casi se reduce en 4
-veces.
-Mientras tanto, al utilizar 8 hilos el algoritmo
-no ha sido capaz de rentabilizarlos en la misma proporción.
-Este déficit podría deberse a que el tamaño del problema
-es demasiado pequeño para aprovechar la cantidad de hilos
-o podría deberse al propio diseño del algoritmo.
-
-\subsection{Comparativa de algoritmos}
-\index{Resultados!Comparativa de algoritmos}
-
-Como es de esperar, el rendimiento monohilo de todas
-las implementaciones es el mismo.
-Todas las implementaciones están diseñadas de forma
-que al ser ejecutadas con un sólo hilo
-el algoritmo sea el A* básico.
-
-\begin{figure}[h]
-    \begin{center}
-        \includegraphics[width=\textwidth]{Media/Ch2/Runtime_All_Algorithms_1.png}
-    \end{center}
-    \caption{Tiempo de ejecución de todos los algoritmos (1 hilo).}
-    \label{fig:MetricasSinglethread}
-\end{figure}
-
-\begin{figure}[h]
-    \begin{subfigure}{.5\textwidth}
-        \begin{center}
-            \includegraphics[width=\textwidth]{Media/Ch2/Runtime_All_Algorithms_4.png}
-            \subcaption{Tiempo de ejecución de todos los algoritmos (4 hilos).}
-        \end{center}
-    \end{subfigure}
-    \begin{subfigure}{.5\textwidth}
-        \begin{center}
-            \includegraphics[width=\textwidth]{Media/Ch2/Speedup_All_Algorithms_4.png}
-            \subcaption{\italic{Speedup} de todos los algoritmos (4 hilos).}
-        \end{center}
-    \end{subfigure}
-    \caption{Métricas con 4 hilos.}
-    \label{fig:Metricas4Thread}
-\end{figure}
-
-Al utilizar cuatro hilos (figura \ref{fig:Metricas4Thread}), se puede comenzar a ver una diferencia clara
-en el rendimiento del algoritmo HDA*, que obtiene un \italic{speedup}
-de casi 4.
-
-\begin{figure}[h]
-    \begin{subfigure}{.5\textwidth}
-        \begin{center}
-            \includegraphics[width=\textwidth]{Media/Ch2/Runtime_All_Algorithms_8.png}
-            \subcaption{Tiempo de ejecución de todos los algoritmos (8 hilos).}
-        \end{center}
-    \end{subfigure}
-    \begin{subfigure}{.5\textwidth}
-        \begin{center}
-            \includegraphics[width=\textwidth]{Media/Ch2/Speedup_All_Algorithms_8.png}
-            \subcaption{\italic{Speedup} de todos los algoritmos (8 hilos).}
-        \end{center}
-    \end{subfigure}
-    \caption{Métricas con 8 hilos.}
-    \label{fig:Metricas8Thread}
-\end{figure}
-
-Al utilizar ocho hilos (figura \ref{fig:Metricas8Thread}), el algoritmo HDA* incremente aún más su diferencia
-en el tiempo de ejecución con respecto al resto de algoritmos,
-aunque esta vez el \italic{speedup} fluctua más.
-De cualquier forma, parece ser capaz de alcanzar casi 8.
-
-La principal conclusión de estas observaciones es que
-(al menos en los conjuntos de datos observados)
-el paralelismo es sólo rentable si se implementa el HDA*.
-En el resto de casos, el paralelismo sólo sirve para
-gastar núcleos y ciclos de CPU a cambio de nada.
-
-\begin{notebox}
-    En la inmensa mayoría de observaciones realizadas,
-    el algoritmo Batch Solver
-    ha sido capaz de resolver el $30\percentsign$ del problema
-    en menos tiempo que cualquier otro algoritmo.
-    Esta reducción de tiempo se debe a que este algoritmo ejecuta el A*
-    tantas veces como hilos haya disponibles de forma simultánea,
-    facilitando la obtención de planificaciones profundas más rápido. 
-    En otras palabras, el algoritmo es más veloz al iniciar el problema
-    pero es más lento al final.
-\end{notebox}
-
-\subsection{Comparativa con Dijkstra}
-\index{Resultados!Comparativa con Dijkstra}
+\pagebreak
+\subsubsection{Dijkstra}
+\index{Resultados!Dijkstra}
 \label{sec:ComparativaDijkstra}
 
 Como se indicó brevemente al inicio de este documento (Subsección \ref{ssec:AlgoritmoA*}),
@@ -1394,6 +1307,10 @@ heurística utilizada para seleccionar el siguiente nodo a explorar.
 Entonces, se podría decir que el algoritmo de Dijkstra es una
 versión particular del algoritmo A* donde la función heurística
 retorna siempre 0.
+
+En esta subsección se ha estudiado el rendimiento del algoritmo de Dijkstra
+y los diferentes A* utilizando el heurístico de cota inferior,
+que retorna resultados óptimos a cambio de un mayor tiempo de ejecución.
 
 La principal conclusión obtenida de las siguientes observaciones 
 (Figura \ref{fig:Speedup_Dijkstra}) es que el \italic{speedup}
@@ -1411,6 +1328,19 @@ utilizando Dijkstra
     desvirtuando la medición.
 }.
 
+\begin{notebox}
+    Nótese que el \italic{speedup} entre A* (utilizando el heurístico lento)
+    y Dijkstra supera 8000 en todos los casos.
+    Sabiendo que el heurístico lento es más lento que el heurístico rápido,
+    se conoce por la propiedad transitiva que Dijkstra es más lento
+    que el heurístico rápido.
+
+    Tratar de hacer pruebas con el objetivo de calcular Dijkstra con el heurístico
+    rápido retornaría una diferencia de tiempo de tal magnitud que sería
+    imposible comprender la diferencia entre ambos,
+    más aún tratar de representarlo en una gráfica.
+\end{notebox}
+
 \begin{figure}[h]
     \centering
     %\includesvg{./Media/Ch2/Speedup_Dijkstra.svg}
@@ -1426,8 +1356,9 @@ El gráfico anterior muestra que como poco el algoritmo A*
 tiene un \italic{speedup} de 8000 frente a Dijkstra
 en el conjunto de datos estudiado.
 
-No obstante, las ejecuciones de Dijkstra han sido capaces
-de obtener un \italic{makespan} mejor que las de A*.
+Las ejecuciones de Dijkstra han sido capaces
+de obtener un \italic{makespan} mejor que
+las implementaciones sin sincronización de A*.
 El algoritmo de Dijkstra explorará todos los
 nodos posibles hasta obtener una solución óptima
 mientras que el A* simplemente explorará nodos
@@ -1436,9 +1367,9 @@ hasta que se cumpla la condición de salida
 
 El algoritmo A* es completo, retornará una solución al problema
 siempre y cuando exista al menos una.
-Por otro lado, el algoritmo A* no tiene por qué retornar la
-solución óptima al problema.
-Esta característica depende de la función heurística
+Esto no implica que sus resultados sean siempre óptimos
+(A diferencia de Dijkstra, cuyos resultados sí lo son).
+Que A* retorne soluciones óptimas o no depende de la función heurística
 encargada de calcular el coste H.
 Si la función heurística subestima el coste H real
 (es cota inferior del coste H real)
@@ -1453,6 +1384,9 @@ Las funciones heurísticas que subestimen
 el coste H real se denominan `optimistas'
 mientras que las que lo igualan o sobreestiman
 se denominan `pesimistas'.
+
+\vspace{4em}
+
 \begin{keynotebox}
 Las funciones optimistas retornarán los resultados óptimos
 pero requerirán un mayor tiempo de ejecución ya que
@@ -1461,6 +1395,8 @@ mientras que las pesimistas no tienen por qué retornar un
 resultado óptimo y tendrán una mayor velocidad porque
 no explorarán tantas posibilidades.
 \end{keynotebox}
+
+\pagebreak
 
 Al extremo de las funciones optimistas
 se encuentra el algoritmo de Dijkstra
@@ -1501,7 +1437,217 @@ que sea lo suficientemente pesimista para retornar resultados óptimos
 pero no tan pesimista que explore demasiadas alternativas.
 
 \pagebreak
+\subsection{Comparativa de algoritmos}
+\index{Resultados!Comparativa de algoritmos}
 
+\subsubsection{Monohilo}
+
+Como es de esperar, el rendimiento monohilo de todas
+las implementaciones es el mismo.
+Todas las implementaciones están diseñadas de forma
+que al ser ejecutadas con un sólo hilo
+el algoritmo sea el A* básico.
+
+\begin{figure}[h]
+    \begin{center}
+        \includegraphics[width=\textwidth]{Media/Ch2/Runtime_All_Algorithms_1.png}
+    \end{center}
+    \caption{Tiempo de ejecución de todos los algoritmos (1 hilo).}
+    \label{fig:MetricasSinglethread}
+\end{figure}
+
+\begin{figure}[h]
+    \begin{subfigure}{.5\textwidth}
+        \begin{center}
+            \includegraphics[width=\textwidth]{Media/Ch2/Runtime_All_Algorithms_4.png}
+            \subcaption{Tiempo de ejecución de todos los algoritmos (4 hilos).}
+        \end{center}
+    \end{subfigure}
+    \begin{subfigure}{.5\textwidth}
+        \begin{center}
+            \includegraphics[width=\textwidth]{Media/Ch2/Speedup_All_Algorithms_4.png}
+            \subcaption{\italic{Speedup} de todos los algoritmos (4 hilos).}
+        \end{center}
+    \end{subfigure}
+    \caption{Métricas con 4 hilos.}
+    \label{fig:Metricas4Thread}
+\end{figure}
+
+\pagebreak
+\subsubsection{Con sincronización: Batch y Recursive}
+
+Se observa el rendimiento de los algoritmos con sincronización entre hilos:
+Batch y Recursive solver.
+Al tener sincronización estos algoritmos retornan siempre la misma solución
+para el mismo problema.
+
+A modo de recordatorio:
+\begin{itemize}[itemsep=0.25px]
+    \item Batch solver: En cada iteración se exploran los mejores nodos conocidos.
+    \item Recursive solver: Se resuelve el algoritmo A* para cada sucesor del nodo inicial.
+\end{itemize}
+
+\begin{figure}[h]
+    \begin{center}
+        \includegraphics[width=\textwidth]{Media/Ch2/Runtime_BatchRecursive.png}
+    \end{center}
+    \caption{Tiempo de ejecución del algoritmos Batch y Recursive solvers.}
+    \label{fig:BatchRecursive}
+\end{figure}
+
+En el caso general, el algoritmo Batch Solver sigue el mismo camino que
+el A* monohilo. La principal diferencia es que al evaluar varios nodos
+en cada iteración, puede encontrar un camino diferente al A* monohilo
+que le lleve al resultado óptimo en menos tiempo.
+No obstante, se ve obligado a destruir y crear al equipo de hilos
+en cada iteración.
+Además, al evaluar más nodos, el \lstinline{open_set} crece
+más rápidamente, empeorando el principal cuello de botella
+del algoritmo.
+En las pruebas ejecutadas, estos sobrecostes
+no compensan el posible ahorro de tiempo.
+
+El algoritmo Recursive Solver resolverá el algoritmo A* monohilo $V$ veces
+siendo $V$ el número de vecinos del nodo inicial.
+Esto implica que en monohilo, el tiempo se ve multiplicado por $V$ veces.
+Si se utilizan $N$ hilos pero hay $1.5 \times N$ vecinos del nodo inicial,
+$N$ hilos ejecutarán el algoritmo A* y cuando hayan terminado, $N \over 2$
+volverán a ejecutar otro A* para los nodos vecinos restantes.
+
+Salvo en casos particulares, ninguna de estas estrategias supera el rendimiento
+del algoritmo A* normal monohilo.
+
+\subsubsection{Sin sincronización: FCFS y HDA*}
+
+Se observa el rendimiento de los algoritmos sin sincronización entre hilos:
+FCFS y HDA* solver.
+Al no tener sincronización estos algoritmos pueden retornar diferentes
+soluciones para el mismo problema.
+
+A modo de recordatorio:
+\begin{itemize}[itemsep=0.25px]
+    \item FCFS: Los hilos exploran nodos tan pronto como estén disponibles en el \lstinline{open_set} compartido.
+    \item HDA*: Igual que FCFS pero los nodos son asignados al \lstinline{open_set} privado de un hilo.
+\end{itemize}
+
+\begin{figure}[h]
+    \begin{center}
+        \includegraphics[width=\textwidth]{Media/Ch2/Runtime_FCFSHDA.png}
+    \end{center}
+    \caption{Tiempo de ejecución del algoritmos FCFS y HDA* solvers.}
+    \label{fig:FCFSHDA}
+\end{figure}
+
+El algoritmo FCFS tiene prácticamente las mismas virtudes y defectos que el Batch solver.
+Tiene una mayor posibilidad de encontrar el camino óptimo en menos tiempo
+pero explora más nodos e incrementa el tamaño del \lstinline{open_set}
+reduciendo su rendimiento.
+
+El algoritmo HDA* sin embargo parece tener lo mejor de ambos mundos.
+Por un lado explora una mayor cantidad de nodos
+por lo que puede encontrar el camino óptimo en menos tiempo
+pero distribuye los nodos descubiertos en diferentes \lstinline{open_set},
+reduciendo los efectos del cuello de botella.
+Esto es, la reducción del cuello de botella es directamente proporcional
+al número de hilos que estén trabajando en el problema
+\footnote{Si el tamaño del problema es lo suficientemente grande.}.
+
+\subsubsection{Todos los algoritmos}
+
+Al utilizar cuatro hilos (figura \ref{fig:Metricas4Thread}), se puede comenzar a ver una diferencia clara
+en el rendimiento del algoritmo HDA*, que obtiene un \italic{speedup}
+de casi 4.
+
+\begin{figure}[h]
+    \begin{subfigure}{.5\textwidth}
+        \begin{center}
+            \includegraphics[width=\textwidth]{Media/Ch2/Runtime_All_Algorithms_8.png}
+            \subcaption{Tiempo de ejecución de todos los algoritmos (8 hilos).}
+        \end{center}
+    \end{subfigure}
+    \begin{subfigure}{.5\textwidth}
+        \begin{center}
+            \includegraphics[width=\textwidth]{Media/Ch2/Speedup_All_Algorithms_8.png}
+            \subcaption{\italic{Speedup} de todos los algoritmos (8 hilos).}
+        \end{center}
+    \end{subfigure}
+    \caption{Métricas con 8 hilos.}
+    \label{fig:Metricas8Thread}
+\end{figure}
+
+Al utilizar ocho hilos (figura \ref{fig:Metricas8Thread}),
+el algoritmo HDA* incrementa aún más su diferencia
+en el tiempo de ejecución con respecto al resto de algoritmos,
+aunque esta vez el \italic{speedup} fluctua más.
+De cualquier forma, parece ser capaz de alcanzar casi
+el máximo \italic{speedup} posible para este número de hilos (8).
+
+La principal conclusión de estas observaciones es que
+(al menos en los conjuntos de datos observados),
+en casos generales,
+el paralelismo sólo es rentable si se implementa el HDA*.
+En el resto de casos, el paralelismo sólo sirve para
+gastar núcleos y ciclos de CPU a cambio de nada.
+
+\begin{notebox}
+    En la inmensa mayoría de observaciones realizadas,
+    el algoritmo Batch Solver
+    ha sido capaz de resolver el $30\percentsign$ del problema
+    en menos tiempo que cualquier otro algoritmo.
+    Esta reducción de tiempo se debe a que este algoritmo ejecuta el A*
+    tantas veces como hilos haya disponibles de forma simultánea,
+    facilitando la obtención de planificaciones profundas más rápido. 
+    En otras palabras, el algoritmo es más veloz al iniciar el problema
+    pero es más lento al final.
+\end{notebox}
+
+\pagebreak
+\subsection{FPGA}
+
+Se han tomado varias mediciones del algoritmo monohilo corriendo en la FPGA.
+Los resultados muestran que la implementación de la FPGA es más lenta
+en todos los casos salvo el Recursive Solver.
+Esto es comprensible ya que el Recursive Solver debe ejecutar varias
+veces el algoritmo cuando el número de hilos es inferior al
+número de nodos vecinos del nodo inicial.
+
+\begin{figure}[h]
+    \begin{center}
+        \includegraphics[width=\textwidth]{Media/Ch2/Speedup_FPGA.png}
+        \caption{\italic{Speedup} de la FPGA frente al resto de algoritmos.}
+        \label{fig:SpeedupFPGA}
+    \end{center}
+\end{figure}
+
+La gráfica \ref{fig:SpeedupFPGA} muestra el \italic{speedup} del algoritmo
+en la FPGA respecto al resto de implementaciones monohilo y paralelas.
+Se ha observado también el comportamiento de este algoritmo
+a lo largo de diferentes tamaños de problema con el objetivo de hallar el
+máximo tamaño que se puede resolver en un tiempo razonable.
+
+Los resultados de \italic{speedup} de todas estas mediciones son similares
+a la gráfica anterior por lo que se han omitido.
+Las ejecuciones en CPU han sido capaces de resolver en un tiempo
+razonable problemas de tamaño 6x6x10 generalmente en menos de una hora, los problemas
+de 7x7x10 tardan varias horas o días en función de cómo de fácil sea hallar
+el camino solución.
+La FPGA por otro lado ha sido capaz de resolver problemas de tamaño 4x4x10
+con relativa facilidad en menos de una hora pero se estanca en algunos
+problemas de tamaño 5x5x10.
+
+\begin{keynotebox}
+    Con la síntesis hecha en esta investigación,
+    el algoritmo en FPGA tarda en resolver un problema
+    de tamaño 4x4x10 lo mismo que una CPU tarda
+    en resolver un problema 6x6x10.
+\end{keynotebox}
+
+Lo más seguro es que la FPGA sea capaz de superar en algún caso el rendimiento
+en CPU dados el algoritmo, implementación y problema adecuados.
+Esto no ha sucedido muy probablemente por falta de conocimiento y práctica
+a la hora de escribir código transpilable con HLS.
+
+\pagebreak
 \subsection{Casos particulares}
 \index{Resultados!Casos particulares}
 

@@ -277,11 +277,15 @@ una muy detenida atención a la estrategia para que sea rentable.
 %	LIST OF CONTENTS/FIGURES/TABLES PAGES
 %----------------------------------------------------------------------------------------
 
+\newenvironment{blackEnv}{}
+	
+\begin{blackEnv}
 \tableofcontents % Prints the main table of contents
 
 \listoffigures % Prints the list of figures
 
 \listoftables % Prints the list of tables
+\end{blackEnv}
 
 %----------------------------------------------------------------------------------------
 %	ABBREVIATIONS
@@ -368,7 +372,6 @@ una muy detenida atención a la estrategia para que sea rentable.
 \pagestyle{thesis} % Return the page headers back to the "thesis" style
 \setlength{\parskip}{\baselineskip}%
 
-
 % Include the chapters of the thesis as separate files from the Chapters folder
 % Uncomment the lines as you write the chapters
 
@@ -393,7 +396,7 @@ una muy detenida atención a la estrategia para que sea rentable.
 
 %\include{Appendices/AppendixA}
 \include{Appendices/AppendixA_Code}
-\include{Appendices/AppendixB_Data}
+% \include{Appendices/AppendixB_Data}
 \include{Appendices/AppendixC_Diagrams}
 
 %----------------------------------------------------------------------------------------

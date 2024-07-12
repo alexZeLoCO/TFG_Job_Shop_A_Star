@@ -553,26 +553,38 @@
 
 %----------------------------------------------------------------------------------------
 
+\RequirePackage{hyperref}
+\hypersetup{pdfpagemode={UseOutlines},
+	bookmarksopen=true,
+	bookmarksopenlevel=0,
+	hypertexnames=false,
+	colorlinks=true,% Set to false to disable coloring links
+	citecolor=magenta,% The color of citations
+	linkcolor=red,% The color of references to document elements (sections, figures, etc)
+	urlcolor=mdtRed,% The color of hyperlinks (URLs)
+	pdfstartview={FitV},
+	unicode,
+	breaklinks=true,
+}
+
 \ifbool{hyperrefsupport}{% If the nohyperref class option has not been specified
-	\AtEndPreamble{\RequirePackage{hyperref}
+	\AtBeginEnvironment{blackEnv}{
 		\hypersetup{pdfpagemode={UseOutlines},
 			bookmarksopen=true,
 			bookmarksopenlevel=0,
 			hypertexnames=false,
 			colorlinks=true,% Set to false to disable coloring links
 			citecolor=magenta,% The color of citations
-			linkcolor=red,% The color of references to document elements (sections, figures, etc)
+			linkcolor=black,% The color of references to document elements (sections, figures, etc)
 			urlcolor=mdtRed,% The color of hyperlinks (URLs)
 			pdfstartview={FitV},
 			unicode,
 			breaklinks=true,
 		}
-
 		\pdfstringdefDisableCommands{% If there is an explicit linebreak in a section heading (or anything printed to the pdf-bookmarks), it is replaced by a space
 			\let\\\space%
 		}
 	}
-}{%nothing
 }
 
 %----------------------------------------------------------------------------------------
