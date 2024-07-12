@@ -26,7 +26,6 @@ const MyStyle = HighlightStyle.define([
 ]);
 
 Code.defaultHighlighter = new LezerHighlighter(parser, MyStyle);
-// Code.defaultHighlighter = new LezerHighlighter(parser);
 
 export default makeProject({
   scenes: [
