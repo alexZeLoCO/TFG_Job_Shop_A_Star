@@ -11,6 +11,7 @@
     "@codemirror/language": "^6.10.2",
     "@lezer/cpp": "^1.1.2",
     "@lezer/highlight": "^1.2.0",
+    "@lezer/javascript": "^1.4.17",
     "@motion-canvas/2d": "^3.16.0",
     "@motion-canvas/core": "^3.16.0",
     "@motion-canvas/ffmpeg": "^1.1.0",
@@ -22,6 +23,7 @@
     "@motion-canvas/vite-plugin": "^3.15.1",
     "@types/node": "^20.14.10",
     "typescript": "^5.2.2",
-    "vite": "^4.0.0"
+    "vite": "^4.0.0",
+    "vite-tsconfig-paths": "^4.3.2"
   }
 }

@@ -1,3 +1,4 @@
 export const Config = {
-  THEME: "",
+  THEME: "DARK",
+  WAIT: 0,
 };

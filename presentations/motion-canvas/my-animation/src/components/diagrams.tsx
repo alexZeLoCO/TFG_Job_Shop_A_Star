@@ -54,7 +54,7 @@ export const NeighborsFunction = (props?: RectProps) => {
       height={150}
       {...props}
     >
-      <Code fontSize={28} code={"node.getNeighbors()"} />
+      <Code fontSize={props.fontSize || 28} code={"node.getNeighbors()"} />
     </Rect>
   );
 };

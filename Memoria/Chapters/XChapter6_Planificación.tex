@@ -1,0 +1,107 @@
+\Chapter{Planificación}{}
+\label{cha:Planificación}
+
+A continuación se describe la planificación utilizada para llevar a cabo
+esta investigación.
+La duración de cada tarea se mide en semanas correspondientes a
+5 días cada una, cada día trabajando una jornada parcial de 4 horas.
+
+Esta investigación se ha llevado a cabo utilizando una combinación entre
+SCRUM y TDD.
+El estudio del algortimo A* se ha dividido en tareas de menor tamaño
+que han sido resueltas de forma ordenada utilizando herramientas como
+el Kanban.
+Los programas se han desarrollado utilizando \italic{Test Driven Development} (TDD)
+en el que primero se crean juegos de pruebas de software y
+posteriormente se codifica hasta que todas las pruebas retornan los resultados esperados.
+
+La tabla siguiente detalla las tareas realizadas así como su duración e instantes
+de inicio y fin.
+Todas las duraciones se han medido en semanas,
+esta decisión ha facilitado la clara distinción entre el fin de una tarea y
+el inicio de otra.
+Así mismo, los datos de las columnas \italic{Comienzo} y \italic{Fin}
+corresponden al número de semana del año 2024 en la que cada tarea ha tenido lugar.
+La semana de inicio es incluida mientras que la de fin es sin incluir.
+El trabajo se ha dividido en cinco fases (0-4).
+A las tareas se les ha proporcionado un ID cuyo primer dígito corresponde
+a la fase de la tarea.
+
+\begin{multicols}{2}
+\begin{enumerate}[start=0,itemsep=0.25px]
+    \item Estudios previos.
+    \item Desarrollo de prototipo Python.
+    \item Desarrollo de programa C++.
+    \item Síntesis de programa VHDL.
+    \item Redacción de memoria.
+\end{enumerate}
+\end{multicols}
+
+Se ha trabajado un total de 28 semanas, equivalente a 140 días o 560 horas.
+A modo de resumen:
+\begin{multicols}{2}
+\begin{itemize}[itemsep=0.25px]
+    \item Semanas totales: 28.
+    \item Días totales: 140.
+    \item Horas totales: 560.
+    \item Semana inicio: 2.
+    \item Día inicio: 2024-01-08.
+    \item Semana fin: 30.
+    \item Duración fase 0 (semanas): 2.
+    \item Duración fase 1 (semanas): 3.
+    \item Duración fase 2 (semanas): 14.
+    \item Duración fase 3 (semanas): 3.
+    \item Duración fase 4 (semanas): 6.
+\end{itemize}
+\end{multicols}
+
+\pagebreak
+\section{Tareas}
+
+\begin{center}
+    \begin{table}[h]
+        \centering
+        \begin{tabular}{ l | l l l l }
+            \hline
+            ID & Tarea & Duración & Comienzo & Fin \\
+            \hline
+            001 & Planificación y estudio de viabilidad del TFG & 0.5 semanas & 2 & 3 \\
+            002 & Búsqueda y estudio de bibliografía (JSP) & 0.5 semanas & 3 & 3 \\
+            003 & Búsqueda y estudio de bibliografía (A*) & 0.5 semanas & 3 & 4 \\
+            004 & Búsqueda y estudio de bibliografía (FPGA) & 0.5 semanas & 4 & 4 \\
+            \hline
+            101 & Diseño de programa orientado a objetos & 0.5 semanas & 4 & 5 \\
+            102 & Diseño de juego de pruebas Python & 0.5 semanas & 5 & 5 \\
+            103 & Codificación de versión Python & 1 semana & 5 & 6 \\
+            104 & Corrección de defectos Python & 1 semana & 6 & 7 \\
+            \hline
+            201 & Diseño de juego de pruebas C++ & 0.5 semanas & 7 & 8 \\
+            202 & Codificación de versión C++ (monohilo) & 4 semanas & 8 & 12 \\
+            203 & Corrección de defectos C++ (monohilo) & 1 semana & 12 & 13 \\
+            204 & Codificación de versión C++ (FCFS) & 0.5 semanas & 13 & 13 \\
+            205 & Corrección de defectos C++ (FCFS) & 1 semana & 13 & 14 \\
+            206 & Codificación de versión C++ (Batch) & 0.5 semanas & 14 & 15 \\
+            207 & Corrección de defectos C++ (Batch) & 1 semana & 15 & 16 \\
+            208 & Codificación de versión C++ (Recursive) & 0.5 semanas & 16 & 16 \\
+            209 & Corrección de defectos C++ (Recursive) & 1 semana & 16 & 17 \\
+            210 & Codificación de versión C++ (HDA*) & 0.5 semanas & 17 & 18 \\
+            211 & Corrección de defectos C++ (HDA*) & 1 semana & 18 & 19 \\
+            212 & Codificación de scripts & 0.5 semanas & 19 & 19 \\
+            213 & Ejecución de scripts & 1 semana & 19 & 20 \\
+            214 & Estudio de resultados & 1 semana & 20 & 21 \\
+            \hline
+            301 & Codificación y síntesis de prototipo en FPGA & 0.5 semanas & 21 & 22 \\
+            302 & Codificación y síntesis de A* en FPGA & 1 semana & 22 & 23 \\
+            303 & Ejecución de programa FPGA & 0.5 semanas & 23 & 23 \\
+            304 & Estudio de resultados & 1 semana & 23 & 24 \\
+            \hline
+            401 & Redacción de capítulos teóricos de la memoria & 1 semana & 24 & 25 \\
+            402 & Redacción de capítulos técnicos de la memoria & 1 semana & 25 & 26 \\
+            403 & Redacción de capítulos con resultados de la memoria & 1 semana & 26 & 27 \\
+            404 & Redacción de conclusiones de la memoria & 1 semana & 27 & 28 \\
+            405 & Corrección y revisiones de la memoria con el tutor & 2 semanas & 28 & 30 \\
+            \hline
+        \end{tabular}
+        \caption{Planificación del TFG.}
+    \end{table}
+\end{center}

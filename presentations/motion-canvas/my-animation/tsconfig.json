@@ -1,4 +1,14 @@
 {
   "extends": "@motion-canvas/2d/tsconfig.project.json",
-  "include": ["src"]
+  "include": ["src"],
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "allowJs": true,
+    "strict": true,
+    "baseUrl": "./src",
+    "paths": {
+      "@components/*": ["components/*"],
+      "@colors": ["colors.ts"]
+    }
+  }
 }
